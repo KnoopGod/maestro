@@ -5,8 +5,8 @@ import { query, queryOne } from '../index'
  * Updated to match Claude pricing as of 2026.
  */
 export const COST_ESTIMATES = {
-  visionAnalysisPerImage: 0.009,   // ~1500 input + 300 output tokens, Sonnet
-  daSynthesisPerClient: 0.020,     // Heavier prompt with all assets metadata
+  visionAnalysisPerImage: 0.009,   // ~1500 input + 300 output tokens, Sonnet 4.6
+  daSynthesisPerClient: 0.050,     // Opus 4.7 + adaptive thinking, ~10 assets in prompt
 }
 
 export interface UsageStats {

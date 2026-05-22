@@ -95,15 +95,20 @@ Règles strictes :
 
 Réponds UNIQUEMENT le JSON.`
 
+  // Opus 4.7 with adaptive thinking — DA synthesis benefits from deep reasoning
+  // about cross-asset patterns. Thinking content omitted (we only use the JSON).
   const message = await claude.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
+    model: 'claude-opus-4-7',
+    max_tokens: 4096,
+    thinking: { type: 'adaptive' },
+    output_config: { effort: 'high' },
     system: systemPrompt,
     messages: [{ role: 'user', content: userPrompt }],
   })
 
-  const textContent = message.content[0]
-  const rawText = textContent.type === 'text' ? textContent.text : ''
+  // Find the first text block (thinking blocks may precede text)
+  const textBlock = message.content.find(b => b.type === 'text')
+  const rawText = textBlock && textBlock.type === 'text' ? textBlock.text : ''
 
   let parsed: Omit<IdentitySynthesisResult, 'cost' | 'tokensUsed'>
   try {
@@ -117,7 +122,8 @@ Réponds UNIQUEMENT le JSON.`
 
   const inputTokens = message.usage.input_tokens
   const outputTokens = message.usage.output_tokens
-  const cost = (inputTokens * 3 + outputTokens * 15) / 1_000_000
+  // Opus 4.7 pricing: $5/1M input, $25/1M output
+  const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
 
   return {
     ...parsed,
