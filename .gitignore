@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local database (contains client Meta tokens, posts, assets)
+*.db
+*.db-journal
+
+# user-uploaded files (client photos, videos, documents)
+/public/uploads/
+
+# Claude Code per-user overrides (settings.json is committed; .local.json is not)
+.claude/settings.local.json

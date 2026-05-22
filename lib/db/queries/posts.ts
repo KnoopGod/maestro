@@ -1,0 +1,173 @@
+import { nanoid } from 'nanoid'
+import { db, query, queryOne } from '../index'
+import type { Post, PostContentType, PostPlatform, PostStatus } from '@/types/post'
+
+interface PostRow {
+  id: string
+  client_id: string
+  status: PostStatus
+  platforms: string
+  content_type: PostContentType
+  brief: string
+  reasoning: string | null
+  caption: string
+  hashtags: string | null
+  hook: string | null
+  cta: string | null
+  image_asset_id: string | null
+  image_url: string | null
+  image_prompt: string | null
+  impact_score: number
+  impact_analysis: string | null
+  meta_post_ids: string | null
+  published_at: number | null
+  error: string | null
+  cost: number
+  tokens_used: number
+  created_at: number
+  updated_at: number
+}
+
+function mapRow(row: PostRow): Post {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    status: row.status,
+    platforms: JSON.parse(row.platforms || '[]'),
+    contentType: row.content_type,
+    brief: row.brief,
+    reasoning: row.reasoning,
+    caption: row.caption,
+    hashtags: row.hashtags ? JSON.parse(row.hashtags) : [],
+    hook: row.hook,
+    cta: row.cta,
+    imageAssetId: row.image_asset_id,
+    imageUrl: row.image_url,
+    imagePrompt: row.image_prompt,
+    impactScore: row.impact_score,
+    impactAnalysis: row.impact_analysis,
+    metaPostIds: row.meta_post_ids ? JSON.parse(row.meta_post_ids) : {},
+    publishedAt: row.published_at,
+    error: row.error,
+    cost: row.cost,
+    tokensUsed: row.tokens_used,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function getPost(id: string): Promise<Post | null> {
+  const row = await queryOne<PostRow>(`SELECT * FROM posts WHERE id = ?`, [id])
+  return row ? mapRow(row) : null
+}
+
+export async function listPosts(options?: {
+  clientId?: string
+  status?: PostStatus
+  limit?: number
+}): Promise<Post[]> {
+  const conditions: string[] = []
+  const args: unknown[] = []
+
+  if (options?.clientId) {
+    conditions.push('client_id = ?')
+    args.push(options.clientId)
+  }
+  if (options?.status) {
+    conditions.push('status = ?')
+    args.push(options.status)
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+  const limit = options?.limit ? `LIMIT ${options.limit}` : ''
+
+  const rows = await query<PostRow>(
+    `SELECT * FROM posts ${where} ORDER BY created_at DESC ${limit}`,
+    args
+  )
+  return rows.map(mapRow)
+}
+
+export async function deletePost(id: string): Promise<void> {
+  await db.execute({
+    sql: `DELETE FROM posts WHERE id = ?`,
+    args: [id],
+  })
+}
+
+export async function createPost(input: {
+  clientId: string
+  platforms: PostPlatform[]
+  contentType: PostContentType
+  brief: string
+  reasoning?: string
+  caption: string
+  hashtags?: string[]
+  hook?: string
+  cta?: string
+  imageAssetId?: string
+  imageUrl?: string
+  imagePrompt?: string
+  impactScore?: number
+  impactAnalysis?: string
+  cost?: number
+  tokensUsed?: number
+}): Promise<Post> {
+  const id = nanoid(12)
+  const now = Date.now()
+
+  await db.execute({
+    sql: `INSERT INTO posts (
+      id, client_id, status, platforms, content_type, brief, reasoning,
+      caption, hashtags, hook, cta, image_asset_id, image_url, image_prompt,
+      impact_score, impact_analysis, cost, tokens_used, created_at, updated_at
+    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      input.clientId,
+      JSON.stringify(input.platforms),
+      input.contentType,
+      input.brief,
+      input.reasoning ?? null,
+      input.caption,
+      JSON.stringify(input.hashtags ?? []),
+      input.hook ?? null,
+      input.cta ?? null,
+      input.imageAssetId ?? null,
+      input.imageUrl ?? null,
+      input.imagePrompt ?? null,
+      input.impactScore ?? 0,
+      input.impactAnalysis ?? null,
+      input.cost ?? 0,
+      input.tokensUsed ?? 0,
+      now,
+      now,
+    ],
+  })
+
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to create post')
+  return post
+}
+
+export async function markPostPublished(id: string, metaPostIds: Record<string, string>): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET status = 'published', meta_post_ids = ?, published_at = ?, error = NULL, updated_at = ? WHERE id = ?`,
+    args: [JSON.stringify(metaPostIds), now, now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
+
+export async function markPostFailed(id: string, error: string): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET status = 'failed', error = ?, updated_at = ? WHERE id = ?`,
+    args: [error, now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
