@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Lightbulb, Loader2, Sparkles, Wand2, Zap, CheckCircle2, XCircle } from 'lucide-react'
 import type { PostIdea } from '@/lib/agents/planner'
 
@@ -23,6 +23,8 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkProgress, setBulkProgress] = useState(0)
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null)
+  const bulkCancelledRef = useRef(false)
+  useEffect(() => () => { bulkCancelledRef.current = true }, [])
 
   async function generate() {
     if (!clientId) {
@@ -51,6 +53,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
 
   async function generateAllDrafts() {
     if (!clientId || ideas.length === 0) return
+    bulkCancelledRef.current = false
     setBulkLoading(true)
     setBulkProgress(0)
     setBulkResult(null)
@@ -76,12 +79,14 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
         } catch {
           failed++
         }
-        setBulkProgress(prev => prev + 1)
+        if (!bulkCancelledRef.current) setBulkProgress(prev => prev + 1)
       })
     )
 
-    setBulkLoading(false)
-    setBulkResult({ done, failed })
+    if (!bulkCancelledRef.current) {
+      setBulkLoading(false)
+      setBulkResult({ done, failed })
+    }
   }
 
   return (

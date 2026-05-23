@@ -59,12 +59,18 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
   useEffect(() => {
     setSelectedAsset(null)
     if (!clientId || imageMode !== 'library') return
+    let cancelled = false
     setAssetsLoading(true)
     fetch(`/api/clients/${clientId}/assets`)
       .then(r => r.json())
-      .then(d => setClientAssets((d.assets as ClientAsset[]).filter(a => a.type === 'image' || a.type === 'logo')))
-      .catch(() => setClientAssets([]))
-      .finally(() => setAssetsLoading(false))
+      .then(d => {
+        if (cancelled) return
+        const assets = Array.isArray(d.assets) ? d.assets as ClientAsset[] : []
+        setClientAssets(assets.filter(a => a.type === 'image' || a.type === 'logo'))
+      })
+      .catch(() => { if (!cancelled) setClientAssets([]) })
+      .finally(() => { if (!cancelled) setAssetsLoading(false) })
+    return () => { cancelled = true }
   }, [clientId, imageMode])
 
   function applyIdea(idea: PostIdea) {

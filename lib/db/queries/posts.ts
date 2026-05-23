@@ -50,7 +50,7 @@ function mapRow(row: PostRow): Post {
     impactScore: row.impact_score,
     impactAnalysis: row.impact_analysis,
     metaPostIds: row.meta_post_ids ? JSON.parse(row.meta_post_ids) : {},
-    metaInsights: row.meta_insights ? JSON.parse(row.meta_insights) as PostInsights[] : [],
+    metaInsights: (() => { try { return row.meta_insights ? JSON.parse(row.meta_insights) as PostInsights[] : [] } catch { return [] } })(),
     supervisorReview: row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null,
     scheduledAt: row.scheduled_at,
     publishedAt: row.published_at,

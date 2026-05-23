@@ -9,7 +9,9 @@ export async function POST(req: Request) {
     if (!clientId || !Array.isArray(platforms) || platforms.length === 0) return NextResponse.json({ error: 'clientId et platforms sont requis' }, { status: 400 })
     const client = await getClient(clientId)
     if (!client) return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
-    const existingAsset = imageAssetId && imageAssetUrl ? { id: imageAssetId as string, url: imageAssetUrl as string } : undefined
+    const existingAsset = typeof imageAssetId === 'string' && typeof imageAssetUrl === 'string' && imageAssetId && imageAssetUrl
+      ? { id: imageAssetId, url: imageAssetUrl }
+      : undefined
     const result = await runPostPipeline({ client, userBrief: typeof brief === 'string' ? brief : undefined, platforms: platforms as PostPlatform[], contentType, skipImage, existingAsset })
     return NextResponse.json({
       post: result.post,
