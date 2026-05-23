@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
-import type { Client, ClientType, ClientWithStats, ClientStatus } from '@/types/client'
+import { createClientStrategy } from '@/lib/agents/strategy-director'
+import type { Client, ClientStrategy, ClientType, ClientWithStats, ClientStatus } from '@/types/client'
 
 // ─── Row mapping ──────────────────────────────────────────────────────────────
 
@@ -17,11 +18,21 @@ interface ClientRow {
   brand_voice_keywords: string | null
   brand_voice_avoid: string | null
   languages: string
+  strategy: string | null
   created_at: number
   updated_at: number
 }
 
 function mapRow(row: ClientRow): Client {
+  const strategy = JSON.parse(row.strategy ?? 'null') ?? createClientStrategy({
+    type: row.type,
+    name: row.name,
+    city: row.city ?? '',
+    positioning: row.description ?? '',
+    tone: row.brand_voice_tone ?? '',
+    offerFocus: '',
+  })
+
   return {
     id: row.id,
     name: row.name,
@@ -35,6 +46,7 @@ function mapRow(row: ClientRow): Client {
     brandVoiceKeywords: row.brand_voice_keywords,
     brandVoiceAvoid: row.brand_voice_avoid,
     languages: JSON.parse(row.languages || '["fr"]'),
+    strategy,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -80,16 +92,25 @@ export async function createClient(input: {
   brandVoiceKeywords?: string
   brandVoiceAvoid?: string
   languages?: string[]
+  strategy?: ClientStrategy
 }): Promise<Client> {
   const id = nanoid(12)
   const now = Date.now()
+  const strategy = input.strategy ?? createClientStrategy({
+    type: input.type,
+    name: input.name,
+    city: input.city ?? '',
+    positioning: input.description ?? '',
+    tone: input.brandVoiceTone ?? '',
+    offerFocus: '',
+  })
 
   await db.execute({
     sql: `INSERT INTO clients (
       id, name, type, city, status, emoji, color, description,
       brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
-      languages, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      languages, strategy, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       input.name,
@@ -102,6 +123,7 @@ export async function createClient(input: {
       input.brandVoiceKeywords ?? null,
       input.brandVoiceAvoid ?? null,
       JSON.stringify(input.languages ?? ['fr']),
+      JSON.stringify(strategy),
       now,
       now,
     ],
@@ -143,6 +165,11 @@ export async function updateClient(
   if (patch.languages) {
     updates.push('languages = ?')
     args.push(JSON.stringify(patch.languages))
+  }
+
+  if (patch.strategy) {
+    updates.push('strategy = ?')
+    args.push(JSON.stringify(patch.strategy))
   }
 
   if (updates.length === 0) return getClient(id)

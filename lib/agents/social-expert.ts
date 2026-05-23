@@ -12,7 +12,7 @@ interface GenerateCaptionInput {
   contentType?: 'photo' | 'reel' | 'story'
 }
 
-interface GeneratedCaption {
+export interface GeneratedCaption {
   platform: Platform
   caption: string
   hashtags: string[]

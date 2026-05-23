@@ -23,6 +23,7 @@ export async function initSchema() {
       brand_voice_keywords TEXT,
       brand_voice_avoid TEXT,
       languages TEXT DEFAULT '["fr"]',
+      strategy TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
@@ -101,11 +102,12 @@ export async function initSchema() {
   `)
 
   // ─── Generated posts ──────────────────────────────────────────────────────
+  // status values: draft | ready | scheduled | published | failed (validated in TS, not in SQL).
   await db.execute(`
     CREATE TABLE IF NOT EXISTS posts (
       id TEXT PRIMARY KEY,
       client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-      status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published', 'failed')),
+      status TEXT NOT NULL DEFAULT 'draft',
       platforms TEXT NOT NULL,
       content_type TEXT NOT NULL,
       brief TEXT NOT NULL,
@@ -119,7 +121,9 @@ export async function initSchema() {
       image_prompt TEXT,
       impact_score INTEGER DEFAULT 0,
       impact_analysis TEXT,
+      supervisor_review TEXT,
       meta_post_ids TEXT,
+      scheduled_at INTEGER,
       published_at INTEGER,
       error TEXT,
       cost REAL DEFAULT 0,
@@ -138,4 +142,9 @@ export async function initSchema() {
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_assets_type ON client_assets(client_id, type)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_posts_client ON posts(client_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status)`)
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_posts_scheduled ON posts(scheduled_at)`)
+
+  // Run idempotent migrations (safe to call on every start).
+  const { migratePostsScheduling } = await import('./migrations/002-add-scheduling')
+  await migratePostsScheduling()
 }

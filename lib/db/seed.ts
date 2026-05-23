@@ -4,8 +4,23 @@
  */
 import { db } from './index'
 import { createClient, listClients } from './queries/clients'
+import type { ClientStrategy, ClientType } from '@/types/client'
 
-const SEED_CLIENTS = [
+interface SeedClient {
+  name: string
+  type: ClientType
+  city: string
+  emoji: string
+  color: string
+  description: string
+  brandVoiceTone: string
+  brandVoiceKeywords: string
+  brandVoiceAvoid: string
+  languages: string[]
+  strategy: ClientStrategy
+}
+
+const SEED_CLIENTS: SeedClient[] = [
   {
     name: 'Le Bistrot de Marie',
     type: 'restaurant' as const,
@@ -17,6 +32,14 @@ const SEED_CLIENTS = [
     brandVoiceKeywords: 'authentique, fait maison, tradition italienne, savoir-faire',
     brandVoiceAvoid: 'corporate, froid, technique',
     languages: ['fr'],
+    strategy: {
+      objective: 'Faire de Le Bistrot de Marie à Lyon le réflexe italien convivial du quartier, avec un focus sur la pâte fermentée 72h, les plats maison et les réservations du week-end.',
+      contentPillars: ['Pâte fermentée 72h', 'Plat signature', 'Menu du jour', 'Coulisses', 'Réservation week-end'],
+      platforms: ['instagram', 'facebook'],
+      frequency: '4 posts/semaine',
+      bestTimes: ['11:30', '18:30', '19:15'],
+      avoid: ['contenu générique', 'promesses exagérées', 'ton robotique', 'ton luxe froid', 'visuels stock photo'],
+    },
   },
   {
     name: 'Hôtel des Vagues',
@@ -29,6 +52,14 @@ const SEED_CLIENTS = [
     brandVoiceKeywords: 'vue mer, bien-être, expérience, raffinement, océan',
     brandVoiceAvoid: 'familier, exagéré',
     languages: ['fr', 'en', 'es'],
+    strategy: {
+      objective: 'Renforcer l\'attractivité de Hôtel des Vagues à Biarritz auprès des voyageurs mer, spa et surf, en convertissant les vues sociales en demandes de séjour qualifiées.',
+      contentPillars: ['Chambres vue mer', 'Spa', 'Expérience locale', 'Petit-déjeuner', 'Avis client'],
+      platforms: ['instagram', 'facebook'],
+      frequency: '4 posts/semaine',
+      bestTimes: ['08:30', '12:15', '18:00'],
+      avoid: ['contenu générique', 'promesses exagérées', 'ton robotique', 'vocabulaire hôtel de chaîne', 'photos impersonnelles'],
+    },
   },
   {
     name: 'La Maison du Lac',
@@ -41,6 +72,14 @@ const SEED_CLIENTS = [
     brandVoiceKeywords: 'authenticité, lac, calme, fait maison, produits locaux',
     brandVoiceAvoid: 'marketing, luxe ostentatoire',
     languages: ['fr', 'en'],
+    strategy: {
+      objective: 'Positionner La Maison du Lac à Annecy comme une chambre d\'hôte calme et personnelle, portée par le lac, l\'accueil direct et le petit-déjeuner local.',
+      contentPillars: ['Vue lac', 'Petit-déjeuner local', 'Accueil maison', 'Expérience locale', 'Saisonnalité'],
+      platforms: ['instagram', 'facebook'],
+      frequency: '3 posts/semaine',
+      bestTimes: ['08:30', '12:15', '18:00'],
+      avoid: ['contenu générique', 'promesses exagérées', 'ton robotique', 'vocabulaire hôtel de chaîne', 'photos impersonnelles'],
+    },
   },
   {
     name: 'Bar Le Sud',
@@ -53,6 +92,14 @@ const SEED_CLIENTS = [
     brandVoiceKeywords: 'cocktail, soirée, ambiance, mixologie, méditerranée',
     brandVoiceAvoid: 'guindé, traditionnel',
     languages: ['fr'],
+    strategy: {
+      objective: 'Installer Bar Le Sud à Marseille comme le rendez-vous cocktails et DJ sets du week-end, avec une communication méditerranéenne, festive et locale.',
+      contentPillars: ['Cocktail signature', 'Ambiance soirée', 'DJ sets', 'Happy hour', 'Clientèle locale'],
+      platforms: ['instagram', 'facebook'],
+      frequency: '5 posts/semaine',
+      bestTimes: ['17:30', '20:00', '21:30'],
+      avoid: ['contenu générique', 'promesses exagérées', 'ton robotique', 'ton institutionnel', 'visuels trop sages'],
+    },
   },
   {
     name: 'Auberge des Pins',
@@ -65,6 +112,14 @@ const SEED_CLIENTS = [
     brandVoiceKeywords: 'Provence, terroir, gastronomie, jardin, tradition',
     brandVoiceAvoid: 'corporate, impersonnel',
     languages: ['fr', 'en'],
+    strategy: {
+      objective: 'Développer la notoriété de Auberge des Pins à Aix-en-Provence en reliant gastronomie provençale, jardin centenaire et séjours intimistes de 12 chambres.',
+      contentPillars: ['Plat signature', 'Terroir provençal', 'Jardin centenaire', 'Chambres', 'Réservation week-end'],
+      platforms: ['instagram', 'facebook'],
+      frequency: '4 posts/semaine',
+      bestTimes: ['11:30', '18:30', '19:15'],
+      avoid: ['contenu générique', 'promesses exagérées', 'ton robotique', 'ton luxe froid', 'photos impersonnelles'],
+    },
   },
   {
     name: 'Les Saveurs d\'Antoine',
@@ -77,6 +132,14 @@ const SEED_CLIENTS = [
     brandVoiceKeywords: 'marché, saison, vin, accord, créativité',
     brandVoiceAvoid: 'prétentieux, snob',
     languages: ['fr'],
+    strategy: {
+      objective: 'Faire rayonner Les Saveurs d\'Antoine à Bordeaux comme une adresse bistronomique accessible, centrée sur le marché, la saison et les accords avec les vins bordelais.',
+      contentPillars: ['Menu du marché', 'Accord mets-vins', 'Plat signature', 'Coulisses', 'Avis client'],
+      platforms: ['instagram', 'facebook'],
+      frequency: '4 posts/semaine',
+      bestTimes: ['11:30', '18:30', '19:15'],
+      avoid: ['contenu générique', 'promesses exagérées', 'ton robotique', 'ton luxe froid', 'visuels stock photo'],
+    },
   },
 ]
 

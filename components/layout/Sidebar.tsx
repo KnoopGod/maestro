@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Home, Users, Sparkles, Bot, CalendarDays, BarChart3,
-  FolderOpen, Plug, Settings, Music2, DollarSign,
+  FolderOpen, Plug, Settings, Music2, DollarSign, ShieldCheck,
 } from 'lucide-react'
 
 const NAV_PRIMARY = [
@@ -11,18 +11,20 @@ const NAV_PRIMARY = [
 ]
 
 const NAV_WORK = [
-  { href: '/clients',    icon: Users,        label: 'Clients',   badge: null },
-  { href: '/studio',     icon: Sparkles,     label: 'Studio',    badge: 'NEW', badgeColor: 'bg-pink-600/30 text-pink-300' },
-  { href: '/agents',     icon: Bot,          label: 'Agents',    badge: null },
-  { href: '/plan',       icon: CalendarDays, label: 'Plan',      badge: null },
-  { href: '/analytics',  icon: BarChart3,    label: 'Analytics', badge: null },
-  { href: '/library',    icon: FolderOpen,   label: 'Library',   badge: null },
+  { href: '/clients',    icon: Users,        label: 'Clients',    badge: null },
+  { href: '/studio',     icon: Sparkles,     label: 'Studio',     badge: 'NEW', badgeColor: 'bg-pink-600/30 text-pink-300' },
+  { href: '/validation', icon: ShieldCheck,  label: 'Validation', badge: null },
+  { href: '/calendar',   icon: CalendarDays, label: 'Calendrier', badge: null },
+  { href: '/plan',       icon: CalendarDays, label: 'Historique', badge: null },
+  { href: '/agents',     icon: Bot,          label: 'Agents',     badge: null },
+  { href: '/analytics',  icon: BarChart3,    label: 'Analytics',  badge: null },
+  { href: '/library',    icon: FolderOpen,   label: 'Library',    badge: null },
 ]
 
 const NAV_SYSTEM = [
-  { href: '/social/settings/connections', icon: Plug,       label: 'Connexions', dot: true },
-  { href: '/usage',                        icon: DollarSign, label: 'Usage',      dot: false },
-  { href: '/settings',                     icon: Settings,   label: 'Settings',   dot: false },
+  { href: '/connections', icon: Plug,       label: 'Connexions', dot: true },
+  { href: '/usage',       icon: DollarSign, label: 'Usage',      dot: false },
+  { href: '/settings',    icon: Settings,   label: 'Settings',   dot: false },
 ]
 
 function NavItem({

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug } from 'lucide-react'
 import { getClient } from '@/lib/db/queries/clients'
 import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
 import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
@@ -57,6 +57,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           >
             <Sparkles className="w-4 h-4" />
             Créer un post
+          </Link>
+          <Link
+            href={`/clients/${client.id}/setup`}
+            className="px-3 py-2 rounded-lg border border-purple-700/40 hover:bg-purple-900/30 text-purple-300 text-sm flex items-center gap-1.5 transition-colors"
+          >
+            <Plug className="w-4 h-4" />
+            Tunnel
           </Link>
           <Link
             href={`/clients/${client.id}/edit`}
@@ -144,45 +151,79 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
       {/* Brand Voice */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-            🎯 Identité de marque
-          </h2>
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Ton</dt>
-              <dd className="text-gray-200">{client.brandVoiceTone || <span className="text-gray-600 italic">Non défini</span>}</dd>
+        <div className="space-y-4">
+          <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+            <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              🎯 Identité de marque
+            </h2>
+            <dl className="space-y-3 text-sm">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Ton</dt>
+                <dd className="text-gray-200">{client.brandVoiceTone || <span className="text-gray-600 italic">Non défini</span>}</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Mots-clés</dt>
+                <dd className="text-gray-200">
+                  {client.brandVoiceKeywords
+                    ? client.brandVoiceKeywords.split(',').map((k, i) => (
+                        <span key={i} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-purple-900/30 border border-purple-700/30 text-purple-300 text-xs">
+                          {k.trim()}
+                        </span>
+                      ))
+                    : <span className="text-gray-600 italic">Non définis</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">À éviter</dt>
+                <dd className="text-gray-400 text-xs italic">
+                  {client.brandVoiceAvoid || <span className="text-gray-600">Aucun</span>}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Langues</dt>
+                <dd className="flex gap-1.5">
+                  {client.languages.map(l => (
+                    <span key={l} className="px-2 py-0.5 rounded bg-blue-900/30 border border-blue-700/30 text-blue-300 text-xs uppercase">
+                      {l}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+            <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+              📌 Stratégie marketing
+            </h2>
+            <div className="space-y-3 text-sm">
+              <p className="text-gray-200 leading-relaxed">{client.strategy.objective}</p>
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Piliers de contenu</div>
+                <div>
+                  {client.strategy.contentPillars.map(pillar => (
+                    <span key={pillar} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-purple-900/40 border border-purple-700/30 text-purple-300 text-xs">
+                      {pillar}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="text-xs text-gray-400">
+                {client.strategy.frequency} · {client.strategy.bestTimes.join(', ')}
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">À éviter</div>
+                <div>
+                  {client.strategy.avoid.map(item => (
+                    <span key={item} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-red-900/30 border border-red-700/30 text-red-300 text-xs">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div>
-              <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Mots-clés</dt>
-              <dd className="text-gray-200">
-                {client.brandVoiceKeywords
-                  ? client.brandVoiceKeywords.split(',').map((k, i) => (
-                      <span key={i} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-purple-900/30 border border-purple-700/30 text-purple-300 text-xs">
-                        {k.trim()}
-                      </span>
-                    ))
-                  : <span className="text-gray-600 italic">Non définis</span>
-                }
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">À éviter</dt>
-              <dd className="text-gray-400 text-xs italic">
-                {client.brandVoiceAvoid || <span className="text-gray-600">Aucun</span>}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Langues</dt>
-              <dd className="flex gap-1.5">
-                {client.languages.map(l => (
-                  <span key={l} className="px-2 py-0.5 rounded bg-blue-900/30 border border-blue-700/30 text-blue-300 text-xs uppercase">
-                    {l}
-                  </span>
-                ))}
-              </dd>
-            </div>
-          </dl>
+          </div>
         </div>
 
         {/* Connected platforms placeholder */}

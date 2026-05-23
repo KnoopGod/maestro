@@ -1,0 +1,130 @@
+import Link from 'next/link'
+import { ShieldCheck, AlertCircle, Sparkles } from 'lucide-react'
+import { listPosts } from '@/lib/db/queries/posts'
+import { listClients } from '@/lib/db/queries/clients'
+import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
+import type { Post } from '@/types/post'
+import type { Client } from '@/types/client'
+
+export const dynamic = 'force-dynamic'
+
+export default async function ValidationPage() {
+  const [allPosts, clients] = await Promise.all([listPosts({ limit: 200 }), listClients()])
+  const queue = allPosts.filter(p => p.status === 'draft' || p.status === 'ready' || p.status === 'failed')
+
+  const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
+
+  const draftCount = queue.filter(p => p.status === 'draft').length
+  const readyCount = queue.filter(p => p.status === 'ready').length
+  const failedCount = queue.filter(p => p.status === 'failed').length
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+            <ShieldCheck className="w-7 h-7 text-purple-400" />
+            Validation
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            File des posts à relire avant publication ou planification
+          </p>
+        </div>
+        <Link
+          href="/studio"
+          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
+        >
+          <Sparkles className="w-4 h-4" />
+          Nouveau post
+        </Link>
+      </div>
+
+      <div className="bg-purple-950/20 border border-purple-700/30 rounded-2xl p-4 text-sm text-purple-200">
+        <strong className="text-white">Règle MVP :</strong> aucun post ne part automatiquement.
+        Tu valides le texte, l&apos;image, le timing et la cohérence DA avant de planifier ou publier.
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <StatBox label="Brouillons" value={draftCount} color="text-amber-400" />
+        <StatBox label="Prêts" value={readyCount} color="text-purple-400" />
+        <StatBox label="Échecs" value={failedCount} color="text-red-400" />
+      </div>
+
+      {queue.length === 0 ? (
+        <div className="bg-gray-900/20 border border-dashed border-gray-700 rounded-2xl p-12 text-center">
+          <ShieldCheck className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+          <p className="text-gray-400">Aucun post en attente de validation.</p>
+          <Link
+            href="/studio"
+            className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3"
+          >
+            <Sparkles className="w-4 h-4" />
+            Créer un post
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {queue.map(post => (
+            <PostCard key={post.id} post={post} client={clientsMap.get(post.clientId)} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatBox({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
+    </div>
+  )
+}
+
+function PostCard({ post, client }: { post: Post; client: Client | undefined }) {
+  return (
+    <article className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-4">
+      <div className="flex items-start gap-3">
+        {post.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.imageUrl} alt="" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
+        ) : (
+          <div className={`w-20 h-20 rounded-lg bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-2xl flex-shrink-0`}>
+            {client?.emoji ?? '📝'}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            {client && (
+              <Link href={`/clients/${client.id}`} className="text-xs text-purple-300 hover:underline">
+                {client.emoji} {client.name}
+              </Link>
+            )}
+            <span className="text-[10px] uppercase tracking-wider text-gray-500">{post.status}</span>
+            <span className="text-[10px] text-gray-600 ml-auto">Impact {post.impactScore}/100</span>
+          </div>
+          <p className="text-sm font-medium text-white line-clamp-2">{post.brief}</p>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-300 line-clamp-4 leading-snug">{post.caption}</p>
+
+      {post.hashtags.length > 0 && (
+        <p className="text-[11px] text-blue-400 line-clamp-1">
+          {post.hashtags.slice(0, 6).map(h => `#${h.replace(/^#/, '')}`).join(' ')}
+        </p>
+      )}
+
+      {post.status === 'failed' && post.error && (
+        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2 flex gap-1.5">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>{post.error}</span>
+        </div>
+      )}
+
+      <PostSupervisor post={post} />
+      <PostActions post={post} />
+    </article>
+  )
+}

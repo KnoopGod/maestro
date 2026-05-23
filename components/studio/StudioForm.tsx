@@ -1,8 +1,12 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, UploadCloud } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target } from 'lucide-react'
 import type { Client } from '@/types/client'
-import type { Post } from '@/types/post'
+import type { Post, SupervisorReview } from '@/types/post'
+import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
+import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
+import type { PostIdea } from '@/lib/agents/planner'
+import type { AccountDirective } from '@/lib/agents/account-director'
 
 type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 type ContentType = 'photo' | 'reel' | 'story'
@@ -23,6 +27,8 @@ interface GenerationResult {
   cost: number
   tokensUsed: number
   model: string
+  review?: SupervisorReview
+  directive?: AccountDirective
 }
 
 const PLATFORM_INFO: Record<Platform, { label: string; emoji: string; color: string }> = {
@@ -40,12 +46,18 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
 
   const [result, setResult] = useState<GenerationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [publishError, setPublishError] = useState<string | null>(null)
-  const [publishSuccess, setPublishSuccess] = useState<string | null>(null)
-  const [isPublishing, setIsPublishing] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const selectedClient = clients.find(c => c.id === clientId)
+
+  function applyIdea(idea: PostIdea) {
+    setBrief(idea.brief)
+    // Map idea platforms (PostPlatform) into Studio's local Platform type
+    const valid: Platform[] = idea.platforms.filter((p): p is Platform =>
+      ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)
+    )
+    if (valid.length > 0) setPlatforms(valid)
+  }
 
   const togglePlatform = (p: Platform) => {
     setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])
@@ -69,34 +81,6 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
         setError(err instanceof Error ? err.message : 'Erreur inconnue')
       }
     })
-  }
-
-  const handlePublish = async (forceTextOnly = false) => {
-    if (!result?.post) return
-    setPublishError(null)
-    setPublishSuccess(null)
-    setIsPublishing(true)
-
-    try {
-      const res = await fetch('/api/studio/publish-post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ postId: result.post.id, forceTextOnly }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Erreur publication')
-      setResult(prev => prev ? { ...prev, post: data.post } : prev)
-
-      let msg = 'Post publié avec succès sur les plateformes connectées.'
-      if (data.warnings?.length) {
-        msg += ' ⚠️ ' + data.warnings.join(' ')
-      }
-      setPublishSuccess(msg)
-    } catch (err) {
-      setPublishError(err instanceof Error ? err.message : 'Erreur inconnue')
-    } finally {
-      setIsPublishing(false)
-    }
   }
 
   return (
@@ -125,6 +109,9 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
             </div>
           )}
         </div>
+
+        {/* Strategy Director — post ideas */}
+        <PostIdeasPanel clientId={clientId || null} onPick={applyIdea} />
 
         {/* Brief */}
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
@@ -208,7 +195,7 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
         {/* Generate button */}
         <button
           onClick={handleGenerate}
-          disabled={!clientId || !brief || platforms.length === 0 || isPending}
+          disabled={!clientId || platforms.length === 0 || isPending}
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? (
@@ -312,6 +299,32 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
               <p className="text-sm text-gray-300">{result.reasoning}</p>
             </div>
 
+            {result.directive && (
+              <div className="bg-amber-950/20 border border-amber-700/30 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-amber-400">
+                  <Target className="w-4 h-4" />
+                  <span>Account Director — Pilier prioritaire : {result.directive.priorityPillar}</span>
+                </div>
+                <div className="space-y-2 text-sm text-gray-300">
+                  <p><span className="text-amber-300">Rationale :</span> {result.directive.rationale}</p>
+                  <p><span className="text-amber-300">Hook proposé :</span> &ldquo;{result.directive.hookSuggestion}&rdquo;</p>
+                  <p><span className="text-amber-300">CTA proposé :</span> {result.directive.ctaSuggestion}</p>
+                </div>
+                {result.directive.recentPillarsCovered.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.directive.recentPillarsCovered.map(pillar => (
+                      <span
+                        key={pillar}
+                        className="text-[11px] px-2 py-1 rounded-md bg-amber-900/30 border border-amber-700/30 text-amber-200"
+                      >
+                        {pillar}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Captions per platform */}
             {result.captions.map((c, i) => (
               <CaptionResult key={i} caption={c} clientEmoji={selectedClient?.emoji || '🏢'} clientName={selectedClient?.name || ''} />
@@ -325,54 +338,29 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
                 <span>Status : <span className="text-emerald-400">{result.post.status}</span></span>
               </div>
 
-              {publishError && (
-                <div className="rounded-lg border border-red-700/40 bg-red-950/30 p-3 space-y-2">
-                  <div className="flex items-start gap-2 text-xs text-red-200">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <span className="whitespace-pre-wrap">{publishError}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-1 border-t border-red-800/40">
-                    {clientId && (
-                      <a
-                        href={`/clients/${clientId}/connections`}
-                        className="text-[11px] px-2 py-1 rounded border border-blue-700/40 text-blue-300 hover:bg-blue-900/30"
-                      >
-                        🩺 Diagnostiquer le token
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handlePublish(true)}
-                      className="text-[11px] px-2 py-1 rounded border border-amber-700/40 text-amber-300 hover:bg-amber-900/30"
-                    >
-                      ✉️ Réessayer sans image (texte seul)
-                    </button>
-                  </div>
+              {clientId && (
+                <div className="flex justify-end">
+                  <a
+                    href={`/clients/${clientId}/connections`}
+                    className="text-[11px] text-blue-300 hover:underline"
+                  >
+                    🩺 Vérifier le token Meta du client
+                  </a>
                 </div>
               )}
 
-              {publishSuccess && (
-                <div className="rounded-lg border border-emerald-700/40 bg-emerald-950/30 p-3 text-xs text-emerald-200">
-                  {publishSuccess}
-                </div>
-              )}
+              <PostSupervisor post={result.post} />
 
-              <div className="flex items-center justify-between">
+              <PostActions post={result.post} refresh={false} />
+
+              <div className="flex items-center justify-end pt-2 border-t border-gray-800">
                 <button
-                  onClick={() => handlePublish(false)}
-                  disabled={isPublishing || result.post.status === 'published'}
-                  className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={handleGenerate}
+                  disabled={isPending}
+                  className="flex items-center gap-1 text-purple-400 hover:underline text-xs"
                 >
-                  {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                  {result.post.status === 'published' ? 'Déjà publié' : 'Publier sur Meta'}
+                  <RefreshCw className="w-3.5 h-3.5" /> Régénérer le post
                 </button>
-
-              <button
-                onClick={handleGenerate}
-                disabled={isPending}
-                className="flex items-center gap-1 text-purple-400 hover:underline"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> Régénérer
-              </button>
               </div>
             </div>
           </div>

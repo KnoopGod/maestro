@@ -1,4 +1,4 @@
-export type PostStatus = 'draft' | 'published' | 'failed'
+export type PostStatus = 'draft' | 'ready' | 'scheduled' | 'published' | 'failed'
 export type PostPlatform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 export type PostContentType = 'photo' | 'reel' | 'story'
 
@@ -20,10 +20,21 @@ export interface Post {
   impactScore: number
   impactAnalysis: string | null
   metaPostIds: Record<string, string>
+  supervisorReview: SupervisorReview | null
+  scheduledAt: number | null
   publishedAt: number | null
   error: string | null
   cost: number
   tokensUsed: number
   createdAt: number
   updatedAt: number
+}
+
+export interface SupervisorReview {
+  verdict: 'ready' | 'revise' | 'blocked'
+  score: number
+  summary: string
+  risks: string[]
+  improvements: string[]
+  nextAction: string
 }

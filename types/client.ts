@@ -2,6 +2,15 @@ export type ClientType = 'restaurant' | 'hotel' | 'bar' | 'bnb' | 'restaurant_ho
 export type ClientStatus = 'active' | 'paused' | 'archived'
 export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin' | 'google_business'
 
+export interface ClientStrategy {
+  objective: string
+  contentPillars: string[]
+  platforms: ('instagram' | 'facebook' | 'tiktok' | 'linkedin')[]
+  frequency: string
+  bestTimes: string[]
+  avoid: string[]
+}
+
 export interface Client {
   id: string
   name: string
@@ -15,6 +24,7 @@ export interface Client {
   brandVoiceKeywords: string | null
   brandVoiceAvoid: string | null
   languages: string[]
+  strategy: ClientStrategy
   createdAt: number
   updatedAt: number
 }

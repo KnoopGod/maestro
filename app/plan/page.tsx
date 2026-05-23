@@ -14,8 +14,10 @@ const PLATFORM_INFO: Record<string, { label: string; emoji: string; color: strin
   linkedin:  { label: 'LI', emoji: '💼', color: 'bg-sky-600/20 text-sky-300 border-sky-700/40' },
 }
 
-const STATUS_INFO = {
+const STATUS_INFO: Record<string, { label: string; color: string; dot: string }> = {
   draft:     { label: 'Brouillon', color: 'bg-amber-900/40 text-amber-400 border-amber-800/40',  dot: 'bg-amber-400' },
+  ready:     { label: 'Prêt',      color: 'bg-purple-900/40 text-purple-300 border-purple-700/40', dot: 'bg-purple-400' },
+  scheduled: { label: 'Planifié',  color: 'bg-blue-900/40 text-blue-300 border-blue-800/40',       dot: 'bg-blue-400' },
   published: { label: 'Publié',    color: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/40', dot: 'bg-emerald-400' },
   failed:    { label: 'Échec',     color: 'bg-red-900/40 text-red-400 border-red-800/40',         dot: 'bg-red-400' },
 }

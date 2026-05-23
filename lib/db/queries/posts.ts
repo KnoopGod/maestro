@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
-import type { Post, PostContentType, PostPlatform, PostStatus } from '@/types/post'
+import type { Post, PostContentType, PostPlatform, PostStatus, SupervisorReview } from '@/types/post'
 
 interface PostRow {
   id: string
@@ -19,7 +19,9 @@ interface PostRow {
   image_prompt: string | null
   impact_score: number
   impact_analysis: string | null
+  supervisor_review: string | null
   meta_post_ids: string | null
+  scheduled_at: number | null
   published_at: number | null
   error: string | null
   cost: number
@@ -47,6 +49,8 @@ function mapRow(row: PostRow): Post {
     impactScore: row.impact_score,
     impactAnalysis: row.impact_analysis,
     metaPostIds: row.meta_post_ids ? JSON.parse(row.meta_post_ids) : {},
+    supervisorReview: row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null,
+    scheduledAt: row.scheduled_at,
     publishedAt: row.published_at,
     error: row.error,
     cost: row.cost,
@@ -170,4 +174,56 @@ export async function markPostFailed(id: string, error: string): Promise<Post> {
   const post = await getPost(id)
   if (!post) throw new Error('Failed to update post')
   return post
+}
+
+export async function setPostStatus(id: string, status: PostStatus): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET status = ?, updated_at = ? WHERE id = ?`,
+    args: [status, now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
+
+export async function schedulePost(id: string, scheduledAt: number): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET status = 'scheduled', scheduled_at = ?, error = NULL, updated_at = ? WHERE id = ?`,
+    args: [scheduledAt, now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
+
+export async function unschedulePost(id: string): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET status = 'draft', scheduled_at = NULL, updated_at = ? WHERE id = ?`,
+    args: [now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
+
+export async function setSupervisorReview(id: string, review: SupervisorReview): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET supervisor_review = ?, updated_at = ? WHERE id = ?`,
+    args: [JSON.stringify(review), now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
+
+export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {
+  const rows = await query<PostRow>(
+    `SELECT * FROM posts WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ? ORDER BY scheduled_at ASC`,
+    [now]
+  )
+  return rows.map(mapRow)
 }
