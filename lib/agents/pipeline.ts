@@ -26,8 +26,10 @@ export async function runPostPipeline(input: {
   contentType?: PostContentType
   /** Si vrai, ignore la génération d'image (texte seul). Défaut : false. */
   skipImage?: boolean
+  /** Si fourni, utilise cet asset existant au lieu de générer une image. */
+  existingAsset?: { id: string; url: string }
 }): Promise<PipelineResult> {
-  const { client, userBrief, platforms, contentType = 'photo', skipImage = false } = input
+  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset } = input
   const account = await runAccountDirector({ client, userBrief })
   const effectiveBrief = account.directive.enrichedBrief
   const text = await generateCaption({ client, brief: effectiveBrief, platforms, contentType })
@@ -40,7 +42,9 @@ export async function runPostPipeline(input: {
   const identity = await getVisualIdentity(client.id)
   let image: { assetId?: string; url?: string; prompt?: string; cost: number } = { cost: 0 }
 
-  if (!skipImage) {
+  if (existingAsset) {
+    image = { assetId: existingAsset.id, url: existingAsset.url, cost: 0 }
+  } else if (!skipImage) {
     try {
       image = await generateAndStoreImage({
         client,

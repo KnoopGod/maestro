@@ -5,11 +5,12 @@ import type { PostPlatform } from '@/types/post'
 
 export async function POST(req: Request) {
   try {
-    const { clientId, brief, platforms, contentType = 'photo', skipImage } = await req.json()
+    const { clientId, brief, platforms, contentType = 'photo', skipImage, imageAssetId, imageAssetUrl } = await req.json()
     if (!clientId || !Array.isArray(platforms) || platforms.length === 0) return NextResponse.json({ error: 'clientId et platforms sont requis' }, { status: 400 })
     const client = await getClient(clientId)
     if (!client) return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
-    const result = await runPostPipeline({ client, userBrief: typeof brief === 'string' ? brief : undefined, platforms: platforms as PostPlatform[], contentType, skipImage })
+    const existingAsset = imageAssetId && imageAssetUrl ? { id: imageAssetId as string, url: imageAssetUrl as string } : undefined
+    const result = await runPostPipeline({ client, userBrief: typeof brief === 'string' ? brief : undefined, platforms: platforms as PostPlatform[], contentType, skipImage, existingAsset })
     return NextResponse.json({
       post: result.post,
       captions: result.captions,

@@ -1,13 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Lightbulb, Loader2, Sparkles, Wand2 } from 'lucide-react'
+import { Lightbulb, Loader2, Sparkles, Wand2, Zap, CheckCircle2, XCircle } from 'lucide-react'
 import type { PostIdea } from '@/lib/agents/planner'
 
 interface PostIdeasPanelProps {
   clientId: string | null
-  /** Called when user clicks "Utiliser cette idée" — gives caller the brief to fill into the form. */
   onPick: (idea: PostIdea) => void
+}
+
+interface BulkResult {
+  done: number
+  failed: number
 }
 
 export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
@@ -16,6 +20,10 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
   const [error, setError] = useState('')
   const [meta, setMeta] = useState<{ model: string; cost: number } | null>(null)
 
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState(0)
+  const [bulkResult, setBulkResult] = useState<BulkResult | null>(null)
+
   async function generate() {
     if (!clientId) {
       setError('Sélectionne un client d\'abord')
@@ -23,6 +31,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
     }
     setLoading(true)
     setError('')
+    setBulkResult(null)
     try {
       const res = await fetch('/api/posts/propose', {
         method: 'POST',
@@ -40,6 +49,41 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
     }
   }
 
+  async function generateAllDrafts() {
+    if (!clientId || ideas.length === 0) return
+    setBulkLoading(true)
+    setBulkProgress(0)
+    setBulkResult(null)
+
+    let done = 0
+    let failed = 0
+
+    await Promise.all(
+      ideas.map(async idea => {
+        try {
+          const res = await fetch('/api/studio/generate-post', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              clientId,
+              brief: idea.brief,
+              platforms: idea.platforms.length > 0 ? idea.platforms : ['instagram'],
+              contentType: 'photo',
+            }),
+          })
+          if (res.ok) done++
+          else failed++
+        } catch {
+          failed++
+        }
+        setBulkProgress(prev => prev + 1)
+      })
+    )
+
+    setBulkLoading(false)
+    setBulkResult({ done, failed })
+  }
+
   return (
     <div className="bg-gradient-to-br from-purple-950/30 to-pink-950/20 border border-purple-700/30 rounded-2xl p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -49,7 +93,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
         </div>
         <button
           onClick={generate}
-          disabled={loading || !clientId}
+          disabled={loading || bulkLoading || !clientId}
           className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -94,7 +138,8 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
                 </div>
                 <button
                   onClick={() => onPick(idea)}
-                  className="px-2.5 py-1 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 text-[11px] flex items-center gap-1 flex-shrink-0"
+                  disabled={bulkLoading}
+                  className="px-2.5 py-1 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 text-[11px] flex items-center gap-1 flex-shrink-0 disabled:opacity-40"
                 >
                   <Wand2 className="w-3 h-3" />
                   Utiliser
@@ -102,11 +147,53 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
               </div>
             </div>
           ))}
-          {meta && (
-            <p className="text-[10px] text-gray-600 text-right">
-              {meta.model} · ${meta.cost.toFixed(4)}
-            </p>
-          )}
+
+          {/* Bulk generation footer */}
+          <div className="pt-2 border-t border-gray-800/60 flex items-center justify-between gap-3">
+            {meta && (
+              <p className="text-[10px] text-gray-600">
+                {meta.model} · ${meta.cost.toFixed(4)}
+              </p>
+            )}
+
+            {bulkResult ? (
+              <div className="flex items-center gap-3 text-xs ml-auto">
+                {bulkResult.done > 0 && (
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    {bulkResult.done} draft{bulkResult.done > 1 ? 's' : ''} créé{bulkResult.done > 1 ? 's' : ''}
+                  </span>
+                )}
+                {bulkResult.failed > 0 && (
+                  <span className="flex items-center gap-1 text-red-400">
+                    <XCircle className="w-3.5 h-3.5" />
+                    {bulkResult.failed} échec{bulkResult.failed > 1 ? 's' : ''}
+                  </span>
+                )}
+                <a href="/plan" className="text-purple-400 hover:underline">
+                  Voir les drafts →
+                </a>
+              </div>
+            ) : (
+              <button
+                onClick={generateAllDrafts}
+                disabled={bulkLoading || ideas.length === 0}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/30 border border-emerald-600/30 text-emerald-300 hover:bg-emerald-700/50 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                {bulkLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {bulkProgress}/{ideas.length}
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-3.5 h-3.5" />
+                    Générer les {ideas.length} drafts
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

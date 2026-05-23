@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
-import type { Post, PostContentType, PostPlatform, PostStatus, SupervisorReview } from '@/types/post'
+import type { Post, PostContentType, PostInsights, PostPlatform, PostStatus, SupervisorReview } from '@/types/post'
 
 interface PostRow {
   id: string
@@ -21,6 +21,7 @@ interface PostRow {
   impact_analysis: string | null
   supervisor_review: string | null
   meta_post_ids: string | null
+  meta_insights: string | null
   scheduled_at: number | null
   published_at: number | null
   error: string | null
@@ -49,6 +50,7 @@ function mapRow(row: PostRow): Post {
     impactScore: row.impact_score,
     impactAnalysis: row.impact_analysis,
     metaPostIds: row.meta_post_ids ? JSON.parse(row.meta_post_ids) : {},
+    metaInsights: row.meta_insights ? JSON.parse(row.meta_insights) as PostInsights[] : [],
     supervisorReview: row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null,
     scheduledAt: row.scheduled_at,
     publishedAt: row.published_at,
@@ -218,6 +220,14 @@ export async function setSupervisorReview(id: string, review: SupervisorReview):
   const post = await getPost(id)
   if (!post) throw new Error('Failed to update post')
   return post
+}
+
+export async function savePostInsights(id: string, insights: PostInsights[]): Promise<void> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET meta_insights = ?, updated_at = ? WHERE id = ?`,
+    args: [JSON.stringify(insights), now, id],
+  })
 }
 
 export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {

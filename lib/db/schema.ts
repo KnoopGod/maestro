@@ -147,4 +147,6 @@ export async function initSchema() {
   // Run idempotent migrations (safe to call on every start).
   const { migratePostsScheduling } = await import('./migrations/002-add-scheduling')
   await migratePostsScheduling()
+  const { migratePostInsights } = await import('./migrations/003-add-post-insights')
+  await migratePostInsights()
 }

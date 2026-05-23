@@ -20,6 +20,7 @@ export interface Post {
   impactScore: number
   impactAnalysis: string | null
   metaPostIds: Record<string, string>
+  metaInsights: PostInsights[]
   supervisorReview: SupervisorReview | null
   scheduledAt: number | null
   publishedAt: number | null
@@ -28,6 +29,17 @@ export interface Post {
   tokensUsed: number
   createdAt: number
   updatedAt: number
+}
+
+export interface PostInsights {
+  platform: 'facebook' | 'instagram'
+  likes: number
+  comments: number
+  shares: number
+  reach: number
+  impressions: number
+  saves?: number
+  fetchedAt: number
 }
 
 export interface SupervisorReview {

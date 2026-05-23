@@ -1,8 +1,9 @@
 'use client'
-import { useState, useTransition } from 'react'
-import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target } from 'lucide-react'
+import { useState, useEffect, useTransition } from 'react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2 } from 'lucide-react'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
+import type { ClientAsset } from '@/types/asset'
 import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
 import type { PostIdea } from '@/lib/agents/planner'
@@ -48,7 +49,23 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
+  const [imageMode, setImageMode] = useState<'generate' | 'library'>('generate')
+  const [selectedAsset, setSelectedAsset] = useState<ClientAsset | null>(null)
+  const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
+  const [assetsLoading, setAssetsLoading] = useState(false)
+
   const selectedClient = clients.find(c => c.id === clientId)
+
+  useEffect(() => {
+    setSelectedAsset(null)
+    if (!clientId || imageMode !== 'library') return
+    setAssetsLoading(true)
+    fetch(`/api/clients/${clientId}/assets`)
+      .then(r => r.json())
+      .then(d => setClientAssets((d.assets as ClientAsset[]).filter(a => a.type === 'image' || a.type === 'logo')))
+      .catch(() => setClientAssets([]))
+      .finally(() => setAssetsLoading(false))
+  }, [clientId, imageMode])
 
   function applyIdea(idea: PostIdea) {
     setBrief(idea.brief)
@@ -72,7 +89,14 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
         const res = await fetch('/api/studio/generate-post', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId, brief, platforms, contentType }),
+          body: JSON.stringify({
+            clientId,
+            brief,
+            platforms,
+            contentType,
+            imageAssetId: imageMode === 'library' && selectedAsset ? selectedAsset.id : undefined,
+            imageAssetUrl: imageMode === 'library' && selectedAsset ? selectedAsset.url : undefined,
+          }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Erreur génération')
@@ -192,10 +216,92 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
           </div>
         </div>
 
+        {/* Image mode */}
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+          <label className="text-sm font-semibold text-white mb-3 block">🖼️ Visuel du post</label>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => setImageMode('generate')}
+              className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
+                imageMode === 'generate'
+                  ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <Wand2 className="w-4 h-4" />
+              Générer une image
+            </button>
+            <button
+              type="button"
+              onClick={() => setImageMode('library')}
+              className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
+                imageMode === 'library'
+                  ? 'bg-blue-600/20 border-blue-600/40 text-blue-300'
+                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <ImageIcon className="w-4 h-4" />
+              Depuis la bibliothèque
+            </button>
+          </div>
+
+          {imageMode === 'library' && (
+            <div>
+              {assetsLoading && (
+                <div className="flex items-center justify-center py-6 text-gray-500 text-sm gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Chargement...
+                </div>
+              )}
+              {!assetsLoading && clientAssets.length === 0 && (
+                <p className="text-xs text-gray-500 text-center py-4">
+                  Aucune image dans la bibliothèque de ce client.{' '}
+                  <a href={clientId ? `/clients/${clientId}/library` : '#'} className="text-purple-400 hover:underline">
+                    Uploader des assets →
+                  </a>
+                </p>
+              )}
+              {!assetsLoading && clientAssets.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1">
+                  {clientAssets.map(asset => (
+                    <button
+                      key={asset.id}
+                      type="button"
+                      onClick={() => setSelectedAsset(prev => prev?.id === asset.id ? null : asset)}
+                      className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
+                        selectedAsset?.id === asset.id
+                          ? 'border-blue-500 ring-2 ring-blue-500/30'
+                          : 'border-transparent hover:border-gray-600'
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={asset.thumbnailUrl ?? asset.url}
+                        alt={asset.originalName}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedAsset?.id === asset.id && (
+                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                          <Check className="w-5 h-5 text-white drop-shadow" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {selectedAsset && (
+                <p className="text-xs text-blue-400 mt-2 truncate">
+                  ✓ Sélectionné : {selectedAsset.originalName}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Generate button */}
         <button
           onClick={handleGenerate}
-          disabled={!clientId || platforms.length === 0 || isPending}
+          disabled={!clientId || platforms.length === 0 || isPending || (imageMode === 'library' && !selectedAsset)}
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? (

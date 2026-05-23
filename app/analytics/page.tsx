@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { BarChart3, TrendingUp, Users, Eye } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
+import { PerformancePanel } from '@/components/analytics/PerformancePanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,11 +12,14 @@ export default async function AnalyticsPage() {
   const draft = posts.filter(p => p.status === 'draft')
   const failed = posts.filter(p => p.status === 'failed')
 
-  // Posts per client
   const postsPerClient = clients.map(c => ({
     client: c,
     count: published.filter(p => p.clientId === c.id).length,
   })).sort((a, b) => b.count - a.count)
+
+  const clientsWithPublished = clients.filter(c =>
+    published.some(p => p.clientId === c.id)
+  )
 
   return (
     <div className="space-y-6">
@@ -36,6 +40,9 @@ export default async function AnalyticsPage() {
         <Card label="Échecs"          value={failed.length}    icon={Eye}        color="text-red-400" />
         <Card label="Clients actifs"  value={clients.filter(c => c.status === 'active').length} icon={Users} color="text-purple-400" />
       </div>
+
+      {/* Performance Analyst */}
+      <PerformancePanel clients={clientsWithPublished} />
 
       {/* Per-client breakdown */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
@@ -76,10 +83,6 @@ export default async function AnalyticsPage() {
             })}
           </div>
         )}
-      </div>
-
-      <div className="bg-purple-950/20 border border-purple-700/30 rounded-2xl p-5 text-sm text-gray-300">
-        💡 <strong>À venir</strong> : intégration des métriques Meta (likes, reach, engagement) — disponible une fois que des posts sont publiés et que Meta retourne les insights (24-48h après publication).
       </div>
     </div>
   )
