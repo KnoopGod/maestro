@@ -81,12 +81,20 @@ DATABASE_URL=file:./maestro.db         # Par défaut
 
 ## 🚧 Ce qui reste à faire (TODO ordre de priorité)
 
-1. **Tester en réel la chaîne complète** Studio → Supervisor → Schedule → Cron sur un client live (Pink House / IBRODEPRO). Bloqué uniquement sur action utilisateur Meta token.
-2. **Deploy public** : Vercel ou Cloudflare Tunnel pour avoir un `MAESTRO_PUBLIC_URL` non-localhost (débloque Instagram publishing).
-3. **Performance Analyst agent** — registry décrit l'agent (#7) mais aucune implémentation. Lit les métriques Meta post-publication, propose 3 reco actionnables. À spec via CODEX_SPECS/004.
-4. **Library picker dans Studio** — actuellement Studio génère toujours une nouvelle image. Permettre de choisir une asset existante du client.
-5. **Bulk generation** — bouton « Générer les 5 idées » qui crée 5 drafts en parallèle depuis le PostIdeasPanel.
-6. **Video agent** (Luma/Kling/Runway) — registry décrit l'agent (#8) mais aucune implémentation.
+1. **Connecter un token Meta** sur un client live (Pink House / IBRODEPRO) → `/clients/[id]/connections`. C'est le seul prérequis utilisateur. Tout le reste est automatisé.
+2. **Activer Vercel Blob** dans le dashboard Vercel → Storage → Blob → Connect. Copier `BLOB_READ_WRITE_TOKEN` dans les env vars Vercel. Sans ça, les images générées crashent en prod.
+3. **Vérifier les env vars Vercel** (voir `.env.example`) : `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL` (Turso), `DATABASE_AUTH_TOKEN`, `BLOB_READ_WRITE_TOKEN`, `CRON_SECRET`.
+4. **Video agent** (Luma/Kling/Runway) — registry décrit l'agent (#8) mais aucune implémentation.
+
+## ✅ Livré depuis la dernière session
+
+- **Performance Analyst agent** (#7) — `/analytics` → bouton "Analyser" par client → insights Meta + 3 recommandations Claude
+- **Library picker Studio** — toggle Générer/Bibliothèque dans Studio, grille assets client
+- **Bulk generation** — bouton "Générer les N drafts" dans PostIdeasPanel (parallèle + progress)
+- **Vercel Blob storage** — `lib/storage/local.ts` détecte `BLOB_READ_WRITE_TOKEN` et bascule automatiquement sur Blob en prod. Images AI ont des URLs publiques HTTPS → Meta peut les fetcher sans `MAESTRO_PUBLIC_URL`.
+- **`vercel.json`** — cron `* * * * *` sur `/api/cron/publish-due` (toutes les minutes). Vercel envoie automatiquement `Authorization: Bearer $CRON_SECRET`.
+- **`.env.example`** — toutes les variables documentées.
+- **4 bugs corrigés** (review code) : JSON.parse sans try/catch, race condition fetch assets, setState après unmount, cast string non validé.
 
 ## 🎨 Conventions importantes
 
