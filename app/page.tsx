@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
+import { SetupBanner } from '@/components/SetupBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,9 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
+      {/* Setup banner — disappears once all env vars are configured */}
+      <SetupBanner />
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">{greeting} Bradley 👋</h1>

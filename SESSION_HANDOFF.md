@@ -79,12 +79,16 @@ CRON_SECRET=...                        # Optionnel — protège /api/cron/publis
 DATABASE_URL=file:./maestro.db         # Par défaut
 ```
 
-## 🚧 Ce qui reste à faire (TODO ordre de priorité)
+## 🚧 Actions utilisateur requises (ordre de priorité)
 
-1. **Connecter un token Meta** sur un client live (Pink House / IBRODEPRO) → `/clients/[id]/connections`. C'est le seul prérequis utilisateur. Tout le reste est automatisé.
-2. **Activer Vercel Blob** dans le dashboard Vercel → Storage → Blob → Connect. Copier `BLOB_READ_WRITE_TOKEN` dans les env vars Vercel. Sans ça, les images générées crashent en prod.
-3. **Vérifier les env vars Vercel** (voir `.env.example`) : `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DATABASE_URL` (Turso), `DATABASE_AUTH_TOKEN`, `BLOB_READ_WRITE_TOKEN`, `CRON_SECRET`.
-4. **Video agent** (Luma/Kling/Runway) — registry décrit l'agent (#8) mais aucune implémentation.
+> Le code est 100 % livré. Ce sont des actions de configuration dans des dashboards externes.
+
+1. **Vercel → Storage → Blob** : créer un store et connecter au projet. `BLOB_READ_WRITE_TOKEN` est copié automatiquement. **Sans ça, les images crashent en prod.**
+2. **Env vars Vercel réelles** : `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `CRON_SECRET` (voir `.env.example`).
+3. **Turso** : `turso db create maestro` → copier `DATABASE_URL` (libsql://...) + `DATABASE_AUTH_TOKEN` dans Vercel Settings → Env Vars. Sans ça, la DB SQLite se réinitialise à chaque redéploiement.
+4. **Token Meta** : aller sur `/clients/[id]/connections` (Pink House ou IBRODEPRO) → coller un User Access Token depuis Graph API Explorer avec scopes `pages_manage_posts` + `instagram_content_publish`.
+
+> 💡 Un banner de setup s'affiche sur la home (`/`) tant que ces variables ne sont pas configurées.
 
 ## ✅ Livré depuis la dernière session
 
@@ -92,9 +96,13 @@ DATABASE_URL=file:./maestro.db         # Par défaut
 - **Library picker Studio** — toggle Générer/Bibliothèque dans Studio, grille assets client
 - **Bulk generation** — bouton "Générer les N drafts" dans PostIdeasPanel (parallèle + progress)
 - **Vercel Blob storage** — `lib/storage/local.ts` détecte `BLOB_READ_WRITE_TOKEN` et bascule automatiquement sur Blob en prod. Images AI ont des URLs publiques HTTPS → Meta peut les fetcher sans `MAESTRO_PUBLIC_URL`.
-- **`vercel.json`** — cron `* * * * *` sur `/api/cron/publish-due` (toutes les minutes). Vercel envoie automatiquement `Authorization: Bearer $CRON_SECRET`.
+- **`vercel.json`** — cron `* * * * *` sur `/api/cron/publish-due`. Vercel envoie automatiquement `Authorization: Bearer $CRON_SECRET`.
 - **`.env.example`** — toutes les variables documentées.
 - **4 bugs corrigés** (review code) : JSON.parse sans try/catch, race condition fetch assets, setState après unmount, cast string non validé.
+- **Video Creator agent** (#8, Luma Dream Machine) — `lib/agents/video-creator.ts` + route `animate` + bouton « Animer en Reel » dans AssetCard. Requiert `LUMA_API_KEY`.
+- **Health endpoint** — `GET /api/health` → JSON status de toutes les dépendances + connectivité DB.
+- **Setup banner** — `components/SetupBanner.tsx` sur la home : affiche les env vars manquantes avec liens directs vers les dashboards. Disparaît une fois tout configuré.
+- **Connection registry mis à jour** — Blob + Turso + Video Luma ajoutés comme connexions documentées dans `/connections`.
 
 ## 🎨 Conventions importantes
 
@@ -126,7 +134,7 @@ Codex CLI : `/Users/bradleydave/.local/bin/codex` (v0.133+). Specs déjà exécu
 1. `/clients/[id]/connections` → « Diagnostiquer le token » → vérifier scopes
 2. Si `pages_manage_posts` manque → ajouter use case « Tout gérer sur votre Page » dans Meta Developer
 3. Si erreur #200 → vérifier que l'utilisateur est **Admin** de la page (pas Editor)
-4. Si Instagram échoue → confirmer `MAESTRO_PUBLIC_URL` non-localhost
+4. Si Instagram échoue → confirmer que `BLOB_READ_WRITE_TOKEN` est défini (les URLs Blob sont publiques HTTPS, Meta peut les fetcher directement)
 
 ### Migration DB n'a pas tourné
 - L'init appelle `migratePostsScheduling()` automatiquement
