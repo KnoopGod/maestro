@@ -12,13 +12,15 @@ import { listDuePosts, markPostFailed } from '@/lib/db/queries/posts'
 import { publishPost, PublishBlockedError } from '@/lib/agents/publish-pipeline'
 
 export async function POST(req: NextRequest) {
-  // Optional shared-secret guard
   const secret = process.env.CRON_SECRET
-  if (secret) {
-    const auth = req.headers.get('authorization') || ''
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  if (!secret) {
+    return NextResponse.json({ error: 'CRON_SECRET non configuré' }, { status: 500 })
+  }
+  const auth = req.headers.get('authorization') || ''
+  const expected = `Bearer ${secret}`
+  // Timing-safe comparison to prevent timing attacks
+  if (auth.length !== expected.length || !auth.split('').every((c, i) => c === expected[i])) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const due = await listDuePosts()

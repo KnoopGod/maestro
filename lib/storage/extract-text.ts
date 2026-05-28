@@ -44,6 +44,10 @@ async function extractDocx(filepath: string): Promise<string> {
 }
 
 export function getAbsolutePath(url: string): string {
-  // Convert /uploads/clients/xxx/yyy.pdf → /absolute/path/public/uploads/clients/xxx/yyy.pdf
-  return path.join(process.cwd(), 'public', url.replace(/^\//, ''))
+  const base = path.join(process.cwd(), 'public', 'uploads', 'clients')
+  const resolved = path.resolve(base, url.replace(/^\/uploads\/clients\//, ''))
+  if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+    throw new Error('Chemin de fichier invalide')
+  }
+  return resolved
 }

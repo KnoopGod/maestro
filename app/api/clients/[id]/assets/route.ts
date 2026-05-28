@@ -33,10 +33,26 @@ export async function POST(
     return NextResponse.json({ error: 'Aucun fichier' }, { status: 400 })
   }
 
+  const ALLOWED_MIMES = new Set([
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml',
+    'video/mp4', 'video/webm', 'video/quicktime',
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain', 'text/markdown',
+  ])
+  const MAX_SIZE = 100 * 1024 * 1024 // 100 MB
+
   const created = []
 
   for (const file of files) {
     if (!(file instanceof File) || file.size === 0) continue
+
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: `Fichier trop volumineux (max 100 MB) : ${file.name}` }, { status: 413 })
+    }
+    if (!ALLOWED_MIMES.has(file.type)) {
+      return NextResponse.json({ error: `Type de fichier non autorisé : ${file.type}` }, { status: 415 })
+    }
 
     // Save physically
     const saved = await saveClientFile(clientId, file)
