@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
 
 const PUBLIC_PATHS = [
   '/login',
@@ -12,30 +11,32 @@ const PUBLIC_PATHS = [
   '/uploads',
 ]
 
-function signToken(password: string): string {
-  return createHmac('sha256', password).update('maestro-session').digest('hex')
+async function signToken(password: string): Promise<string> {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  )
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('maestro-session'))
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Allow public paths
   if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
     return NextResponse.next()
   }
 
   const password = process.env.MAESTRO_PASSWORD
-  if (!password) return NextResponse.next() // no auth configured → dev mode
+  if (!password) return NextResponse.next()
 
   const sessionCookie = req.cookies.get('maestro_session')?.value
-  const expected = signToken(password)
+  const expected = await signToken(password)
 
   if (sessionCookie !== expected) {
-    // API routes → 401
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
-    // Pages → redirect to login
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('next', pathname)
     return NextResponse.redirect(loginUrl)

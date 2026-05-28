@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
 
-function signToken(password: string): string {
-  return createHmac('sha256', password).update('maestro-session').digest('hex')
+async function signToken(password: string): Promise<string> {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  )
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('maestro-session'))
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 export async function POST(req: NextRequest) {
@@ -10,11 +14,11 @@ export async function POST(req: NextRequest) {
   const expected = process.env.MAESTRO_PASSWORD
 
   if (!expected || !password || password !== expected) {
-    await new Promise(r => setTimeout(r, 500)) // anti-bruteforce delay
+    await new Promise(r => setTimeout(r, 500))
     return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 })
   }
 
-  const token = signToken(expected)
+  const token = await signToken(expected)
   const res = NextResponse.json({ ok: true })
   res.cookies.set('maestro_session', token, {
     httpOnly: true,
