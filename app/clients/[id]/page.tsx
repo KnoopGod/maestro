@@ -80,7 +80,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Link href={`/clients/${client.id}/library`} className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-xl p-4 hover:border-purple-500/50 transition-all flex items-center gap-3 group">
           <FolderOpen className="w-5 h-5 text-purple-400 flex-shrink-0" />
           <div>
@@ -153,7 +153,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       )}
 
       {/* Brand Voice */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="space-y-4">
           <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
             <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">

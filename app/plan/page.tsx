@@ -77,7 +77,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatBox label="Total" value={posts.length} color="text-white" />
         <StatBox label="Publiés" value={totalPublished} color="text-emerald-400" />
         <StatBox label="Brouillons" value={totalDraft} color="text-amber-400" />

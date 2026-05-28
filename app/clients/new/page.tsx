@@ -40,7 +40,7 @@ export default function NewClientPage() {
             <label htmlFor="type" className="block text-xs text-gray-400 mb-1.5">
               Type <span className="text-red-400">*</span>
             </label>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {(Object.keys(CLIENT_TYPES) as ClientType[]).map(t => {
                 const cfg = CLIENT_TYPES[t]
                 return (

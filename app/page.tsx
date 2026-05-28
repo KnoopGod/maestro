@@ -31,7 +31,7 @@ export default async function HomePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard
           label="Clients actifs"
           value={activeClients.length}
@@ -71,7 +71,7 @@ export default async function HomePage() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
           href="/studio"
           className="group bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-6 hover:border-purple-500/50 transition-all"
@@ -113,7 +113,7 @@ export default async function HomePage() {
             Voir tous ({clients.length}) →
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {clients.slice(0, 6).map(c => (
             <Link
               key={c.id}
@@ -154,8 +154,8 @@ function StatCard({
         <span className={`text-xs ${accent}`}>{label}</span>
         <Icon className={`w-4 h-4 ${accent}`} />
       </div>
-      <div className="text-3xl font-bold text-white">{value}</div>
-      <div className="text-[11px] text-gray-500 mt-1">{sub}</div>
+      <div className="text-2xl lg:text-3xl font-bold text-white">{value}</div>
+      <div className="text-xs text-gray-500 mt-1">{sub}</div>
     </div>
   )
 }

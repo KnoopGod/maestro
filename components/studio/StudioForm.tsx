@@ -114,9 +114,9 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
   }
 
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* LEFT: Inputs */}
-      <div className="col-span-5 space-y-4">
+      <div className="col-span-1 lg:col-span-5 space-y-4">
         {/* Client selector */}
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
           <label className="text-sm font-semibold text-white mb-3 block">👤 Client</label>
@@ -165,7 +165,7 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
                 key={p}
                 onClick={() => setBrief(b => b + (b ? '\n' : '') + p)}
                 type="button"
-                className="text-[11px] px-2 py-1 rounded-md bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700"
+                className="text-xs px-2.5 py-1.5 min-h-[36px] rounded-md bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700"
               >
                 {p}
               </button>
@@ -329,7 +329,7 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
       </div>
 
       {/* RIGHT: Result */}
-      <div className="col-span-7">
+      <div className="col-span-1 lg:col-span-7">
         {!result && !error && !isPending && (
           <div className="bg-gray-900/20 border border-dashed border-gray-700 rounded-2xl p-12 text-center">
             <Sparkles className="w-12 h-12 text-gray-700 mx-auto mb-3" />
