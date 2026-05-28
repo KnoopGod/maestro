@@ -63,14 +63,41 @@ export async function listClients(): Promise<Client[]> {
 
 export async function listClientsWithStats(): Promise<ClientWithStats[]> {
   const clients = await listClients()
-  // For now, stats are mocked. Will plug real analytics later.
-  return clients.map(c => ({
-    ...c,
-    postsThisMonth: Math.floor(Math.random() * 40) + 10,
-    engagement: parseFloat((Math.random() * 5 + 3).toFixed(1)),
-    agentsCount: Math.floor(Math.random() * 4) + 2,
-    connectedPlatforms: Math.floor(Math.random() * 3) + 1,
-  }))
+  if (clients.length === 0) return []
+
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+  const monthTs = startOfMonth.getTime()
+
+  const [postStats, socialStats] = await Promise.all([
+    query<{ client_id: string; posts_this_month: number; avg_impact: number | null }>(
+      `SELECT
+        client_id,
+        COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
+        AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact
+      FROM posts GROUP BY client_id`,
+      [monthTs]
+    ),
+    query<{ client_id: string; count: number }>(
+      `SELECT client_id, COUNT(*) as count FROM client_social_accounts GROUP BY client_id`
+    ),
+  ])
+
+  const postMap = new Map(postStats.map(r => [r.client_id, r]))
+  const socialMap = new Map(socialStats.map(r => [r.client_id, r.count]))
+
+  return clients.map(c => {
+    const ps = postMap.get(c.id)
+    const avgImpact = ps?.avg_impact
+    return {
+      ...c,
+      postsThisMonth: ps?.posts_this_month ?? 0,
+      engagement: avgImpact != null ? parseFloat((avgImpact / 20).toFixed(1)) : 0,
+      agentsCount: socialMap.get(c.id) ?? 0,
+      connectedPlatforms: socialMap.get(c.id) ?? 0,
+    }
+  })
 }
 
 export async function getClient(id: string): Promise<Client | null> {

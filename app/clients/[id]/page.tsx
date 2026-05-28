@@ -1,12 +1,16 @@
+import type React from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
+import { listPosts } from '@/lib/db/queries/posts'
+import { listClientSocialAccounts } from '@/lib/db/queries/social-accounts'
 import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
 import type { StrategyAdvice } from '@/lib/agents/strategy-advisor'
+import type { Post } from '@/types/post'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,11 +19,20 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assets, identity, aiStrategy] = await Promise.all([
+  const [assets, identity, aiStrategy, socialAccounts, clientPosts] = await Promise.all([
     listClientAssets(id),
     getVisualIdentity(id),
     getAiStrategy(id),
+    listClientSocialAccounts(id),
+    listPosts({ clientId: id, limit: 100 }),
   ])
+
+  const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
+  const publishedPosts = clientPosts.filter(p => p.status === 'published')
+  const avgImpact = publishedPosts.length
+    ? publishedPosts.reduce((s, p) => s + p.impactScore, 0) / publishedPosts.length
+    : null
+  const recentPosts = clientPosts.slice(0, 4)
 
   const typeCfg = CLIENT_TYPES[client.type]
   const statusCfg = CLIENT_STATUS[client.status]
@@ -93,7 +106,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <Bot className="w-5 h-5 text-purple-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Agents</div>
-            <div className="text-[11px] text-gray-500">3 actifs</div>
+            <div className="text-[11px] text-gray-500">{clientPosts.length} générations</div>
           </div>
         </Link>
 
@@ -101,7 +114,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <CalendarDays className="w-5 h-5 text-blue-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Calendrier</div>
-            <div className="text-[11px] text-gray-500">8 posts prog.</div>
+            <div className="text-[11px] text-gray-500">{scheduledCount > 0 ? `${scheduledCount} planifié${scheduledCount > 1 ? 's' : ''}` : 'Aucun planifié'}</div>
           </div>
         </Link>
 
@@ -109,7 +122,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <BarChart3 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Analytics</div>
-            <div className="text-[11px] text-gray-500">5.2% engagement</div>
+            <div className="text-[11px] text-gray-500">{avgImpact != null ? `Impact ${avgImpact.toFixed(0)}/100` : 'Aucun post publié'}</div>
           </div>
         </Link>
 
@@ -199,46 +212,108 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <StrategyPanel clientId={id} initial={aiStrategy as StrategyAdvice | null} />
         </div>
 
-        {/* Connected platforms placeholder */}
+        {/* Connected platforms — real data */}
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
           <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
             🔌 Plateformes connectées
           </h2>
           <div className="space-y-2">
             {[
-              { name: 'Instagram', emoji: '📷', connected: false },
-              { name: 'Facebook',  emoji: '👍', connected: false },
-              { name: 'TikTok',    emoji: '🎵', connected: false },
-              { name: 'Google Business', emoji: '📍', connected: false },
-            ].map(p => (
-              <div key={p.name} className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-950/40 border border-gray-800">
-                <span className="text-lg">{p.emoji}</span>
-                <span className="text-sm text-gray-300 flex-1">{p.name}</span>
-                <button className="text-xs px-2.5 py-1 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 transition-colors">
-                  Connecter
-                </button>
-              </div>
-            ))}
+              { platform: 'facebook'        as const, name: 'Facebook',         emoji: '👍' },
+              { platform: 'instagram'       as const, name: 'Instagram',        emoji: '📷' },
+              { platform: 'tiktok'          as const, name: 'TikTok',           emoji: '🎵' },
+              { platform: 'google_business' as const, name: 'Google Business',  emoji: '📍' },
+            ].map(p => {
+              const account = socialAccounts.find(a => a.platform === p.platform)
+              return (
+                <div key={p.platform} className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-950/40 border border-gray-800">
+                  <span className="text-lg">{p.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-300">{p.name}</div>
+                    {account?.handle && (
+                      <div className="text-[10px] text-gray-500 truncate">{account.handle}</div>
+                    )}
+                  </div>
+                  {account ? (
+                    <span className="text-[10px] text-emerald-400 bg-emerald-950/30 border border-emerald-700/40 rounded-full px-2 py-0.5">
+                      ✓ Connecté
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/clients/${client.id}/connections`}
+                      className="text-xs px-2.5 py-1 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 transition-colors"
+                    >
+                      Connecter
+                    </Link>
+                  )}
+                </div>
+              )
+            })}
           </div>
-          <p className="text-[11px] text-gray-600 mt-3">
-            La connexion OAuth des comptes sociaux sera disponible bientôt.
-          </p>
+          {socialAccounts.length === 0 && (
+            <p className="text-[11px] text-gray-600 mt-3">
+              Connecte un compte dans{' '}
+              <Link href={`/clients/${client.id}/connections`} className="text-purple-400 hover:underline">
+                Connexions
+              </Link>{' '}pour publier automatiquement.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Recent activity placeholder */}
+      {/* Recent activity — real posts */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-        <h2 className="text-sm font-semibold text-white mb-3">📊 Activité récente</h2>
-        <div className="text-center py-8 text-gray-500 text-sm">
-          Pas encore de posts publiés pour ce client.
-          <div className="mt-2">
-            <Link href={`/studio?client=${client.id}`} className="inline-flex items-center gap-1.5 text-purple-400 hover:underline">
-              <Sparkles className="w-4 h-4" />
-              Créer le premier post
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-white">📊 Activité récente</h2>
+          {clientPosts.length > 0 && (
+            <Link href={`/plan?client=${client.id}`} className="text-xs text-purple-400 hover:underline">
+              Voir tout ({clientPosts.length}) →
             </Link>
-          </div>
+          )}
         </div>
+        {recentPosts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            Pas encore de posts pour ce client.
+            <div className="mt-2">
+              <Link href={`/studio?client=${client.id}`} className="inline-flex items-center gap-1.5 text-purple-400 hover:underline">
+                <Sparkles className="w-4 h-4" />
+                Créer le premier post
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {recentPosts.map(p => <RecentPostRow key={p.id} post={p} />)}
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+const POST_STATUS_CFG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  draft:     { label: 'Brouillon', icon: Clock,         color: 'text-amber-400' },
+  ready:     { label: 'Prêt',      icon: Sparkles,      color: 'text-purple-400' },
+  scheduled: { label: 'Planifié',  icon: CalendarDays,  color: 'text-blue-400' },
+  published: { label: 'Publié',    icon: CheckCircle2,  color: 'text-emerald-400' },
+  failed:    { label: 'Échec',     icon: AlertCircle,   color: 'text-red-400' },
+}
+
+function RecentPostRow({ post }: { post: Post }) {
+  const cfg = POST_STATUS_CFG[post.status] ?? POST_STATUS_CFG.draft
+  const Icon = cfg.icon
+  const when = new Date(post.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+  return (
+    <Link
+      href={`/validation#${post.id}`}
+      className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/40 transition-colors"
+    >
+      <Icon className={`w-4 h-4 flex-shrink-0 ${cfg.color}`} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm text-white truncate">{post.brief || post.caption.substring(0, 60)}</div>
+        <div className="text-[10px] text-gray-500">{post.platforms.join(' + ')} · {when}</div>
+      </div>
+      <span className={`text-[10px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
+    </Link>
   )
 }

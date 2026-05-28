@@ -36,8 +36,8 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
           <div className="text-[10px] text-gray-500">engagement</div>
         </div>
         <div>
-          <div className="text-sm font-bold text-purple-400">{client.agentsCount}</div>
-          <div className="text-[10px] text-gray-500">agents</div>
+          <div className="text-sm font-bold text-purple-400">{client.connectedPlatforms}</div>
+          <div className="text-[10px] text-gray-500">plateformes</div>
         </div>
       </div>
     </Link>

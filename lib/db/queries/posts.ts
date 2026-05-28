@@ -230,6 +230,15 @@ export async function savePostInsights(id: string, insights: PostInsights[]): Pr
   })
 }
 
+export async function countPostsByStatus(statuses: PostStatus[]): Promise<number> {
+  const placeholders = statuses.map(() => '?').join(',')
+  const row = await queryOne<{ count: number }>(
+    `SELECT COUNT(*) as count FROM posts WHERE status IN (${placeholders})`,
+    statuses
+  )
+  return row?.count ?? 0
+}
+
 export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {
   const rows = await query<PostRow>(
     `SELECT * FROM posts WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ? ORDER BY scheduled_at ASC`,

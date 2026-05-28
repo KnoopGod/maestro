@@ -34,7 +34,7 @@ export default async function AnalyticsPage() {
       </div>
 
       {/* Top stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card label="Posts publiés"   value={published.length} icon={TrendingUp} color="text-emerald-400" />
         <Card label="Brouillons"      value={draft.length}     icon={BarChart3}  color="text-amber-400" />
         <Card label="Échecs"          value={failed.length}    icon={Eye}        color="text-red-400" />

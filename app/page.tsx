@@ -1,12 +1,16 @@
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
+import { countPostsByStatus } from '@/lib/db/queries/posts'
 import { SetupBanner } from '@/components/SetupBanner'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const clients = await listClientsWithStats()
+  const [clients, toValidate] = await Promise.all([
+    listClientsWithStats(),
+    countPostsByStatus(['draft', 'ready']),
+  ])
   const activeClients = clients.filter(c => c.status === 'active')
   const totalPosts = clients.reduce((sum, c) => sum + c.postsThisMonth, 0)
   const avgEngagement = clients.length
@@ -63,12 +67,12 @@ export default async function HomePage() {
         />
         <StatCard
           label="À valider"
-          value={0}
+          value={toValidate}
           icon={CalendarDays}
           color="from-amber-950/40"
           accent="text-amber-300"
           border="border-amber-800/30"
-          sub="Aucun post en attente"
+          sub={toValidate === 0 ? 'Aucun post en attente' : `${toValidate} post${toValidate > 1 ? 's' : ''} à relire`}
         />
         </div>
       </section>
@@ -133,7 +137,7 @@ export default async function HomePage() {
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white truncate">{c.name}</div>
                 <div className="text-[11px] text-gray-500">
-                  {c.city || '—'} · {c.engagement}% engagement
+                  {c.city || '—'}{c.engagement > 0 ? ` · ${c.engagement}% impact` : ''}
                 </div>
               </div>
             </Link>
