@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CheckCircle2, Circle, Plug, ExternalLink } from 'lucide-react'
+import { Bot, CheckCircle2, Circle, CreditCard, ExternalLink, Plug } from 'lucide-react'
 import { CONNECTIONS } from '@/lib/connection-registry'
 
 export const dynamic = 'force-dynamic'
@@ -15,10 +15,19 @@ const SCOPE_INFO = {
   'per-client': { label: 'Par client', color: 'bg-blue-900/30 text-blue-300 border-blue-700/40' },
 }
 
+const CATEGORY_INFO = {
+  ai:         { label: 'IA', color: 'bg-fuchsia-900/30 text-fuchsia-300 border-fuchsia-700/40' },
+  social:     { label: 'Social API', color: 'bg-blue-900/30 text-blue-300 border-blue-700/40' },
+  infra:      { label: 'Infrastructure', color: 'bg-emerald-900/30 text-emerald-300 border-emerald-700/40' },
+  automation: { label: 'Automatisation', color: 'bg-amber-900/30 text-amber-300 border-amber-700/40' },
+}
+
 export default function ConnectionsPage() {
   const configured = CONNECTIONS.filter(c => c.isConfigured?.()).length
   const required = CONNECTIONS.filter(c => c.status === 'required')
   const requiredOk = required.filter(c => c.isConfigured?.()).length
+  const aiConnections = CONNECTIONS.filter(c => c.category === 'ai')
+  const paidConnections = CONNECTIONS.filter(c => /payante|crédit|coût|upgrade/i.test(c.credits))
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -43,8 +52,71 @@ export default function ConnectionsPage() {
         </div>
       </div>
 
+      {/* AI/API cockpit */}
+      <section className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Bot className="w-4 h-4 text-purple-400" />
+              Cockpit IA & API
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Vue spéciale pour savoir quoi connecter, pourquoi, quel agent l’utilise et si des crédits sont nécessaires.
+            </p>
+          </div>
+          <div className="text-right text-xs text-gray-500">
+            <div><span className="text-fuchsia-300">{aiConnections.length}</span> services IA</div>
+            <div><span className="text-amber-300">{paidConnections.length}</span> avec crédits/coûts à surveiller</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {CONNECTIONS.map(connection => {
+            const category = CATEGORY_INFO[connection.category]
+            const isOk = connection.isConfigured?.()
+            return (
+              <div key={connection.id} className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">{connection.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-semibold text-white">{connection.name}</h3>
+                      <span className={`text-[10px] border rounded-full px-2 py-0.5 ${category.color}`}>
+                        {category.label}
+                      </span>
+                      {isOk ? (
+                        <span className="text-[10px] border rounded-full px-2 py-0.5 bg-emerald-900/30 text-emerald-300 border-emerald-700/40">
+                          connecté
+                        </span>
+                      ) : (
+                        <span className="text-[10px] border rounded-full px-2 py-0.5 bg-gray-800 text-gray-400 border-gray-700">
+                          à configurer
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">{connection.purpose}</p>
+
+                    <div className="mt-3 grid grid-cols-1 gap-2 text-[11px]">
+                      <InfoRow label="Spécialité" value={connection.specialty} />
+                      <InfoRow label="Agents" value={connection.usedBy.join(' · ')} />
+                      <div className="rounded-lg border border-amber-800/30 bg-amber-950/15 p-2">
+                        <div className="text-[10px] uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1">
+                          <CreditCard className="w-3 h-3" />
+                          Crédit / coût
+                        </div>
+                        <p className="text-amber-100/80">{connection.credits}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
       {/* Explainer */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-purple-950/30 border border-purple-700/30 rounded-xl p-4">
           <h3 className="text-sm font-semibold text-white mb-1">🌐 Connexions globales</h3>
           <p className="text-xs text-gray-400">
@@ -119,6 +191,16 @@ export default function ConnectionsPage() {
                 <span className={`text-[10px] border rounded-full px-2 py-0.5 ${SCOPE_INFO[connection.scope].color}`}>
                   {SCOPE_INFO[connection.scope].label}
                 </span>
+                <span className={`text-[10px] border rounded-full px-2 py-0.5 ${CATEGORY_INFO[connection.category].color}`}>
+                  {CATEGORY_INFO[connection.category].label}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 mb-3">
+                <InfoRow label="But" value={connection.purpose} />
+                <InfoRow label="Spécialité" value={connection.specialty} />
+                <InfoRow label="Utilisé par" value={connection.usedBy.join(' · ')} />
+                <InfoRow label="Crédit / coût" value={connection.credits} highlight />
               </div>
 
               <div className="mb-3">
@@ -148,6 +230,18 @@ export default function ConnectionsPage() {
                 <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Test de validation</div>
                 <p className="text-xs text-gray-400 italic">{connection.test}</p>
               </div>
+
+              {connection.providerUrl && (
+                <a
+                  href={connection.providerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs text-purple-300 hover:text-purple-200"
+                >
+                  Ouvrir le fournisseur
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </article>
           )
         })}
@@ -169,6 +263,29 @@ export default function ConnectionsPage() {
           Voir tous les clients →
         </Link>
       </div>
+    </div>
+  )
+}
+
+function InfoRow({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string
+  value: string
+  highlight?: boolean
+}) {
+  return (
+    <div className={`rounded-lg border p-2 ${
+      highlight
+        ? 'border-amber-800/30 bg-amber-950/15'
+        : 'border-gray-800 bg-gray-950/30'
+    }`}>
+      <div className={`text-[10px] uppercase tracking-wider mb-1 ${highlight ? 'text-amber-400' : 'text-gray-500'}`}>
+        {label}
+      </div>
+      <p className={`text-xs ${highlight ? 'text-amber-100/80' : 'text-gray-300'}`}>{value}</p>
     </div>
   )
 }

@@ -6,14 +6,21 @@
  */
 export type ConnectionStatus = 'required' | 'recommended' | 'later'
 export type ConnectionScope = 'global' | 'per-client'
+export type ConnectionCategory = 'ai' | 'social' | 'infra' | 'automation'
 
 export interface ConnectionStep {
   id: string
   name: string
   emoji: string
+  category: ConnectionCategory
   status: ConnectionStatus
   scope: ConnectionScope
   unlocks: string
+  purpose: string
+  specialty: string
+  usedBy: string[]
+  credits: string
+  providerUrl?: string
   envVars: string[]
   guide: string[]
   test: string
@@ -26,9 +33,15 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'anthropic',
     name: 'Anthropic · Claude',
     emoji: '🧠',
+    category: 'ai',
     status: 'required',
     scope: 'global',
     unlocks: 'Stratégie, captions, idées de posts, supervision qualité, analyse DA.',
+    purpose: 'Donner à Maestro son niveau agence : stratégie, raisonnement, critique qualité et analyse de marque.',
+    specialty: 'Raisonnement long, stratégie marketing, supervision éditoriale, analyse de documents et vision.',
+    usedBy: ['Strategy Director', 'Social Expert', 'Claude Supervisor', 'DA Curator', 'Vision Analyzer'],
+    credits: 'API payante. Prévoir un petit budget mensuel selon volume ; commencer avec un plafond bas côté console Anthropic.',
+    providerUrl: 'https://console.anthropic.com/settings/keys',
     envVars: ['ANTHROPIC_API_KEY'],
     guide: [
       'Créer une clé sur console.anthropic.com → API Keys.',
@@ -42,10 +55,16 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'openai',
     name: 'OpenAI · Images',
     emoji: '🎨',
+    category: 'ai',
     status: 'required',
     scope: 'global',
     unlocks: 'Génération des visuels carrés Facebook et Instagram (gpt-image-1).',
-    envVars: ['OPENAI_API_KEY'],
+    purpose: 'Créer les images IA des posts quand il manque une photo réelle adaptée.',
+    specialty: 'Génération d’images, variantes visuelles, assets carrés prêts pour Facebook/Instagram.',
+    usedBy: ['Visual Director', 'Image Generator'],
+    credits: 'API payante à l’image. Recommandé : crédit initial 5 à 20 $ pour valider le MVP.',
+    providerUrl: 'https://platform.openai.com/api-keys',
+    envVars: ['OPENAI_API_KEY', 'OPENAI_IMAGE_MODEL'],
     guide: [
       'Créer une clé sur platform.openai.com → API Keys.',
       'Ajouter OPENAI_API_KEY=sk-... dans .env.local.',
@@ -58,9 +77,15 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'meta',
     name: 'Meta · Graph API',
     emoji: '👍',
+    category: 'social',
     status: 'required',
     scope: 'per-client',
     unlocks: 'Publication réelle sur Facebook + Instagram depuis Maestro.',
+    purpose: 'Publier automatiquement les posts validés sur les pages Facebook et comptes Instagram Business des clients.',
+    specialty: 'Connexion page Facebook, Instagram Business, test de token, publication photo/text.',
+    usedBy: ['Publisher · Meta'],
+    credits: 'Gratuit côté API, mais demande une app Meta, des permissions et parfois une validation Meta.',
+    providerUrl: 'https://developers.facebook.com/apps',
     envVars: ['META_APP_ID', 'META_APP_SECRET'],
     guide: [
       'Créer une app Business sur developers.facebook.com.',
@@ -76,9 +101,15 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'storage',
     name: 'Stockage · Vercel Blob',
     emoji: '🗄️',
+    category: 'infra',
     status: 'required',
     scope: 'global',
     unlocks: 'Images générées accessibles publiquement par Meta. Sans Blob, la génération d\'images crashe sur Vercel (filesystem read-only).',
+    purpose: 'Héberger les images générées ou uploadées sur des URLs publiques que Meta peut lire.',
+    specialty: 'Stockage médias public, URLs HTTPS, compatibilité Vercel production.',
+    usedBy: ['Image Generator', 'Video Creator', 'Publisher · Meta', 'Library'],
+    credits: 'Souvent inclus/faible coût au début. Surveiller le stockage et la bande passante si beaucoup de médias.',
+    providerUrl: 'https://vercel.com/storage/blob',
     envVars: ['BLOB_READ_WRITE_TOKEN'],
     guide: [
       'Dans le dashboard Vercel → Storage → Blob → Create Store → Connect to Project.',
@@ -93,9 +124,15 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'turso',
     name: 'Base de données · Turso',
     emoji: '🗃️',
+    category: 'infra',
     status: 'required',
     scope: 'global',
     unlocks: 'Persistance des données entre les déploiements Vercel. Sans Turso, la DB SQLite locale est réinitialisée à chaque redéploiement.',
+    purpose: 'Sauvegarder durablement clients, posts, connexions, assets, stratégies, coûts et historiques.',
+    specialty: 'Base LibSQL distante compatible SQLite, simple à brancher sur Vercel.',
+    usedBy: ['Toute l’application', 'Agents runtime', 'Analytics', 'Calendar'],
+    credits: 'Plan gratuit suffisant au début ; prévoir upgrade quand clients, assets et historique augmentent.',
+    providerUrl: 'https://turso.tech',
     envVars: ['DATABASE_URL', 'DATABASE_AUTH_TOKEN'],
     guide: [
       'Créer un compte sur turso.tech et installer la CLI : brew install tursodatabase/tap/turso',
@@ -115,9 +152,15 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'cron',
     name: 'Cron · Publication planifiée',
     emoji: '⏰',
+    category: 'automation',
     status: 'recommended',
     scope: 'global',
     unlocks: 'Publication automatique des posts planifiés à l\'heure dite.',
+    purpose: 'Déclencher la publication des posts planifiés sans action manuelle.',
+    specialty: 'Appel sécurisé de /api/cron/publish-due, publication différée, contrôle des posts dus.',
+    usedBy: ['Publisher · Meta', 'Calendar'],
+    credits: 'Gratuit ou inclus selon Vercel/GitHub Actions. Besoin surtout d’un CRON_SECRET.',
+    providerUrl: 'https://vercel.com/docs/cron-jobs',
     envVars: ['CRON_SECRET'],
     guide: [
       'Définir CRON_SECRET=un-mot-de-passe-aleatoire dans .env.local.',
@@ -132,9 +175,15 @@ export const CONNECTIONS: ConnectionStep[] = [
     id: 'video',
     name: 'Vidéo IA · Luma Dream Machine',
     emoji: '🎬',
+    category: 'ai',
     status: 'recommended',
     scope: 'global',
     unlocks: 'Reels 9:16 générés depuis les visuels validés — bouton « Animer en Reel » dans la bibliothèque.',
+    purpose: 'Transformer les images validées en vidéos courtes pour Reels, Stories et TikTok.',
+    specialty: 'Image-to-video, mouvements courts, reels 9:16, déclinaisons animées.',
+    usedBy: ['Video Creator'],
+    credits: 'API payante/crédits vidéo. À brancher après stabilisation texte + image + Meta.',
+    providerUrl: 'https://lumalabs.ai',
     envVars: ['LUMA_API_KEY'],
     guide: [
       'L\'agent Video Creator est implémenté (lib/agents/video-creator.ts).',
