@@ -48,13 +48,19 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">Mot de passe</label>
+            {/* WCAG 3.3.2 — label explicitement associé */}
+            <label htmlFor="login-password" className="block text-xs text-gray-400 mb-1.5">
+              Mot de passe
+            </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <Lock aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                aria-describedby={error ? 'login-error' : undefined}
+                aria-invalid={!!error}
                 className="w-full bg-gray-950 border border-gray-700 rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-600 transition-colors"
                 placeholder="••••••••"
                 autoFocus
@@ -62,8 +68,11 @@ function LoginForm() {
             </div>
           </div>
 
+          {/* WCAG 3.3.1 — message d'erreur avec role="alert" */}
           {error && (
-            <p className="text-xs text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg px-3 py-2">{error}</p>
+            <p id="login-error" role="alert" className="text-xs text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg px-3 py-2">
+              {error}
+            </p>
           )}
 
           <button

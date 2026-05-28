@@ -133,3 +133,29 @@
     @apply font-sans;
   }
 }
+
+/* WCAG 2.1 AA — Critère 2.4.7 : indicateurs de focus visibles */
+:focus-visible {
+  outline: 2px solid #a78bfa !important; /* purple-400, visible sur fond sombre */
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* Lien "Aller au contenu" — visible uniquement au clavier */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 0.5rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: top 0.1s;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}

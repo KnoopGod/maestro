@@ -43,20 +43,21 @@ function NavItem({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group
+      aria-current={active ? 'page' : undefined}
+      className={`flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all group
         ${active
           ? 'bg-purple-600/20 text-purple-300 border border-purple-500/20'
           : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 border border-transparent'
         }`}
     >
-      <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
+      <Icon aria-hidden="true" className={`w-4 h-4 flex-shrink-0 ${active ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
       <span className="flex-1">{label}</span>
       {badge && (
-        <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeColor ?? 'bg-purple-600/30 text-purple-300'}`}>
+        <span aria-hidden="true" className={`text-[10px] px-1.5 py-0.5 rounded ${badgeColor ?? 'bg-purple-600/30 text-purple-300'}`}>
           {badge}
         </span>
       )}
-      {dot && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+      {dot && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
     </Link>
   )
 }
@@ -66,7 +67,7 @@ export function Sidebar() {
     <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-gray-950/90 backdrop-blur-xl border-r border-gray-800/50 flex-col z-40">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-800/50">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-purple-900 flex items-center justify-center shadow-lg shadow-purple-900/30">
+        <div aria-hidden="true" className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-purple-900 flex items-center justify-center shadow-lg shadow-purple-900/30">
           <Music2 className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -76,17 +77,17 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav aria-label="Navigation principale" className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {NAV_PRIMARY.map(item => <NavItem key={item.href} {...item} />)}
 
-        <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
+        <p className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-semibold" aria-hidden="true">
           Travail
-        </div>
+        </p>
         {NAV_WORK.map(item => <NavItem key={item.href} {...item} />)}
 
-        <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
+        <p className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-widest text-gray-400 font-semibold" aria-hidden="true">
           Système
-        </div>
+        </p>
         {NAV_SYSTEM.map(item => <NavItem key={item.href} {...item} />)}
       </nav>
 

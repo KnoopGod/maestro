@@ -24,14 +24,16 @@ export default async function HomePage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">{greeting} Bradley 👋</h1>
+        <h1 className="text-3xl font-bold text-white">{greeting} Bradley <span aria-hidden="true">👋</span></h1>
         <p className="text-gray-400 mt-1">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+      {/* Stats — WCAG 1.3.1 : section avec titre */}
+      <section aria-labelledby="stats-heading">
+        <h2 id="stats-heading" className="sr-only">Statistiques du tableau de bord</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard
           label="Clients actifs"
           value={activeClients.length}
@@ -68,47 +70,52 @@ export default async function HomePage() {
           border="border-amber-800/30"
           sub="Aucun post en attente"
         />
-      </div>
+        </div>
+      </section>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link
-          href="/studio"
-          className="group bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-6 hover:border-purple-500/50 transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-2xl shadow-lg">
-              ✨
+      <section aria-labelledby="actions-heading">
+        <h2 id="actions-heading" className="sr-only">Actions rapides</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link
+            href="/studio"
+            className="group bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-6 hover:border-purple-500/50 transition-all"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div aria-hidden="true" className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-2xl shadow-lg">
+                ✨
+              </div>
+              <ArrowRight aria-hidden="true" className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
             </div>
-            <ArrowRight className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
-          </div>
-          <h3 className="text-lg font-semibold text-white">Créer un post</h3>
-          <p className="text-sm text-gray-400 mt-1">
-            Texte, image, vidéo — générés par tes agents spécialisés
-          </p>
-        </Link>
+            <h3 className="text-lg font-semibold text-white">Créer un post</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Texte, image, vidéo — générés par tes agents spécialisés
+            </p>
+          </Link>
 
-        <Link
-          href="/clients"
-          className="group bg-gradient-to-br from-blue-950/40 to-cyan-950/30 border border-blue-700/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all"
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-2xl shadow-lg">
-              👥
+          <Link
+            href="/clients"
+            className="group bg-gradient-to-br from-blue-950/40 to-cyan-950/30 border border-blue-700/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div aria-hidden="true" className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-2xl shadow-lg">
+                👥
+              </div>
+              <ArrowRight aria-hidden="true" className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
             </div>
-            <ArrowRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
-          </div>
-          <h3 className="text-lg font-semibold text-white">Gérer mes clients</h3>
-          <p className="text-sm text-gray-400 mt-1">
-            {clients.length} clients HORECA — voir leurs stratégies et performances
-          </p>
-        </Link>
-      </div>
+            <h3 className="text-lg font-semibold text-white">Gérer mes clients</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              {clients.length} clients HORECA — voir leurs stratégies et performances
+            </p>
+          </Link>
+        </div>
+      </section>
 
       {/* Recent clients */}
+      <section aria-labelledby="clients-heading">
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">📋 Tes clients</h2>
+          <h2 id="clients-heading" className="text-lg font-semibold text-white"><span aria-hidden="true">📋</span> Tes clients</h2>
           <Link href="/clients" className="text-sm text-purple-400 hover:underline">
             Voir tous ({clients.length}) →
           </Link>
@@ -133,6 +140,7 @@ export default async function HomePage() {
           ))}
         </div>
       </div>
+      </section>
     </div>
   )
 }
@@ -152,10 +160,10 @@ function StatCard({
     <div className={`bg-gradient-to-br ${color} to-gray-900/40 border ${border} rounded-xl p-5 hover:border-opacity-50 transition-colors`}>
       <div className="flex items-center justify-between mb-2">
         <span className={`text-xs ${accent}`}>{label}</span>
-        <Icon className={`w-4 h-4 ${accent}`} />
+        <Icon aria-hidden="true" className={`w-4 h-4 ${accent}`} />
       </div>
-      <div className="text-2xl lg:text-3xl font-bold text-white">{value}</div>
-      <div className="text-xs text-gray-500 mt-1">{sub}</div>
+      <div className="text-2xl lg:text-3xl font-bold text-white" aria-label={`${value} — ${label}`}>{value}</div>
+      <div className="text-xs text-gray-400 mt-1">{sub}</div>
     </div>
   )
 }
