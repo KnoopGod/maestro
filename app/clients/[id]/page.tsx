@@ -6,6 +6,8 @@ import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClientSocialAccounts } from '@/lib/db/queries/social-accounts'
+import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
+import type { AgentJob } from '@/lib/db/queries/agent-jobs'
 import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
@@ -19,12 +21,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assets, identity, aiStrategy, socialAccounts, clientPosts] = await Promise.all([
+  const [assets, identity, aiStrategy, socialAccounts, clientPosts, clientJobs] = await Promise.all([
     listClientAssets(id),
     getVisualIdentity(id),
     getAiStrategy(id),
     listClientSocialAccounts(id),
     listPosts({ clientId: id, limit: 100 }),
+    listJobsByClient(id, 8),
   ])
 
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
@@ -264,7 +267,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       {/* Recent activity — real posts */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-white">📊 Activité récente</h2>
+          <h2 className="text-sm font-semibold text-white">📊 Posts récents</h2>
           {clientPosts.length > 0 && (
             <Link href={`/plan?client=${client.id}`} className="text-xs text-purple-400 hover:underline">
               Voir tout ({clientPosts.length}) →
@@ -284,6 +287,30 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         ) : (
           <div className="space-y-2">
             {recentPosts.map(p => <RecentPostRow key={p.id} post={p} />)}
+          </div>
+        )}
+      </div>
+
+      {/* Agent jobs for this client */}
+      <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Bot className="w-4 h-4 text-purple-400" />
+            Activité agents
+          </h2>
+          {clientJobs.length > 0 && (
+            <Link href="/agents" className="text-xs text-purple-400 hover:underline">
+              Tous les jobs →
+            </Link>
+          )}
+        </div>
+        {clientJobs.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">
+            Aucun job agent pour ce client.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {clientJobs.map(j => <AgentJobRow key={j.id} job={j} />)}
           </div>
         )}
       </div>
@@ -312,6 +339,31 @@ function RecentPostRow({ post }: { post: Post }) {
       <div className="flex-1 min-w-0">
         <div className="text-sm text-white truncate">{post.brief || post.caption.substring(0, 60)}</div>
         <div className="text-[10px] text-gray-500">{post.platforms.join(' + ')} · {when}</div>
+      </div>
+      <span className={`text-[10px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
+    </Link>
+  )
+}
+
+const JOB_STATUS_CFG = {
+  running:             { label: 'En cours',          dot: 'bg-purple-400 animate-pulse', color: 'text-purple-300' },
+  completed:           { label: 'Terminé',            dot: 'bg-emerald-400',              color: 'text-emerald-300' },
+  failed:              { label: 'Erreur',             dot: 'bg-red-400',                  color: 'text-red-300' },
+  awaiting_validation: { label: 'Validation requise', dot: 'bg-amber-400 animate-pulse',  color: 'text-amber-300' },
+}
+
+function AgentJobRow({ job }: { job: AgentJob }) {
+  const cfg = JOB_STATUS_CFG[job.status]
+  const when = new Date(job.startedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return (
+    <Link
+      href={`/agents/jobs/${job.id}`}
+      className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/40 transition-colors"
+    >
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm text-white truncate">{job.briefSummary ?? 'Job'}</div>
+        <div className="text-[10px] text-gray-500">{when}</div>
       </div>
       <span className={`text-[10px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
     </Link>

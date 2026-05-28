@@ -230,6 +230,15 @@ export async function savePostInsights(id: string, insights: PostInsights[]): Pr
   })
 }
 
+export async function searchPosts(q: string): Promise<Post[]> {
+  const like = `%${q}%`
+  const rows = await query<PostRow>(
+    `SELECT * FROM posts WHERE brief LIKE ? OR caption LIKE ? ORDER BY created_at DESC LIMIT 20`,
+    [like, like]
+  )
+  return rows.map(mapRow)
+}
+
 export async function countPostsByStatus(statuses: PostStatus[]): Promise<number> {
   const placeholders = statuses.map(() => '?').join(',')
   const row = await queryOne<{ count: number }>(

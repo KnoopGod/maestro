@@ -213,6 +213,15 @@ export async function updateClient(
   return getClient(id)
 }
 
+export async function searchClients(q: string): Promise<Client[]> {
+  const like = `%${q}%`
+  const rows = await query<ClientRow>(
+    `SELECT * FROM clients WHERE name LIKE ? OR city LIKE ? OR description LIKE ? ORDER BY name ASC LIMIT 20`,
+    [like, like, like]
+  )
+  return rows.map(mapRow)
+}
+
 export async function deleteClient(id: string): Promise<void> {
   await db.execute({
     sql: `DELETE FROM clients WHERE id = ?`,
