@@ -1,151 +1,205 @@
-# Session handoff — Maestro
+# Session Handoff — Maestro
 
-> **Pour Claude (toute future session)** : ce document te donne le contexte complet pour reprendre le travail sur Maestro. Lis-le en entier avant d'agir. Le reste du projet est documenté dans [CLAUDE.md](./CLAUDE.md) — lis-le aussi.
+> **Pour Claude (toute future session)** : lis ce document + `CLAUDE.md` en entier avant d'agir.
 
-**Dernière mise à jour** : 23 mai 2026
-**Propriétaire** : Bradley Dave (knoopleague@gmail.com)
-**Repo** : https://github.com/KnoopGod/maestro (privé)
+**Dernière mise à jour** : 28 mai 2026  
+**Propriétaire** : Bradley Dave (knoopleague@gmail.com)  
+**Repo** : https://github.com/KnoopGod/maestro (privé)  
+**Prod** : https://maestro-green.vercel.app  
 
 ---
 
 ## 🎯 Le projet en une phrase
 
-**Maestro** est une plateforme Next.js 16 / LibSQL / TypeScript qui pilote les réseaux sociaux des clients HORECA (hôtels, restaurants, cafés, bars, B&B) avec des agents IA (Claude Opus 4.7 + OpenAI gpt-image-1 + Meta Graph API).
+**Maestro** est une plateforme Next.js 16 / LibSQL / TypeScript qui pilote les réseaux sociaux des clients HORECA (hôtels, restaurants, cafés, bars, B&B) avec des agents IA spécialisés (Claude Opus 4.7 + OpenAI gpt-image-1 + Meta Graph API).
+
+---
 
 ## 🧱 Stack & emplacement
 
-- **Code** : `/Users/bradleydave/Dev/ai-command-center` (le dossier s'appelle ainsi pour raisons historiques, mais le produit s'appelle Maestro)
-- **Stack** : Next.js 16.2.6 (App Router, port **3010**), LibSQL (`./maestro.db`), Tailwind dark theme
-- **Dev server** : `npm run dev` (jamais le port 3000 — toujours 3010)
-- **Type check rapide** : `npx tsc --noEmit`
+- **Code** : `/home/user/maestro` (en session cloud) ou `/Users/bradleydave/Dev/ai-command-center` (local — nom legacy)
+- **Stack** : Next.js 16.2.6 App Router, LibSQL/Turso, Tailwind dark theme, port **3010**
+- **Dev** : `npm run dev` — type check : `npx tsc --noEmit`
+- **Prod** : Vercel (auto-deploy sur push `main`), Turso cloud DB, Vercel Blob storage
 
-## ✅ Ce qui est livré
+---
+
+## ✅ État complet livré
 
 ### Agents (`lib/agents/`)
-| Agent | Rôle | Fichier |
-|---|---|---|
-| Account Director | Enrichit le brief en lisant l'historique des posts du client | `account-director.ts` |
-| Strategy Director (Planner) | Propose 5 idées de posts variées par client | `planner.ts` |
-| Social Expert | Captions multi-plateformes avec brand voice + DA | `social-expert.ts` |
-| Visual Director (Image Generator) | Génère l'image alignée DA via OpenAI | `image-generator.ts` |
-| DA Curator (Visual Identity) | Synthétise la DA depuis les assets uploadés | `visual-identity.ts` |
-| Vision Analyzer | Tag chaque photo (palette, mood, sujets) | `vision-analyzer.ts` |
-| Supervisor | Quality gate avant publication (ready/revise/blocked) | `supervisor.ts` |
-| Publisher | Publie sur Facebook + Instagram via Meta Graph | `meta-publisher.ts` |
-| Pipeline orchestrator | Chaîne Account → Social → Visual → Supervisor | `pipeline.ts` |
-| Publish pipeline | Factorise publish-post + cron | `publish-pipeline.ts` |
-| Impact Scorer | Score 0-100 heuristique pour un post | `impact-scorer.ts` |
 
-### Registries (`lib/`)
-- `agent-registry.ts` — descripteurs des 10 agents (alimente `/agents` UI)
-- `connection-registry.ts` — 6 connexions externes (alimente `/connections` UI)
+| Agent | Rôle | Fichier | Statut |
+|---|---|---|---|
+| Account Director | Enrichit le brief, lit l'historique client | `account-director.ts` | ✅ actif |
+| Strategy Director (Planner) | 5 idées de posts par pilier | `planner.ts` | ✅ actif |
+| Social Expert | Captions multi-plateformes + brand voice + DA | `social-expert.ts` | ✅ actif |
+| Visual Director | Image IA alignée DA via OpenAI gpt-image-1 | `image-generator.ts` | ✅ actif |
+| DA Curator | Synthèse Direction Artistique depuis assets | `visual-identity.ts` | ✅ actif |
+| Vision Analyzer | Tag chaque photo (palette, mood, sujets) | `vision-analyzer.ts` | ✅ actif |
+| Supervisor | Quality gate ready/revise/blocked avant pub | `supervisor.ts` | ✅ actif |
+| Publisher | Facebook + Instagram via Meta Graph API | `meta-publisher.ts` | ✅ actif |
+| Performance Analyst | Insights post-pub + recommandations Claude | `performance-analyst.ts` | ✅ actif |
+| Video Creator | Image → Reel via Luma Dream Machine | `video-creator.ts` | ✅ actif |
+| Strategy Advisor | Stratégie marketing complète par client (Opus 4.7) | `strategy-advisor.ts` | ✅ actif |
+| Impact Scorer | Score 0–100 heuristique | `impact-scorer.ts` | ✅ actif |
+| Pipeline orchestrator | Account → Social → Visual → Supervisor | `pipeline.ts` | ✅ actif |
+| Publish pipeline | Supervisor gate + Meta publish | `publish-pipeline.ts` | ✅ actif |
+
+### Pipeline de tracking (`lib/agents/tracking.ts`)
+
+`withTracking()` — wrapper transparent autour de chaque agent :
+- Écrit `agent_events` en DB (pending → running → completed/failed/skipped)
+- Rethrow les erreurs après avoir tracé le failure
+- `skipTracking()` pour les steps conditionnels (ex: asset existant)
 
 ### Pages UI (`app/`)
-- `/` Home avec stats
-- `/clients`, `/clients/[id]`, `/clients/[id]/edit`, `/clients/[id]/library`, `/clients/[id]/connections`, **`/clients/[id]/setup`** (tunnel d'onboarding 6 étapes)
-- `/studio` (générateur avec PostIdeasPanel + auto-supervision)
-- **`/validation`** (file de relecture)
-- **`/calendar`** (vue chronologique + bouton « Publier les posts dus »)
-- `/plan` (historique de tous les posts)
-- `/agents` (10 agents + pipeline visuel)
-- **`/connections`** (guide global 6 connexions)
-- `/library`, `/analytics`, `/usage`, `/settings`
 
-### API (`app/api/`)
-- `/api/studio/generate-post` — chaîne `runPostPipeline` complète
-- `/api/studio/publish-post` — utilise `publish-pipeline.ts`
-- `/api/posts/propose` — Account Director / Planner
-- `/api/posts/[id]/supervise` — re-supervise
-- `/api/posts/[id]/schedule` (POST + DELETE) — planifier / déplanifier
-- `/api/cron/publish-due` — publie tous les posts dus (header `Authorization: Bearer $CRON_SECRET`)
-- `/api/meta/discover`, `/api/meta/connect`, `/api/meta/debug-token` — wizard Meta
+| Route | Description |
+|---|---|
+| `/` | Home — stats, actions rapides, liste clients |
+| `/clients` | Liste des clients avec filtres par type |
+| `/clients/[id]` | Fiche client — DA, brand voice, stratégie IA, connexions |
+| `/clients/[id]/edit` | Édition client |
+| `/clients/[id]/library` | Assets + Vision Analyzer + DA Curator |
+| `/clients/[id]/connections` | Wizard Meta OAuth (avec checklist pré-requis 4 étapes) |
+| `/clients/[id]/setup` | Tunnel d'onboarding 6 étapes |
+| `/clients/[id]/agents` | Agents actifs pour ce client |
+| `/clients/new` | Création client |
+| `/studio` | Générateur de post (Account Director → Social → Visual → Supervisor) |
+| `/validation` | File de relecture des drafts |
+| `/calendar` | Vue chronologique + "Publier les posts dus" |
+| `/plan` | Historique de tous les posts avec filtres |
+| `/agents` | **[NOUVEAU]** Activité en direct + pipeline visuel + registre agents |
+| `/agents/jobs/[id]` | **[NOUVEAU]** Timeline détaillée d'un job avec polling 2s |
+| `/analytics` | Performance Analyst par client |
+| `/connections` | Guide connexions globales (6 services) |
+| `/library` | Bibliothèque globale multi-clients |
+| `/usage` | Coûts IA par client / mois |
+| `/settings` | Paramètres |
+| `/login` | Auth page (MAESTRO_PASSWORD) |
 
-### Schéma DB (`lib/db/schema.ts` + migrations)
-Tables : `clients`, `client_social_accounts`, `client_agents`, `client_assets`, `client_visual_identity`, `posts`.
+### API routes (`app/api/`)
 
-`posts.status` : `draft | ready | scheduled | published | failed`. Colonnes notables : `scheduled_at`, `supervisor_review` (JSON), `meta_post_ids` (JSON).
+| Route | Rôle |
+|---|---|
+| `POST /api/studio/generate-post` | Pipeline complet — crée un `agent_job` + 4 events trackés |
+| `POST /api/studio/publish-post` | Publication Meta — crée un job Publisher séparé |
+| `GET /api/agents/jobs` | Liste des 40 derniers jobs |
+| `GET /api/agents/jobs/[id]` | Job + events (polling endpoint) |
+| `POST /api/clients/[id]/strategy` | Génère stratégie IA (Opus 4.7) |
+| `GET /api/clients/[id]/performance` | Insights Meta + recommandations |
+| `POST /api/clients/[id]/assets/[assetId]/animate` | Luma image → vidéo |
+| `POST /api/meta/discover` | Découverte pages FB + comptes IG |
+| `POST /api/meta/connect` | Sauvegarde Page Access Token |
+| `GET /api/meta/debug-token` | Diagnostique token + scopes |
+| `POST /api/posts/propose` | Planner — idées de posts |
+| `POST /api/posts/[id]/supervise` | Re-supervise un post |
+| `POST/DELETE /api/posts/[id]/schedule` | Planifier/déplanifier |
+| `GET /api/cron/publish-due` | Publie les posts planifiés (CRON_SECRET requis) |
+| `GET /api/health` | Statut toutes les dépendances + DB |
 
-Migrations dans `lib/db/migrations/` (idempotentes, appelées par `initSchema()`).
+### Schéma DB (`lib/db/schema.ts` + migrations 001–005)
 
-## 🔑 Variables d'environnement (`.env.local`, non commité)
+Tables actives :
+- `clients` — profil HORECA complet
+- `client_social_accounts` — tokens Meta/IG/TikTok (clear, TODO encrypt)
+- `client_agents` — assignments agents
+- `client_assets` — photos/vidéos/docs analysés
+- `client_visual_identity` — DA synthétisée (style_prompt injecté partout)
+- `posts` — pipeline de publication (`draft|ready|scheduled|published|failed`)
+- **`agent_jobs`** — [NOUVEAU] un job par génération/publication
+- **`agent_events`** — [NOUVEAU] un event par étape agent dans le job
+
+### Sécurité & auth
+
+- **Middleware** (`middleware.ts`) — HMAC session cookie via Web Crypto API (Edge-compatible)
+- **Login** (`/login`) — mot de passe unique `MAESTRO_PASSWORD`
+- **Cron** — `CRON_SECRET` requis (timing-safe comparison)
+- **Upload** — whitelist MIME + limite 100 MB + path traversal fix
+
+### Mobile & Accessibilité
+
+- **Bottom navigation** — remplace la sidebar sur mobile (`components/layout/BottomNav.tsx`)
+- **Responsive** — grilles adaptatives sur toutes les pages clés
+- **WCAG 2.1 AA** — 8 corrections : `:focus-visible`, landmarks ARIA, `aria-hidden`, `aria-current`, `aria-label`, touch targets 44px, labels formulaire, `role="alert"` erreurs
+- **Skip link** — "Aller au contenu principal" (visible au focus clavier)
+
+---
+
+## 🔑 Variables d'environnement
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...          # Requis — Opus 4.7
-OPENAI_API_KEY=sk-...                  # Requis — gpt-image-1
-META_APP_ID=...                        # Optionnel — exchange token long
-META_APP_SECRET=...
-MAESTRO_PUBLIC_URL=https://...         # Requis prod — pour que Meta fetche les images
-CRON_SECRET=...                        # Optionnel — protège /api/cron/publish-due
-DATABASE_URL=file:./maestro.db         # Par défaut
+OPENAI_API_KEY=sk-...                 # Requis — gpt-image-1
+MAESTRO_PASSWORD=...                  # Auth unique (vide = dev sans auth)
+META_APP_ID=...                       # Optionnel — exchange token long
+META_APP_SECRET=...                   # Optionnel
+MAESTRO_PUBLIC_URL=https://...        # Requis prod — Meta fetche les images
+CRON_SECRET=...                       # Protège /api/cron/publish-due
+DATABASE_URL=file:./maestro.db        # Dev local (ou libsql://... pour Turso)
+DATABASE_AUTH_TOKEN=...               # Requis si Turso
+BLOB_READ_WRITE_TOKEN=...             # Vercel Blob — auto-injecté si store connecté
+LUMA_API_KEY=...                      # Optionnel — Video Creator agent
 ```
 
-## 🚧 Actions utilisateur requises (ordre de priorité)
+---
 
-> Le code est 100 % livré. Ce sont des actions de configuration dans des dashboards externes.
+## 📦 Infrastructure prod
 
-1. **Vercel → Storage → Blob** : créer un store et connecter au projet. `BLOB_READ_WRITE_TOKEN` est copié automatiquement. **Sans ça, les images crashent en prod.**
-2. **Env vars Vercel réelles** : `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `CRON_SECRET` (voir `.env.example`).
-3. **Turso** : `turso db create maestro` → copier `DATABASE_URL` (libsql://...) + `DATABASE_AUTH_TOKEN` dans Vercel Settings → Env Vars. Sans ça, la DB SQLite se réinitialise à chaque redéploiement.
-4. **Token Meta** : aller sur `/clients/[id]/connections` (Pink House ou IBRODEPRO) → coller un User Access Token depuis Graph API Explorer avec scopes `pages_manage_posts` + `instagram_content_publish`.
+| Service | État | Notes |
+|---|---|---|
+| Vercel | ✅ déployé | Auto-deploy sur push `main`. Hobby plan : 1 cron/jour max |
+| Turso | ✅ connecté | `libsql://maestro-knoopgod.aws-ap-northeast-1.turso.io` |
+| Vercel Blob | ✅ configuré | Images IA stockées en HTTPS public (Meta peut les fetcher) |
+| Meta App | ⚠️ à connecter | Instagram doit être en mode Business + lié à la Page FB |
+| CRON | ✅ configuré | `0 8 * * *` — publie les posts planifiés chaque matin à 8h |
 
-> 💡 Un banner de setup s'affiche sur la home (`/`) tant que ces variables ne sont pas configurées.
+---
 
-## ✅ Livré depuis la dernière session
+## 🚧 Prochaines priorités
 
-- **Performance Analyst agent** (#7) — `/analytics` → bouton "Analyser" par client → insights Meta + 3 recommandations Claude
-- **Library picker Studio** — toggle Générer/Bibliothèque dans Studio, grille assets client
-- **Bulk generation** — bouton "Générer les N drafts" dans PostIdeasPanel (parallèle + progress)
-- **Vercel Blob storage** — `lib/storage/local.ts` détecte `BLOB_READ_WRITE_TOKEN` et bascule automatiquement sur Blob en prod. Images AI ont des URLs publiques HTTPS → Meta peut les fetcher sans `MAESTRO_PUBLIC_URL`.
-- **`vercel.json`** — cron `* * * * *` sur `/api/cron/publish-due`. Vercel envoie automatiquement `Authorization: Bearer $CRON_SECRET`.
-- **`.env.example`** — toutes les variables documentées.
-- **4 bugs corrigés** (review code) : JSON.parse sans try/catch, race condition fetch assets, setState après unmount, cast string non validé.
-- **Video Creator agent** (#8, Luma Dream Machine) — `lib/agents/video-creator.ts` + route `animate` + bouton « Animer en Reel » dans AssetCard. Requiert `LUMA_API_KEY`.
-- **Health endpoint** — `GET /api/health` → JSON status de toutes les dépendances + connectivité DB.
-- **Setup banner** — `components/SetupBanner.tsx` sur la home : affiche les env vars manquantes avec liens directs vers les dashboards. Disparaît une fois tout configuré.
-- **Connection registry mis à jour** — Blob + Turso + Video Luma ajoutés comme connexions documentées dans `/connections`.
+1. **Connecter le premier compte Meta** — aller sur `/clients/[id]/connections`, suivre la checklist 4 étapes, coller un token depuis Graph API Explorer
+2. **Tester le pipeline complet** — générer un post dans le Studio → voir l'activité sur `/agents` → publier → vérifier `/agents/jobs/[id]`
+3. **Performance Analyst actif** — câbler les webhooks Meta pour récupérer les vraies métriques post-publication (reach, impressions, saves)
+4. **Onglet "Activité" dans la fiche client** — montrer l'historique des jobs filtrés par client (déjà en DB, UI à créer)
+
+---
 
 ## 🎨 Conventions importantes
 
-- **Français pour l'UI** (labels, prompts, messages d'erreur). **Anglais pour le code**.
-- **Server Components** par défaut. `'use client'` seulement si interactivité.
+- **Français** pour l'UI (labels, messages). **Anglais** pour le code.
+- **Server Components** par défaut. `'use client'` seulement si état ou événement.
 - **DB queries** retournent camelCase ; colonnes SQL snake_case. Voir helpers `mapRow`.
-- **Tailwind dark theme** : `bg-gray-950` fond, `bg-gray-900/40` cartes, `border-gray-800`, accent `purple-600`.
+- **Tailwind dark** : `bg-gray-950` fond, `bg-gray-900/40` cartes, `border-gray-800`, accent `purple-600`.
 - **Status colors** : emerald (success), amber (warning), red (error), purple (primary).
-- **Opus 4.7 pricing** : `(input * 5 + output * 25) / 1_000_000`. Tous les agents Opus utilisent `thinking: { type: 'adaptive' }` + `output_config: { effort: 'high' }`.
-- **JSON parsing robuste** : strip markdown fences + regex fallback (voir `lib/agents/social-expert.ts` pour le pattern canonique).
+- **Opus 4.7 pricing** : `(input × 5 + output × 25) / 1_000_000`. Agents Opus utilisent `thinking: { type: 'adaptive' }`.
+- **JSON parsing** : strip markdown fences + regex fallback (voir `social-expert.ts` pour le pattern).
+- **Tracking** : tout nouvel agent doit être wrappé avec `withTracking()` de `lib/agents/tracking.ts`.
 
-## 🧑‍💻 Pattern Codex (executor)
-
-Quand le travail est de la génération de code routinier, j'écris une spec dans `CODEX_SPECS/NNN-feature.md`, puis l'exécute avec :
-
-```bash
-codex exec --cd /Users/bradleydave/Dev/ai-command-center --sandbox workspace-write \
-  "Read CODEX_SPECS/NNN-feature.md and execute it precisely. Report the summary at the end."
-```
-
-Codex CLI : `/Users/bradleydave/.local/bin/codex` (v0.133+). Specs déjà exécutées :
-- 001 — ClientStrategy integration
-- 002 — Supervisor agent
-- 003 — Account Director + Pipeline orchestrator
+---
 
 ## 🐞 Debug
 
 ### Publication Meta échoue
 1. `/clients/[id]/connections` → « Diagnostiquer le token » → vérifier scopes
-2. Si `pages_manage_posts` manque → ajouter use case « Tout gérer sur votre Page » dans Meta Developer
-3. Si erreur #200 → vérifier que l'utilisateur est **Admin** de la page (pas Editor)
-4. Si Instagram échoue → confirmer que `BLOB_READ_WRITE_TOKEN` est défini (les URLs Blob sont publiques HTTPS, Meta peut les fetcher directement)
+2. `pages_manage_posts` manquant → ajouter use case dans Meta Developer
+3. Erreur #200 → utilisateur doit être **Admin** (pas Éditeur) de la Page
+4. Instagram sans image → vérifier `BLOB_READ_WRITE_TOKEN` défini
 
-### Migration DB n'a pas tourné
-- L'init appelle `migratePostsScheduling()` automatiquement
-- Force : `npx tsx -e "import('./lib/db/migrations/002-add-scheduling').then(m => m.migratePostsScheduling())"`
+### Migration DB non appliquée
+```bash
+npx tsx -e "import { initSchema } from './lib/db/schema'; initSchema().then(() => console.log('OK'))"
+```
 
-## 📦 Reprendre cette session
+### Dev server
+```bash
+npm run dev   # port 3010
+```
 
-**Prompt à donner au Claude (mobile ou ailleurs)** :
+---
 
-> Lis `SESSION_HANDOFF.md` et `CLAUDE.md`. Je veux reprendre le travail sur Maestro où on s'est arrêté. La prochaine priorité est [TODO #N de la liste]. Pose-moi les questions nécessaires avant de coder.
+## 📋 Reprendre cette session
 
-Ou si tu veux une tâche précise :
+**Prompt pour une nouvelle session Claude** :
 
-> Lis `SESSION_HANDOFF.md` puis exécute la spec Codex `CODEX_SPECS/004-performance-analyst.md` (à créer en suivant le pattern des specs 001-003).
+> Lis `SESSION_HANDOFF.md` et `CLAUDE.md`. Je veux reprendre le travail sur Maestro. La prochaine priorité est [voir section "Prochaines priorités"]. Vérifie l'état du projet avant de proposer quoi que ce soit.
