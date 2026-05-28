@@ -1,0 +1,106 @@
+'use client'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Home, Users, Sparkles, CalendarDays, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { ShieldCheck, BarChart3, FolderOpen, Bot, Plug, Settings, DollarSign, X } from 'lucide-react'
+
+const NAV_MAIN = [
+  { href: '/',          icon: Home,         label: 'Home' },
+  { href: '/clients',   icon: Users,        label: 'Clients' },
+  { href: '/studio',    icon: Sparkles,     label: 'Studio' },
+  { href: '/calendar',  icon: CalendarDays, label: 'Calendrier' },
+]
+
+const NAV_MORE = [
+  { href: '/validation',  icon: ShieldCheck,  label: 'Validation' },
+  { href: '/plan',        icon: CalendarDays, label: 'Historique' },
+  { href: '/analytics',   icon: BarChart3,    label: 'Analytics' },
+  { href: '/library',     icon: FolderOpen,   label: 'Library' },
+  { href: '/agents',      icon: Bot,          label: 'Agents' },
+  { href: '/connections', icon: Plug,         label: 'Connexions' },
+  { href: '/usage',       icon: DollarSign,   label: 'Usage' },
+  { href: '/settings',    icon: Settings,     label: 'Settings' },
+]
+
+export function BottomNav() {
+  const pathname = usePathname()
+  const [showMore, setShowMore] = useState(false)
+
+  if (pathname === '/login') return null
+
+  return (
+    <>
+      {/* More sheet */}
+      {showMore && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMore(false)} />
+          <div className="absolute bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800 rounded-t-2xl p-4 pb-8">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold text-white">Navigation</span>
+              <button onClick={() => setShowMore(false)} className="p-1.5 rounded-lg hover:bg-gray-800">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {NAV_MORE.map(item => {
+                const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setShowMore(false)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${
+                      active ? 'bg-purple-600/20 text-purple-300' : 'text-gray-400 hover:bg-gray-800/60'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="text-[10px] text-center leading-tight">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom tab bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-gray-950/90 backdrop-blur-xl border-t border-gray-800/50 pb-safe">
+        <div className="flex items-stretch h-16">
+          {NAV_MAIN.map(item => {
+            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
+                  active ? 'text-purple-400' : 'text-gray-500'
+                }`}
+              >
+                {item.href === '/studio' ? (
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    active ? 'bg-purple-600' : 'bg-purple-600/80'
+                  }`}>
+                    <item.icon className="w-5 h-5 text-white" />
+                  </div>
+                ) : (
+                  <>
+                    <item.icon className="w-5 h-5" />
+                    <span className="text-[10px]">{item.label}</span>
+                  </>
+                )}
+              </Link>
+            )
+          })}
+          <button
+            onClick={() => setShowMore(true)}
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-500"
+          >
+            <MoreHorizontal className="w-5 h-5" />
+            <span className="text-[10px]">Plus</span>
+          </button>
+        </div>
+      </nav>
+    </>
+  )
+}

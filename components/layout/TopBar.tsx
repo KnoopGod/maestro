@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export function TopBar() {
   return (
-    <header className="fixed top-0 left-64 right-0 h-14 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800/50 flex items-center px-6 z-30">
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800/50 flex items-center px-4 lg:px-6 z-30">
       {/* Search */}
       <div className="flex-1 max-w-md relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />

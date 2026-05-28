@@ -63,7 +63,7 @@ function NavItem({
 
 export function Sidebar() {
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-gray-950/90 backdrop-blur-xl border-r border-gray-800/50 flex flex-col z-40">
+    <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-gray-950/90 backdrop-blur-xl border-r border-gray-800/50 flex-col z-40">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-800/50">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-purple-900 flex items-center justify-center shadow-lg shadow-purple-900/30">
