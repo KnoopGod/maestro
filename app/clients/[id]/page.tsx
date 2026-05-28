@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug } from 'lucide-react'
-import { getClient } from '@/lib/db/queries/clients'
+import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
 import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
+import { StrategyPanel } from '@/components/clients/StrategyPanel'
+import type { StrategyAdvice } from '@/lib/agents/strategy-advisor'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,9 +15,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assets, identity] = await Promise.all([
+  const [assets, identity, aiStrategy] = await Promise.all([
     listClientAssets(id),
     getVisualIdentity(id),
+    getAiStrategy(id),
   ])
 
   const typeCfg = CLIENT_TYPES[client.type]
@@ -193,37 +196,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </dl>
           </div>
 
-          <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              📌 Stratégie marketing
-            </h2>
-            <div className="space-y-3 text-sm">
-              <p className="text-gray-200 leading-relaxed">{client.strategy.objective}</p>
-              <div>
-                <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Piliers de contenu</div>
-                <div>
-                  {client.strategy.contentPillars.map(pillar => (
-                    <span key={pillar} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-purple-900/40 border border-purple-700/30 text-purple-300 text-xs">
-                      {pillar}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="text-xs text-gray-400">
-                {client.strategy.frequency} · {client.strategy.bestTimes.join(', ')}
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">À éviter</div>
-                <div>
-                  {client.strategy.avoid.map(item => (
-                    <span key={item} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-red-900/30 border border-red-700/30 text-red-300 text-xs">
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <StrategyPanel clientId={id} initial={aiStrategy as StrategyAdvice | null} />
         </div>
 
         {/* Connected platforms placeholder */}

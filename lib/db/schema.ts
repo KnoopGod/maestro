@@ -149,4 +149,6 @@ export async function initSchema() {
   await migratePostsScheduling()
   const { migratePostInsights } = await import('./migrations/003-add-post-insights')
   await migratePostInsights()
+  const { migrateAiStrategy } = await import('./migrations/004-add-ai-strategy')
+  await migrateAiStrategy()
 }

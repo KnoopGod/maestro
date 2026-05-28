@@ -192,3 +192,18 @@ export async function deleteClient(id: string): Promise<void> {
     args: [id],
   })
 }
+
+export async function saveAiStrategy(id: string, strategy: unknown): Promise<void> {
+  await db.execute({
+    sql: `UPDATE clients SET ai_strategy = ?, updated_at = ? WHERE id = ?`,
+    args: [JSON.stringify(strategy), Date.now(), id],
+  })
+}
+
+export async function getAiStrategy(id: string): Promise<unknown | null> {
+  const row = await queryOne<{ ai_strategy: string | null }>(
+    `SELECT ai_strategy FROM clients WHERE id = ?`, [id]
+  )
+  if (!row?.ai_strategy) return null
+  try { return JSON.parse(row.ai_strategy) } catch { return null }
+}

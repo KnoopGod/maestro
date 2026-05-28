@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { getClient } from '@/lib/db/queries/clients'
 import { listClientSocialAccounts } from '@/lib/db/queries/social-accounts'
 import { MetaConnectionWizard } from '@/components/clients/MetaConnectionWizard'
+import { MetaPreflightChecklist } from '@/components/clients/MetaPreflightChecklist'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,8 @@ export default async function ClientConnectionsPage({ params }: { params: Promis
           <span className="text-lg">🔌</span>
           Meta (Facebook + Instagram)
         </h2>
+
+        <MetaPreflightChecklist onReady={() => {}} />
 
         <MetaConnectionWizard
           clientId={id}
