@@ -26,6 +26,10 @@ export default function AgentsPage() {
         <p className="text-sm text-gray-500 mt-0.5">
           Le pipeline complet : {active.length} agents actifs, {upcoming.length} à venir
         </p>
+        <p className="text-sm text-gray-400 mt-2 max-w-2xl">
+          Vue de travail inspirée du prototype : chaque agent affiche son rôle, ses entrées,
+          ses sorties, ses contrôles qualité et sa place dans la chaîne de production.
+        </p>
       </div>
 
       {/* Pipeline visual */}
@@ -93,11 +97,13 @@ function AgentCard({ agent }: { agent: MaestroAgent }) {
   const cfg = STATUS_INFO[agent.status]
   return (
     <article
-      className={`rounded-2xl border p-5 ${
+      className={`relative overflow-hidden rounded-2xl border p-5 min-h-[330px] ${
         isActive ? 'bg-gray-900/40 border-gray-800' : 'bg-gray-900/20 border-gray-800/60 opacity-80'
       }`}
     >
-      <header className="flex items-start gap-3 mb-3">
+      <PixelAgent agentId={agent.id} />
+
+      <header className="relative z-10 flex items-start gap-3 mb-3 pr-20">
         <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} flex items-center justify-center text-2xl shadow-lg flex-shrink-0`}>
           {agent.emoji}
         </div>
@@ -111,22 +117,34 @@ function AgentCard({ agent }: { agent: MaestroAgent }) {
         </div>
       </header>
 
-      <p className="text-xs text-gray-300 leading-snug border-l-2 border-purple-700/40 pl-3 mb-4">
+      <p className="relative z-10 text-xs text-gray-300 leading-snug border-l-2 border-purple-700/40 pl-3 mb-4 pr-16">
         {agent.specialty}
       </p>
 
-      <div className="grid grid-cols-1 gap-3 mb-3 text-[11px]">
+      <div className="relative z-10 grid grid-cols-1 gap-3 mb-3 text-[11px]">
         <Row label="Entrées" items={agent.inputs} color="text-blue-300 border-blue-700/40 bg-blue-950/20" />
         <Row label="Sorties" items={agent.outputs} color="text-purple-300 border-purple-700/40 bg-purple-950/20" />
         <Row label="Contrôles qualité" items={agent.qualityChecks} color="text-emerald-300 border-emerald-700/40 bg-emerald-950/20" />
       </div>
 
       {agent.file && (
-        <div className="text-[10px] text-gray-600 mt-2">
+        <div className="relative z-10 text-[10px] text-gray-600 mt-2">
           📄 <code>{agent.file}</code>
         </div>
       )}
     </article>
+  )
+}
+
+function PixelAgent({ agentId }: { agentId: string }) {
+  return (
+    <div className={`pixelAgent ${agentId}`} aria-hidden="true">
+      <span className="pixelHead" />
+      <span className="pixelBody" />
+      <span className="pixelArm left" />
+      <span className="pixelArm right" />
+      <span className="pixelTool" />
+    </div>
   )
 }
 
