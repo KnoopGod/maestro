@@ -2,7 +2,7 @@
 
 > **Pour Claude (toute future session)** : lis ce document + `CLAUDE.md` en entier avant d'agir.
 
-**Dernière mise à jour** : 28 mai 2026  
+**Dernière mise à jour** : 28 mai 2026 (session 3)  
 **Propriétaire** : Bradley Dave (knoopleague@gmail.com)  
 **Repo** : https://github.com/KnoopGod/maestro (privé)  
 **Prod** : https://maestro-green.vercel.app  
@@ -156,12 +156,25 @@ LUMA_API_KEY=...                      # Optionnel — Video Creator agent
 
 ---
 
+## ✅ V1 terminée — tout est réel
+
+**Session 3 — tous les points V1 corrigés :**
+- `listClientsWithStats()` — vraies requêtes SQL (plus de `Math.random()`)
+- Fiche client : stats réelles (posts générés, planifiés, impact score moyen)
+- "Plateformes connectées" — lit `client_social_accounts`, bouton "Connecter" lié à `/connections`
+- "Posts récents" — 4 derniers vrais posts avec statut et date
+- "Activité agents" — 8 derniers `agent_jobs` par client, lien vers timeline détaillée
+- Recherche globale `/search` — clients + posts par texte (SQL LIKE)
+- TopBar search — form submit navigue vers `/search?q=...`
+- Analytics grid responsive (`grid-cols-2 lg:grid-cols-4`)
+- "À valider" home page — vraie requête COUNT draft|ready
+
 ## 🚧 Prochaines priorités
 
 1. **Connecter le premier compte Meta** — aller sur `/clients/[id]/connections`, suivre la checklist 4 étapes, coller un token depuis Graph API Explorer
-2. **Tester le pipeline complet** — générer un post dans le Studio → voir l'activité sur `/agents` → publier → vérifier `/agents/jobs/[id]`
+2. **Tester le pipeline complet avec image** — générer un post avec image → Meta publish → vérifier que BLOB_READ_WRITE_TOKEN est défini
 3. **Performance Analyst actif** — câbler les webhooks Meta pour récupérer les vraies métriques post-publication (reach, impressions, saves)
-4. **Onglet "Activité" dans la fiche client** — montrer l'historique des jobs filtrés par client (déjà en DB, UI à créer)
+4. **Recherche avancée** — ajouter agents dans les résultats de `/search`, filtres par statut/date
 
 ---
 
