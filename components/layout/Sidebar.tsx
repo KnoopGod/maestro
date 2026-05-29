@@ -5,6 +5,7 @@ import {
   Home, Users, Sparkles, Bot, CalendarDays, BarChart3,
   FolderOpen, Plug, Settings, DollarSign, ShieldCheck,
 } from 'lucide-react'
+import { WipTag } from '@/components/ui/WipTag'
 
 const NAV_PRIMARY = [
   { href: '/',           icon: Home,         label: 'Home',      seq: '01' },
@@ -87,19 +88,24 @@ export function Sidebar() {
         {NAV_SYSTEM.map(item => <NavItem key={item.href} {...item} />)}
       </nav>
 
-      {/* Status / Profile */}
+      {/* Status / Profile — hardcoded placeholder */}
       <div className="border-t border-indigo-950/60 px-4 py-3 space-y-2">
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           <span className="text-[9px] text-indigo-500/60 font-mono tracking-widest">SESSION :: ACTIVE</span>
         </div>
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-[9px] font-bold text-white font-mono">
+          <div className="w-6 h-6 bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center text-[9px] font-bold text-white font-mono opacity-50">
             BD
           </div>
-          <div>
-            <div className="text-[10px] text-[#E0E3FF] font-mono tracking-wide">BRADLEY DAVE</div>
-            <div className="text-[8px] text-indigo-600/60 font-mono tracking-widest">PRO // PLAN</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-[#E0E3FF]/50 font-mono tracking-wide truncate">BRADLEY DAVE</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[8px] text-indigo-600/40 font-mono tracking-widest">PRO // PLAN</span>
+              <WipTag label="MOCK" />
+            </div>
           </div>
         </div>
       </div>

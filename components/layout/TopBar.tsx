@@ -2,6 +2,7 @@
 import { Search, Bell, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { WipTag } from '@/components/ui/WipTag'
 
 export function TopBar() {
   const router = useRouter()
@@ -40,13 +41,17 @@ export function TopBar() {
           <span className="text-[9px] text-indigo-600/50 font-mono tracking-widest">SYSTEM :: ONLINE</span>
         </div>
 
-        {/* Notifications */}
-        <button
-          aria-label="Notifications"
-          className="relative w-8 h-8 min-w-[44px] min-h-[44px] border border-indigo-900/40 hover:border-indigo-600/60 flex items-center justify-center transition-colors"
-        >
-          <Bell aria-hidden="true" className="w-3.5 h-3.5 text-indigo-500/60" />
-        </button>
+        {/* Notifications — not yet implemented */}
+        <div className="relative" title="Notifications — non implémenté">
+          <button
+            aria-label="Notifications (non disponible)"
+            aria-disabled="true"
+            className="relative w-8 h-8 min-w-[44px] min-h-[44px] border border-amber-900/30 flex items-center justify-center opacity-40 cursor-not-allowed"
+          >
+            <Bell aria-hidden="true" className="w-3.5 h-3.5 text-amber-600/60" />
+          </button>
+          <WipTag label="WIP" className="absolute -top-2 -right-1 z-10" />
+        </div>
 
         {/* CTA */}
         <Link
