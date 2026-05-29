@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const testMessage = message || `🧪 Test depuis Maestro · ${new Date().toLocaleString('fr-FR')}\n\nCe post de test a été publié automatiquement pour vérifier la connexion. Vous pouvez le supprimer.`
+    const testMessage = message || `🧪 Test depuis CODEXRS · ${new Date().toLocaleString('fr-FR')}\n\nCe post de test a été publié automatiquement pour vérifier la connexion. Vous pouvez le supprimer.`
 
     const result = await publishToFacebook({
       pageId: fbAccount.accountId,

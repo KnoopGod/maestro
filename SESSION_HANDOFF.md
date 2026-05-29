@@ -1,21 +1,21 @@
-# Session handoff — Maestro
+# Session handoff — CODEXRS
 
-> **Pour Claude (toute future session)** : ce document te donne le contexte complet pour reprendre le travail sur Maestro. Lis-le en entier avant d'agir. Le reste du projet est documenté dans [CLAUDE.md](./CLAUDE.md) — lis-le aussi.
+> **Pour Claude (toute future session)** : ce document te donne le contexte complet pour reprendre le travail sur CODEXRS. Lis-le en entier avant d'agir. Le reste du projet est documenté dans [CLAUDE.md](./CLAUDE.md) — lis-le aussi.
 
 **Dernière mise à jour** : 23 mai 2026
 **Propriétaire** : Bradley Dave (knoopleague@gmail.com)
-**Repo** : https://github.com/KnoopGod/maestro (privé)
+**Repo** : https://github.com/KnoopGod/codexrs (privé)
 
 ---
 
 ## 🎯 Le projet en une phrase
 
-**Maestro** est une plateforme Next.js 16 / LibSQL / TypeScript qui pilote les réseaux sociaux des clients HORECA (hôtels, restaurants, cafés, bars, B&B) avec des agents IA (Claude Opus 4.7 + OpenAI gpt-image-1 + Meta Graph API).
+**CODEXRS** est une plateforme Next.js 16 / LibSQL / TypeScript qui pilote les réseaux sociaux des clients HORECA (hôtels, restaurants, cafés, bars, B&B) avec des agents IA (Claude Opus 4.7 + OpenAI gpt-image-1 + Meta Graph API).
 
 ## 🧱 Stack & emplacement
 
-- **Code** : `/Users/bradleydave/Dev/ai-command-center` (le dossier s'appelle ainsi pour raisons historiques, mais le produit s'appelle Maestro)
-- **Stack** : Next.js 16.2.6 (App Router, port **3010**), LibSQL (`./maestro.db`), Tailwind dark theme
+- **Code** : `/Users/bradleydave/Dev/ai-command-center` (le dossier s'appelle ainsi pour raisons historiques, mais le produit s'appelle CODEXRS)
+- **Stack** : Next.js 16.2.6 (App Router, port **3010**), LibSQL (`./codexrs.db`), Tailwind dark theme
 - **Dev server** : `npm run dev` (jamais le port 3000 — toujours 3010)
 - **Type check rapide** : `npx tsc --noEmit`
 
@@ -74,9 +74,9 @@ ANTHROPIC_API_KEY=sk-ant-...          # Requis — Opus 4.7
 OPENAI_API_KEY=sk-...                  # Requis — gpt-image-1
 META_APP_ID=...                        # Optionnel — exchange token long
 META_APP_SECRET=...
-MAESTRO_PUBLIC_URL=https://...         # Requis prod — pour que Meta fetche les images
+CODEXRS_PUBLIC_URL=https://...         # Requis prod — pour que Meta fetche les images
 CRON_SECRET=...                        # Optionnel — protège /api/cron/publish-due
-DATABASE_URL=file:./maestro.db         # Par défaut
+DATABASE_URL=file:./codexrs.db         # Par défaut
 ```
 
 ## 🚧 Actions utilisateur requises (ordre de priorité)
@@ -85,7 +85,7 @@ DATABASE_URL=file:./maestro.db         # Par défaut
 
 1. **Vercel → Storage → Blob** : créer un store et connecter au projet. `BLOB_READ_WRITE_TOKEN` est copié automatiquement. **Sans ça, les images crashent en prod.**
 2. **Env vars Vercel réelles** : `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `CRON_SECRET` (voir `.env.example`).
-3. **Turso** : `turso db create maestro` → copier `DATABASE_URL` (libsql://...) + `DATABASE_AUTH_TOKEN` dans Vercel Settings → Env Vars. Sans ça, la DB SQLite se réinitialise à chaque redéploiement.
+3. **Turso** : `turso db create codexrs` → copier `DATABASE_URL` (libsql://...) + `DATABASE_AUTH_TOKEN` dans Vercel Settings → Env Vars. Sans ça, la DB SQLite se réinitialise à chaque redéploiement.
 4. **Token Meta** : aller sur `/clients/[id]/connections` (Pink House ou IBRODEPRO) → coller un User Access Token depuis Graph API Explorer avec scopes `pages_manage_posts` + `instagram_content_publish`.
 
 > 💡 Un banner de setup s'affiche sur la home (`/`) tant que ces variables ne sont pas configurées.
@@ -95,7 +95,7 @@ DATABASE_URL=file:./maestro.db         # Par défaut
 - **Performance Analyst agent** (#7) — `/analytics` → bouton "Analyser" par client → insights Meta + 3 recommandations Claude
 - **Library picker Studio** — toggle Générer/Bibliothèque dans Studio, grille assets client
 - **Bulk generation** — bouton "Générer les N drafts" dans PostIdeasPanel (parallèle + progress)
-- **Vercel Blob storage** — `lib/storage/local.ts` détecte `BLOB_READ_WRITE_TOKEN` et bascule automatiquement sur Blob en prod. Images AI ont des URLs publiques HTTPS → Meta peut les fetcher sans `MAESTRO_PUBLIC_URL`.
+- **Vercel Blob storage** — `lib/storage/local.ts` détecte `BLOB_READ_WRITE_TOKEN` et bascule automatiquement sur Blob en prod. Images AI ont des URLs publiques HTTPS → Meta peut les fetcher sans `CODEXRS_PUBLIC_URL`.
 - **`vercel.json`** — cron `* * * * *` sur `/api/cron/publish-due`. Vercel envoie automatiquement `Authorization: Bearer $CRON_SECRET`.
 - **`.env.example`** — toutes les variables documentées.
 - **4 bugs corrigés** (review code) : JSON.parse sans try/catch, race condition fetch assets, setState après unmount, cast string non validé.
@@ -144,7 +144,7 @@ Codex CLI : `/Users/bradleydave/.local/bin/codex` (v0.133+). Specs déjà exécu
 
 **Prompt à donner au Claude (mobile ou ailleurs)** :
 
-> Lis `SESSION_HANDOFF.md` et `CLAUDE.md`. Je veux reprendre le travail sur Maestro où on s'est arrêté. La prochaine priorité est [TODO #N de la liste]. Pose-moi les questions nécessaires avant de coder.
+> Lis `SESSION_HANDOFF.md` et `CLAUDE.md`. Je veux reprendre le travail sur CODEXRS où on s'est arrêté. La prochaine priorité est [TODO #N de la liste]. Pose-moi les questions nécessaires avant de coder.
 
 Ou si tu veux une tâche précise :
 

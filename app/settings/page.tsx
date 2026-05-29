@@ -49,10 +49,10 @@ export default function SettingsPage() {
 
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 text-sm text-gray-400">
         <p>
-          <strong className="text-white">Version Maestro :</strong> v0.3.0 — Sprint Post-Production
+          <strong className="text-white">Version CODEXRS :</strong> v0.3.0 — Sprint Post-Production
         </p>
         <p className="mt-1 text-xs text-gray-500">
-          Maestro est en développement actif. Les sections marquées &laquo;Bientôt&raquo; seront disponibles dans les prochains sprints.
+          CODEXRS est en développement actif. Les sections marquées &laquo;Bientôt&raquo; seront disponibles dans les prochains sprints.
         </p>
       </div>
     </div>

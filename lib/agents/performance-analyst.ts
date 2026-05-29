@@ -109,7 +109,7 @@ export async function analyzePerformance(input: {
     return { analysis: fallbackAnalysis(posts), cost: 0, tokensUsed: 0, model: 'fallback' }
   }
 
-  const systemPrompt = `Tu es le **Performance Analyst** de Maestro, spécialiste analytics HORECA.
+  const systemPrompt = `Tu es le **Performance Analyst** de CODEXRS, spécialiste analytics HORECA.
 Analyse les métriques Meta des posts d'un client, identifie les patterns et formule des recommandations actionnables pour améliorer les prochains posts.
 Réponds en français, en JSON strict, sans markdown.`
 

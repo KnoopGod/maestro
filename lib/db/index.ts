@@ -1,6 +1,6 @@
 import { createClient } from '@libsql/client'
 
-const url = process.env.DATABASE_URL || 'file:./maestro.db'
+const url = process.env.DATABASE_URL || 'file:./codexrs.db'
 const authToken = process.env.DATABASE_AUTH_TOKEN
 
 export const db = createClient({

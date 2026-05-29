@@ -70,7 +70,7 @@ export function Sidebar() {
           <Music2 className="w-5 h-5 text-white" />
         </div>
         <div>
-          <div className="text-base font-bold text-white tracking-tight">Maestro</div>
+          <div className="text-base font-bold text-white tracking-tight">CODEXRS</div>
           <div className="text-[10px] text-gray-500 uppercase tracking-widest">AI Conductor</div>
         </div>
       </div>

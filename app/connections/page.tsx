@@ -38,7 +38,7 @@ export default function ConnectionsPage() {
             Connexions
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Le tunnel API pour activer Maestro · {configured}/{CONNECTIONS.length} configurées
+            Le tunnel API pour activer CODEXRS · {configured}/{CONNECTIONS.length} configurées
           </p>
         </div>
         <div className="text-right">

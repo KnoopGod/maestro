@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ⚠️ Critical context
 
-- **The folder is named `ai-command-center` for legacy reasons. The product is called Maestro** — a unified social media management platform for HORECA clients (restaurants, hotels, bars, B&Bs) powered by AI agents.
+- **The folder is named `ai-command-center` for legacy reasons. The product is called CODEXRS** — a unified social media management platform for HORECA clients (restaurants, hotels, bars, B&Bs) powered by AI agents.
 - **Next.js 16.2.6**. This version has breaking changes from your training data — read `node_modules/next/dist/docs/` (especially `01-app/01-getting-started/`) before writing routes, actions, or layouts. Heed deprecation notices.
 - **Dev server runs on port 3010, not 3000** (`npm run dev` → http://localhost:3010).
 - A few legacy pages still exist from the original "AI Command Center" iteration (`/dashboard`, `/models`, `/task-router`, `/token-economy`, `/work-memory`, `/resume-for-claude`, `/setup-guide`). They are no longer in the sidebar but the files are still in `app/`. Do not refactor them unless asked.
@@ -17,7 +17,7 @@ npm run build            # Production build (use to verify changes compile)
 npm run lint             # ESLint
 npx tsc --noEmit         # Fast type check (preferred over build for quick checks)
 
-# Database (LibSQL, file at ./maestro.db)
+# Database (LibSQL, file at ./codexrs.db)
 npx tsx -e "import('./lib/db/schema').then(m => m.initSchema())"   # Init schema
 npx tsx lib/db/seed.ts                                              # Seed HORECA mock clients
 
@@ -29,7 +29,7 @@ There is no test framework configured.
 
 ## Architecture
 
-### The 4 layers of Maestro
+### The 4 layers of CODEXRS
 
 ```
 UI (Next.js App Router)
@@ -40,7 +40,7 @@ Agents (lib/agents/*.ts)         ← AI orchestration + external APIs
     ↓ persist via
 Data layer (lib/db/queries/*.ts)
     ↓
-LibSQL (./maestro.db, local SQLite — same client as Turso for cloud migration)
+LibSQL (./codexrs.db, local SQLite — same client as Turso for cloud migration)
 ```
 
 ### Agents (`lib/agents/`)
@@ -67,7 +67,7 @@ Tables:
 
 Local filesystem under `public/uploads/clients/<clientId>/`. Files are served as static assets at `/uploads/clients/<clientId>/...`. The path is what gets stored in `client_assets.url`.
 
-**Production gotcha**: Meta cannot fetch images from `localhost`. The publish flow in `app/api/studio/publish-post/route.ts` rewrites local URLs using `MAESTRO_PUBLIC_URL` env var. Without it, Facebook posts go through as text-only, Instagram posts are skipped with a warning.
+**Production gotcha**: Meta cannot fetch images from `localhost`. The publish flow in `app/api/studio/publish-post/route.ts` rewrites local URLs using `CODEXRS_PUBLIC_URL` env var. Without it, Facebook posts go through as text-only, Instagram posts are skipped with a warning.
 
 ### Server Actions
 
@@ -101,10 +101,10 @@ ANTHROPIC_API_KEY=sk-ant-...    # Required (Claude Sonnet 4.6 + Vision)
 OPENAI_API_KEY=sk-...           # Required for image generation
 META_APP_ID=...                 # Optional (enables long-lived token exchange)
 META_APP_SECRET=...             # Optional
-MAESTRO_PUBLIC_URL=https://...  # Required in prod so Meta can fetch /uploads/*
-DATABASE_URL=                   # Default: file:./maestro.db (swap to Turso URL for cloud)
+CODEXRS_PUBLIC_URL=https://...  # Required in prod so Meta can fetch /uploads/*
+DATABASE_URL=                   # Default: file:./codexrs.db (swap to Turso URL for cloud)
 DATABASE_AUTH_TOKEN=            # Only if DATABASE_URL is a Turso URL
-OLLAMA_HOST=                    # Legacy, unused by Maestro core
+OLLAMA_HOST=                    # Legacy, unused by CODEXRS core
 ```
 
 ## Conventions
@@ -123,11 +123,11 @@ If "Publier sur Meta" fails:
 1. Go to `/clients/[id]/connections` → click **"Diagnostiquer le token"**. The panel shows exact stored scopes vs required ones.
 2. If `pages_manage_posts` is missing → the Meta app needs the **"Tout gérer sur votre Page"** use case added (at `developers.facebook.com/apps/<APP_ID>/use_cases/`). Generating a token without this use case enabled will silently strip the permission.
 3. If the error is "(#200)" → user must be **Admin** of the page (not Editor/Moderator), AND the app must be in Development mode with the page linked to the same Business Manager.
-4. If Instagram fails with image error → confirm `MAESTRO_PUBLIC_URL` is set and not `localhost`. The route auto-rejects localhost URLs.
+4. If Instagram fails with image error → confirm `CODEXRS_PUBLIC_URL` is set and not `localhost`. The route auto-rejects localhost URLs.
 
 ## Things to know before refactoring
 
 - Posts table is the source of truth for the entire pipeline (generation, scheduling, publishing, analytics). Do not split it without a real reason.
-- The DA is what makes Maestro unique. Any change to `social-expert.ts` or `image-generator.ts` must continue to read and inject `getVisualIdentity()` results.
+- The DA is what makes CODEXRS unique. Any change to `social-expert.ts` or `image-generator.ts` must continue to read and inject `getVisualIdentity()` results.
 - All Anthropic responses are parsed as JSON with a robust fallback (regex extraction). Keep this pattern when adding new agents — Claude occasionally wraps JSON in markdown despite instructions.
 - Cost tracking on posts is real (token-based). Vision/DA costs in `/usage` are estimates (`COST_ESTIMATES` in `lib/db/queries/usage.ts`). If you add per-call cost tracking for those, update the usage page to use real numbers.

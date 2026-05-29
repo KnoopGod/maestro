@@ -29,11 +29,11 @@ export async function POST(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: 'Seules les images peuvent être animées' }, { status: 400 })
     }
 
-    // Resolve a publicly accessible URL (Vercel Blob gives absolute URLs; local needs MAESTRO_PUBLIC_URL)
+    // Resolve a publicly accessible URL (Vercel Blob gives absolute URLs; local needs CODEXRS_PUBLIC_URL)
     const publicUrl = toPublicUrl(asset.url) ?? asset.url
     if (/localhost|127\.0\.0\.1/.test(publicUrl)) {
       return NextResponse.json(
-        { error: 'L\'image doit être sur une URL publique. Configure MAESTRO_PUBLIC_URL ou Vercel Blob.' },
+        { error: 'L\'image doit être sur une URL publique. Configure CODEXRS_PUBLIC_URL ou Vercel Blob.' },
         { status: 400 }
       )
     }

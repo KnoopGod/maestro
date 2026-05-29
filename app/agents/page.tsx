@@ -1,5 +1,5 @@
 import { Bot, CheckCircle2, Clock, Sparkles } from 'lucide-react'
-import { AGENTS, type AgentStatus, type MaestroAgent } from '@/lib/agent-registry'
+import { AGENTS, type AgentStatus, type CODEXRSAgent } from '@/lib/agent-registry'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,7 +92,7 @@ export default function AgentsPage() {
   )
 }
 
-function AgentCard({ agent }: { agent: MaestroAgent }) {
+function AgentCard({ agent }: { agent: CODEXRSAgent }) {
   const isActive = agent.status === 'active'
   const cfg = STATUS_INFO[agent.status]
   return (

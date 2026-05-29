@@ -9,10 +9,10 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Maestro — AI Social Media Conductor',
+  title: 'CODEXRS — AI Social Media Conductor',
   description: 'Plateforme unifiée de gestion sociale pour HORECA avec agents IA spécialisés',
   viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Maestro' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'CODEXRS' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

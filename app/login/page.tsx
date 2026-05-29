@@ -42,7 +42,7 @@ function LoginForm() {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg">
             🎯
           </div>
-          <h1 className="text-2xl font-bold text-white">Maestro</h1>
+          <h1 className="text-2xl font-bold text-white">CODEXRS</h1>
           <p className="text-sm text-gray-500 mt-1">Plateforme de gestion sociale HORECA</p>
         </div>
 

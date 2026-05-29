@@ -1,5 +1,5 @@
 /**
- * Global connection registry — describes every external service Maestro
+ * Global connection registry — describes every external service CODEXRS
  * can plug into, in the recommended onboarding order.
  *
  * Used by /connections to render the guided setup.
@@ -37,7 +37,7 @@ export const CONNECTIONS: ConnectionStep[] = [
     status: 'required',
     scope: 'global',
     unlocks: 'Stratégie, captions, idées de posts, supervision qualité, analyse DA.',
-    purpose: 'Donner à Maestro son niveau agence : stratégie, raisonnement, critique qualité et analyse de marque.',
+    purpose: 'Donner à CODEXRS son niveau agence : stratégie, raisonnement, critique qualité et analyse de marque.',
     specialty: 'Raisonnement long, stratégie marketing, supervision éditoriale, analyse de documents et vision.',
     usedBy: ['Strategy Director', 'Social Expert', 'Claude Supervisor', 'DA Curator', 'Vision Analyzer'],
     credits: 'API payante. Prévoir un petit budget mensuel selon volume ; commencer avec un plafond bas côté console Anthropic.',
@@ -48,7 +48,7 @@ export const CONNECTIONS: ConnectionStep[] = [
       'Ajouter ANTHROPIC_API_KEY=sk-ant-... dans .env.local.',
       'Modèle par défaut : claude-opus-4-7 (adaptive thinking activé).',
     ],
-    test: 'Générer un post dans Studio. Sans clé, Maestro bascule sur un fallback déterministe.',
+    test: 'Générer un post dans Studio. Sans clé, CODEXRS bascule sur un fallback déterministe.',
     isConfigured: () => Boolean(process.env.ANTHROPIC_API_KEY),
   },
   {
@@ -80,7 +80,7 @@ export const CONNECTIONS: ConnectionStep[] = [
     category: 'social',
     status: 'required',
     scope: 'per-client',
-    unlocks: 'Publication réelle sur Facebook + Instagram depuis Maestro.',
+    unlocks: 'Publication réelle sur Facebook + Instagram depuis CODEXRS.',
     purpose: 'Publier automatiquement les posts validés sur les pages Facebook et comptes Instagram Business des clients.',
     specialty: 'Connexion page Facebook, Instagram Business, test de token, publication photo/text.',
     usedBy: ['Publisher · Meta'],
@@ -115,7 +115,7 @@ export const CONNECTIONS: ConnectionStep[] = [
       'Dans le dashboard Vercel → Storage → Blob → Create Store → Connect to Project.',
       'Vercel copie automatiquement BLOB_READ_WRITE_TOKEN dans les variables d\'environnement du projet.',
       'En local : sans BLOB_READ_WRITE_TOKEN, les fichiers sont stockés dans public/uploads/ (normal).',
-      'Les URLs Blob sont publiques HTTPS — Meta peut les fetcher sans MAESTRO_PUBLIC_URL.',
+      'Les URLs Blob sont publiques HTTPS — Meta peut les fetcher sans CODEXRS_PUBLIC_URL.',
     ],
     test: 'Générer un post dans Studio, vérifier que l\'URL de l\'image commence par https://...blob.vercel-storage.com',
     isConfigured: () => Boolean(process.env.BLOB_READ_WRITE_TOKEN),
@@ -136,9 +136,9 @@ export const CONNECTIONS: ConnectionStep[] = [
     envVars: ['DATABASE_URL', 'DATABASE_AUTH_TOKEN'],
     guide: [
       'Créer un compte sur turso.tech et installer la CLI : brew install tursodatabase/tap/turso',
-      'Créer une DB : turso db create maestro',
-      'Récupérer l\'URL : turso db show maestro --url → libsql://maestro-xxx.turso.io',
-      'Créer un token : turso db tokens create maestro',
+      'Créer une DB : turso db create codexrs',
+      'Récupérer l\'URL : turso db show codexrs --url → libsql://codexrs-xxx.turso.io',
+      'Créer un token : turso db tokens create codexrs',
       'Dans Vercel : Settings → Environment Variables → ajouter DATABASE_URL et DATABASE_AUTH_TOKEN.',
       'La DB Turso est compatible LibSQL — aucun changement de code requis.',
     ],

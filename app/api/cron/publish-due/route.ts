@@ -13,7 +13,7 @@ import { publishPost, PublishBlockedError } from '@/lib/agents/publish-pipeline'
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET
-  const authorizedBySession = await hasValidMaestroSession(req)
+  const authorizedBySession = await hasValidCODEXRSSession(req)
   if (!secret && !authorizedBySession) {
     return NextResponse.json({ error: 'CRON_SECRET non configuré' }, { status: 500 })
   }
@@ -60,11 +60,11 @@ function timingSafeEqual(a: string, b: string) {
   return mismatch === 0
 }
 
-async function hasValidMaestroSession(req: NextRequest) {
-  const password = process.env.MAESTRO_PASSWORD
+async function hasValidCODEXRSSession(req: NextRequest) {
+  const password = process.env.CODEXRS_PASSWORD
   if (!password) return false
 
-  const sessionCookie = req.cookies.get('maestro_session')?.value
+  const sessionCookie = req.cookies.get('codexrs_session')?.value
   if (!sessionCookie) return false
 
   const expected = await signSessionToken(password)
@@ -80,6 +80,6 @@ async function signSessionToken(password: string): Promise<string> {
     false,
     ['sign']
   )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('maestro-session'))
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('codexrs-session'))
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
 }

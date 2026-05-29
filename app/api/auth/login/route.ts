@@ -5,13 +5,13 @@ async function signToken(password: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw', enc.encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
   )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('maestro-session'))
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('codexrs-session'))
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json().catch(() => ({}))
-  const expected = process.env.MAESTRO_PASSWORD
+  const expected = process.env.CODEXRS_PASSWORD
 
   if (!expected || !password || password !== expected) {
     await new Promise(r => setTimeout(r, 500))
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const token = await signToken(expected)
   const res = NextResponse.json({ ok: true })
-  res.cookies.set('maestro_session', token, {
+  res.cookies.set('codexrs_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

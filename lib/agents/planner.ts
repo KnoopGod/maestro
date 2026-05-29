@@ -33,7 +33,7 @@ export async function proposePostIdeas(client: Client, count = 5): Promise<Plann
     }
   }
 
-  const systemPrompt = `Tu es **Strategy Director** pour Maestro, agence HORECA.
+  const systemPrompt = `Tu es **Strategy Director** pour CODEXRS, agence HORECA.
 Tu pilotes la planification de contenu social pour chaque client.
 
 Tes principes :

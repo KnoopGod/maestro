@@ -16,7 +16,7 @@ async function signToken(password: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw', enc.encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
   )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('maestro-session'))
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('codexrs-session'))
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
@@ -27,10 +27,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  const password = process.env.MAESTRO_PASSWORD
+  const password = process.env.CODEXRS_PASSWORD
   if (!password) return NextResponse.next()
 
-  const sessionCookie = req.cookies.get('maestro_session')?.value
+  const sessionCookie = req.cookies.get('codexrs_session')?.value
   const expected = await signToken(password)
 
   if (sessionCookie !== expected) {
