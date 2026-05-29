@@ -47,8 +47,7 @@ function LoginForm() {
       })
       if (!res.ok) { setError('ACCESS DENIED — INVALID CREDENTIALS'); return }
       const next = searchParams.get('next') || '/'
-      router.push(next)
-      router.refresh()
+      window.location.href = next
     } catch {
       setError('CONNECTION ERROR — RETRY')
     } finally {
