@@ -1,8 +1,10 @@
+import type React from 'react'
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { countPostsByStatus } from '@/lib/db/queries/posts'
 import { SetupBanner } from '@/components/SetupBanner'
+import { CLIENT_TYPES } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,99 +19,72 @@ export default async function HomePage() {
     ? (clients.reduce((sum, c) => sum + c.engagement, 0) / clients.length).toFixed(1)
     : '0'
 
-  // Current hour for greeting
   const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
+  const greeting = hour < 12 ? 'GOOD MORNING' : hour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING'
 
   return (
-    <div className="space-y-6">
-      {/* Setup banner — disappears once all env vars are configured */}
+    <div className="space-y-8">
       <SetupBanner />
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">{greeting} Bradley <span aria-hidden="true">👋</span></h1>
-        <p className="text-gray-400 mt-1">
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      <div className="border-b border-indigo-950/60 pb-5">
+        <div className="text-[9px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">
+          MAESTRO // DASHBOARD
+        </div>
+        <h1 className="text-2xl font-bold text-[#E0E3FF] tracking-wide">
+          {greeting}, BRADLEY <span className="text-indigo-400">_</span>
+        </h1>
+        <p className="text-[10px] text-gray-500 font-mono mt-1 tracking-wider">
+          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
         </p>
       </div>
 
-      {/* Stats — WCAG 1.3.1 : section avec titre */}
+      {/* Stats */}
       <section aria-labelledby="stats-heading">
-        <h2 id="stats-heading" className="sr-only">Statistiques du tableau de bord</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <StatCard
-          label="Clients actifs"
-          value={activeClients.length}
-          icon={Users}
-          color="from-purple-950/40"
-          accent="text-purple-300"
-          border="border-purple-800/30"
-          sub={`${clients.length} au total`}
-        />
-        <StatCard
-          label="Posts ce mois"
-          value={totalPosts}
-          icon={Sparkles}
-          color="from-pink-950/40"
-          accent="text-pink-300"
-          border="border-pink-800/30"
-          sub="Tous clients confondus"
-        />
-        <StatCard
-          label="Engagement moyen"
-          value={`${avgEngagement}%`}
-          icon={BarChart3}
-          color="from-emerald-950/40"
-          accent="text-emerald-300"
-          border="border-emerald-800/30"
-          sub="vs 2.1% industrie"
-        />
-        <StatCard
-          label="À valider"
-          value={toValidate}
-          icon={CalendarDays}
-          color="from-amber-950/40"
-          accent="text-amber-300"
-          border="border-amber-800/30"
-          sub={toValidate === 0 ? 'Aucun post en attente' : `${toValidate} post${toValidate > 1 ? 's' : ''} à relire`}
-        />
+        <h2 id="stats-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">// OVERVIEW</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
+          <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
+          <StatCard label="ENGAGEMENT MOY."  value={`${avgEngagement}%`}   icon={BarChart3}   accent="text-emerald-400" sub="VS 2.1% INDUSTRIE" />
+          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'FILE VIDE' : `${toValidate} POST${toValidate > 1 ? 'S' : ''}`} />
         </div>
       </section>
 
       {/* Quick actions */}
       <section aria-labelledby="actions-heading">
-        <h2 id="actions-heading" className="sr-only">Actions rapides</h2>
+        <h2 id="actions-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">// ACTIONS RAPIDES</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             href="/studio"
-            className="group bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-6 hover:border-purple-500/50 transition-all"
+            className="hud-corners group bg-gray-900/60 border border-gray-800 hover:border-indigo-600/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] transition-all duration-200 p-6"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div aria-hidden="true" className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-2xl shadow-lg">
-                ✨
+            <div className="flex items-start justify-between mb-5">
+              <div className="w-10 h-10 bg-indigo-600/20 border border-indigo-600/40 flex items-center justify-center">
+                <Sparkles aria-hidden="true" className="w-5 h-5 text-indigo-400" />
               </div>
-              <ArrowRight aria-hidden="true" className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight aria-hidden="true" className="w-4 h-4 text-indigo-600/40 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-lg font-semibold text-white">Créer un post</h3>
-            <p className="text-sm text-gray-400 mt-1">
-              Texte, image, vidéo — générés par tes agents spécialisés
+            <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 01 //</div>
+            <h3 className="text-base font-bold text-[#E0E3FF] tracking-wide uppercase">Créer un Post</h3>
+            <p className="text-[11px] text-gray-500 font-mono mt-1.5 leading-relaxed">
+              Texte · image · vidéo — agents IA spécialisés
             </p>
           </Link>
 
           <Link
             href="/clients"
-            className="group bg-gradient-to-br from-blue-950/40 to-cyan-950/30 border border-blue-700/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all"
+            className="hud-corners group bg-gray-900/60 border border-gray-800 hover:border-indigo-600/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] transition-all duration-200 p-6"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div aria-hidden="true" className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-2xl shadow-lg">
-                👥
+            <div className="flex items-start justify-between mb-5">
+              <div className="w-10 h-10 bg-indigo-600/20 border border-indigo-600/40 flex items-center justify-center">
+                <Users aria-hidden="true" className="w-5 h-5 text-indigo-400" />
               </div>
-              <ArrowRight aria-hidden="true" className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight aria-hidden="true" className="w-4 h-4 text-indigo-600/40 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-lg font-semibold text-white">Gérer mes clients</h3>
-            <p className="text-sm text-gray-400 mt-1">
-              {clients.length} clients HORECA — voir leurs stratégies et performances
+            <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 02 //</div>
+            <h3 className="text-base font-bold text-[#E0E3FF] tracking-wide uppercase">Gérer les Clients</h3>
+            <p className="text-[11px] text-gray-500 font-mono mt-1.5 leading-relaxed">
+              {clients.length} clients HORECA — stratégies · performances
             </p>
           </Link>
         </div>
@@ -117,57 +92,59 @@ export default async function HomePage() {
 
       {/* Recent clients */}
       <section aria-labelledby="clients-heading">
-      <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="clients-heading" className="text-lg font-semibold text-white"><span aria-hidden="true">📋</span> Tes clients</h2>
-          <Link href="/clients" className="text-sm text-purple-400 hover:underline">
-            Voir tous ({clients.length}) →
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {clients.slice(0, 6).map(c => (
-            <Link
-              key={c.id}
-              href={`/clients/${c.id}`}
-              className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-all"
-            >
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${c.color} flex items-center justify-center text-lg flex-shrink-0`}>
-                {c.emoji}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">{c.name}</div>
-                <div className="text-[11px] text-gray-500">
-                  {c.city || '—'}{c.engagement > 0 ? ` · ${c.engagement}% impact` : ''}
-                </div>
-              </div>
+        <div className="border border-gray-800 bg-gray-900/40 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 id="clients-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase">// CLIENTS ENREGISTRÉS</h2>
+            <Link href="/clients" className="text-[9px] text-indigo-500 hover:text-indigo-300 font-mono tracking-wider transition-colors">
+              VOIR TOUT ({clients.length}) →
             </Link>
-          ))}
+          </div>
+          {clients.length === 0 ? (
+            <p className="text-[11px] text-gray-600 font-mono text-center py-6">AUCUN CLIENT ENREGISTRÉ</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {clients.slice(0, 6).map(c => {
+                const typeCfg = CLIENT_TYPES[c.type]
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/clients/${c.id}`}
+                    className="flex items-center gap-3 p-3 border border-gray-800 hover:border-indigo-700/50 transition-all group"
+                  >
+                    <div className={`w-9 h-9 bg-gradient-to-br ${c.color} flex items-center justify-center text-base flex-shrink-0`}>
+                      {c.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-medium text-[#E0E3FF] truncate group-hover:text-indigo-300 transition-colors font-mono tracking-wide uppercase">{c.name}</div>
+                      <div className="text-[9px] text-gray-600 font-mono truncate">
+                        {typeCfg?.label ?? ''}{c.city ? ` // ${c.city}` : ''}
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-indigo-700/60 font-mono">►</span>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </div>
-      </div>
       </section>
     </div>
   )
 }
 
 function StatCard({
-  label, value, icon: Icon, color, accent, border, sub,
+  label, value, icon: Icon, accent, sub,
 }: {
-  label: string
-  value: string | number
-  icon: React.ElementType
-  color: string
-  accent: string
-  border: string
-  sub: string
+  label: string; value: string | number; icon: React.ElementType; accent: string; sub: string
 }) {
   return (
-    <div className={`bg-gradient-to-br ${color} to-gray-900/40 border ${border} rounded-xl p-5 hover:-translate-y-0.5 hover:shadow-md hover:shadow-purple-900/10 transition-all duration-200 group`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className={`text-xs ${accent}`}>{label}</span>
-        <Icon aria-hidden="true" className={`w-4 h-4 ${accent} group-hover:scale-110 transition-transform duration-200`} />
+    <div className="hud-corners bg-gray-900/60 border border-gray-800 hover:border-indigo-700/50 hover:shadow-[0_0_16px_rgba(99,102,241,0.1)] transition-all duration-200 p-4 group">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase">{label}</span>
+        <Icon aria-hidden="true" className={`w-3.5 h-3.5 ${accent} group-hover:scale-110 transition-transform duration-200`} />
       </div>
-      <div className="text-2xl lg:text-3xl font-bold text-white" aria-label={`${value} — ${label}`}>{value}</div>
-      <div className="text-xs text-gray-400 mt-1">{sub}</div>
+      <div className="text-2xl lg:text-3xl font-bold text-[#E0E3FF] font-mono">{value}</div>
+      <div className="text-[8px] text-gray-600 font-mono tracking-[0.15em] mt-1.5">{sub}</div>
     </div>
   )
 }
