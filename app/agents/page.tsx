@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Bot, CheckCircle2, Clock, Sparkles, Activity, AlertTriangle, ArrowRight } from 'lucide-react'
 import { AGENTS, type AgentStatus, type MaestroAgent } from '@/lib/agent-registry'
 import { listRecentJobs } from '@/lib/db/queries/agent-jobs'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
 
 export const dynamic = 'force-dynamic'
@@ -230,15 +231,13 @@ export default async function AgentsPage() {
           </div>
         )}
 
-        {/* État vide */}
         {allJobs.length === 0 && (
-          <div className="text-center py-10 bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl">
-            <p className="text-gray-500 text-sm">Aucune activité enregistrée.</p>
-            <p className="text-gray-600 text-xs mt-1">
-              Les activités apparaîtront ici dès que tu génères un post dans le{' '}
-              <Link href="/studio" className="text-purple-400 hover:underline">Studio</Link>.
-            </p>
-          </div>
+          <EmptyState
+            icon={Bot}
+            title="Aucune activité enregistrée"
+            description="Les activités apparaîtront ici dès que tu génères un post dans le Studio."
+            cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
+          />
         )}
       </section>
 

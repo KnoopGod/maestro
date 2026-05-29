@@ -3,10 +3,18 @@ import { ShieldCheck, AlertCircle, Sparkles } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
+
+const POST_STATUS_BORDER: Record<string, string> = {
+  draft:    'border-l-amber-500/70',
+  ready:    'border-l-purple-500/70',
+  failed:   'border-l-red-500/70',
+  published: 'border-l-emerald-500/70',
+}
 
 export default async function ValidationPage() {
   const [allPosts, clients] = await Promise.all([listPosts({ limit: 200 }), listClients()])
@@ -32,7 +40,7 @@ export default async function ValidationPage() {
         </div>
         <Link
           href="/studio"
-          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
+          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
           Nouveau post
@@ -45,23 +53,18 @@ export default async function ValidationPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <StatBox label="Brouillons" value={draftCount} color="text-amber-400" />
-        <StatBox label="Prêts" value={readyCount} color="text-purple-400" />
-        <StatBox label="Échecs" value={failedCount} color="text-red-400" />
+        <StatBox label="Brouillons" value={draftCount} color="text-amber-400" border="border-amber-800/30" />
+        <StatBox label="Prêts" value={readyCount} color="text-purple-400" border="border-purple-800/30" />
+        <StatBox label="Échecs" value={failedCount} color="text-red-400" border="border-red-800/30" />
       </div>
 
       {queue.length === 0 ? (
-        <div className="bg-gray-900/20 border border-dashed border-gray-700 rounded-2xl p-12 text-center">
-          <ShieldCheck className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-400">Aucun post en attente de validation.</p>
-          <Link
-            href="/studio"
-            className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3"
-          >
-            <Sparkles className="w-4 h-4" />
-            Créer un post
-          </Link>
-        </div>
+        <EmptyState
+          icon={ShieldCheck}
+          title="Aucun post en attente de validation"
+          description="Les posts générés dans le Studio apparaîtront ici pour relecture avant publication."
+          cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {queue.map(post => (
@@ -73,9 +76,9 @@ export default async function ValidationPage() {
   )
 }
 
-function StatBox({ label, value, color }: { label: string; value: number; color: string }) {
+function StatBox({ label, value, color, border }: { label: string; value: number; color: string; border: string }) {
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+    <div className={`bg-gray-900/40 border ${border} rounded-xl p-4 hover:-translate-y-0.5 transition-transform duration-200`}>
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
     </div>
@@ -83,8 +86,9 @@ function StatBox({ label, value, color }: { label: string; value: number; color:
 }
 
 function PostCard({ post, client }: { post: Post; client: Client | undefined }) {
+  const leftBorder = POST_STATUS_BORDER[post.status] ?? ''
   return (
-    <article className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-4">
+    <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 hover:border-gray-700 transition-colors duration-200`}>
       <div className="flex items-start gap-3">
         {post.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -101,7 +105,7 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
                 {client.emoji} {client.name}
               </Link>
             )}
-            <span className="text-[10px] uppercase tracking-wider text-gray-500">{post.status}</span>
+            <StatusPill status={post.status} />
             <span className="text-[10px] text-gray-600 ml-auto">Impact {post.impactScore}/100</span>
           </div>
           <p className="text-sm font-medium text-white line-clamp-2">{post.brief}</p>
@@ -126,5 +130,19 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       <PostSupervisor post={post} />
       <PostActions post={post} />
     </article>
+  )
+}
+
+const STATUS_PILL: Record<string, { label: string; cls: string }> = {
+  draft:    { label: 'Brouillon', cls: 'text-amber-300 border-amber-700/40 bg-amber-950/20' },
+  ready:    { label: 'Prêt',      cls: 'text-purple-300 border-purple-700/40 bg-purple-950/20' },
+  failed:   { label: 'Échec',     cls: 'text-red-300 border-red-700/40 bg-red-950/20' },
+  published:{ label: 'Publié',    cls: 'text-emerald-300 border-emerald-700/40 bg-emerald-950/20' },
+}
+
+function StatusPill({ status }: { status: string }) {
+  const cfg = STATUS_PILL[status] ?? { label: status, cls: 'text-gray-400 border-gray-700 bg-gray-800/20' }
+  return (
+    <span className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
   )
 }

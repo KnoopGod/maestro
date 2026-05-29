@@ -8,10 +8,10 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
   return (
     <Link
       href={`/clients/${client.id}`}
-      className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 hover:border-purple-700/50 transition-all group block"
+      className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 hover:border-purple-700/50 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-200 group block"
     >
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${client.color} flex items-center justify-center text-2xl shadow-lg`}>
+        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${client.color} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform duration-200`}>
           {client.emoji}
         </div>
         <span className={`text-[10px] border rounded-full px-2 py-0.5 ${statusCfg.color}`}>
@@ -26,16 +26,16 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
         {typeCfg.label}{client.city ? ` · ${client.city}` : ''}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-800 grid grid-cols-3 gap-2 text-center">
-        <div>
+      <div className="mt-4 pt-4 border-t border-gray-800 grid grid-cols-3 text-center divide-x divide-gray-800">
+        <div className="px-2">
           <div className="text-sm font-bold text-white">{client.postsThisMonth}</div>
           <div className="text-[10px] text-gray-500">posts/mois</div>
         </div>
-        <div>
+        <div className="px-2">
           <div className="text-sm font-bold text-emerald-400">{client.engagement}%</div>
           <div className="text-[10px] text-gray-500">engagement</div>
         </div>
-        <div>
+        <div className="px-2">
           <div className="text-sm font-bold text-purple-400">{client.connectedPlatforms}</div>
           <div className="text-[10px] text-gray-500">plateformes</div>
         </div>

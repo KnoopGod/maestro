@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { BarChart3, TrendingUp, Users, Eye } from 'lucide-react'
+import { BarChart3, TrendingUp, Users, Eye, Sparkles } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PerformancePanel } from '@/components/analytics/PerformancePanel'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,10 +36,10 @@ export default async function AnalyticsPage() {
 
       {/* Top stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card label="Posts publiés"   value={published.length} icon={TrendingUp} color="text-emerald-400" />
-        <Card label="Brouillons"      value={draft.length}     icon={BarChart3}  color="text-amber-400" />
-        <Card label="Échecs"          value={failed.length}    icon={Eye}        color="text-red-400" />
-        <Card label="Clients actifs"  value={clients.filter(c => c.status === 'active').length} icon={Users} color="text-purple-400" />
+        <Card label="Posts publiés"  value={published.length} icon={TrendingUp} color="text-emerald-400" grad="from-emerald-950/40" border="border-emerald-800/30" />
+        <Card label="Brouillons"     value={draft.length}     icon={BarChart3}  color="text-amber-400"  grad="from-amber-950/40"  border="border-amber-800/30" />
+        <Card label="Échecs"         value={failed.length}    icon={Eye}        color="text-red-400"    grad="from-red-950/40"    border="border-red-800/30" />
+        <Card label="Clients actifs" value={clients.filter(c => c.status === 'active').length} icon={Users} color="text-purple-400" grad="from-purple-950/40" border="border-purple-800/30" />
       </div>
 
       {/* Performance Analyst */}
@@ -49,9 +50,12 @@ export default async function AnalyticsPage() {
         <h2 className="text-lg font-semibold text-white mb-4">Posts publiés par client</h2>
 
         {postsPerClient.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-6">
-            Pas encore de posts publiés. <Link href="/studio" className="text-purple-400 hover:underline">Créer le premier</Link>
-          </p>
+          <EmptyState
+            icon={BarChart3}
+            title="Pas encore de posts publiés"
+            description="Les statistiques apparaîtront dès que tu publies des contenus pour tes clients."
+            cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
+          />
         ) : (
           <div className="space-y-2">
             {postsPerClient.map(({ client, count }) => {
@@ -62,14 +66,14 @@ export default async function AnalyticsPage() {
                   href={`/plan?client=${client.id}`}
                   className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-800/40 transition-colors group"
                 >
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${client.color} flex items-center justify-center text-lg flex-shrink-0`}>
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${client.color} flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform duration-200`}>
                     {client.emoji}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-white truncate">{client.name}</div>
                     <div className="mt-1.5 w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-600 to-pink-500"
+                        className="h-full bg-gradient-to-r from-purple-600 to-pink-500 transition-all duration-300"
                         style={{ width: `${(count / max) * 100}%` }}
                       />
                     </div>
@@ -88,12 +92,19 @@ export default async function AnalyticsPage() {
   )
 }
 
-function Card({ label, value, icon: Icon, color }: { label: string; value: number; icon: React.ElementType; color: string }) {
+function Card({ label, value, icon: Icon, color, grad, border }: {
+  label: string
+  value: number
+  icon: React.ElementType
+  color: string
+  grad: string
+  border: string
+}) {
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-5">
+    <div className={`bg-gradient-to-br ${grad} to-gray-900/40 border ${border} rounded-xl p-5 hover:-translate-y-0.5 hover:shadow-md hover:shadow-purple-900/10 transition-all duration-200 group`}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-gray-500">{label}</span>
-        <Icon className={`w-4 h-4 ${color}`} />
+        <Icon className={`w-4 h-4 ${color} group-hover:scale-110 transition-transform duration-200`} />
       </div>
       <div className={`text-3xl font-bold ${color}`}>{value}</div>
     </div>

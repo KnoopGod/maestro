@@ -44,9 +44,9 @@ function NavItem({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all group
+      className={`flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-150 group
         ${active
-          ? 'bg-purple-600/20 text-purple-300 border border-purple-500/20'
+          ? 'bg-purple-600/20 text-purple-300 border border-purple-500/30 border-l-2 border-l-purple-400 shadow-sm shadow-purple-900/20'
           : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 border border-transparent'
         }`}
     >

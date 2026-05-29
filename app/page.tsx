@@ -161,10 +161,10 @@ function StatCard({
   sub: string
 }) {
   return (
-    <div className={`bg-gradient-to-br ${color} to-gray-900/40 border ${border} rounded-xl p-5 hover:border-opacity-50 transition-colors`}>
+    <div className={`bg-gradient-to-br ${color} to-gray-900/40 border ${border} rounded-xl p-5 hover:-translate-y-0.5 hover:shadow-md hover:shadow-purple-900/10 transition-all duration-200 group`}>
       <div className="flex items-center justify-between mb-2">
         <span className={`text-xs ${accent}`}>{label}</span>
-        <Icon aria-hidden="true" className={`w-4 h-4 ${accent}`} />
+        <Icon aria-hidden="true" className={`w-4 h-4 ${accent} group-hover:scale-110 transition-transform duration-200`} />
       </div>
       <div className="text-2xl lg:text-3xl font-bold text-white" aria-label={`${value} — ${label}`}>{value}</div>
       <div className="text-xs text-gray-400 mt-1">{sub}</div>

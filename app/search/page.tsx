@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Search, Users, FileText } from 'lucide-react'
 import { searchClients } from '@/lib/db/queries/clients'
 import { searchPosts } from '@/lib/db/queries/posts'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { CLIENT_TYPES } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
@@ -107,9 +108,11 @@ export default async function SearchPage({
       )}
 
       {total === 0 && (
-        <div className="text-center py-12 bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl">
-          <p className="text-gray-400 text-sm">Aucun client ni post ne correspond à «&nbsp;{query}&nbsp;».</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title={`Aucun résultat pour « ${query} »`}
+          description="Essaie un autre terme — nom de client, ville, ou extrait de caption."
+        />
       )}
     </div>
   )
