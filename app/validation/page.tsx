@@ -88,7 +88,7 @@ function StatBox({ label, value, color, border }: { label: string; value: number
 function PostCard({ post, client }: { post: Post; client: Client | undefined }) {
   const leftBorder = POST_STATUS_BORDER[post.status] ?? ''
   return (
-    <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 hover:border-gray-700 transition-colors duration-200`}>
+    <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 transition-colors duration-200`}>
       <div className="flex items-start gap-3">
         {post.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
