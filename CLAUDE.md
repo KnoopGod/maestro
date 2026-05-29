@@ -131,3 +131,39 @@ If "Publier sur Meta" fails:
 - The DA is what makes Maestro unique. Any change to `social-expert.ts` or `image-generator.ts` must continue to read and inject `getVisualIdentity()` results.
 - All Anthropic responses are parsed as JSON with a robust fallback (regex extraction). Keep this pattern when adding new agents — Claude occasionally wraps JSON in markdown despite instructions.
 - Cost tracking on posts is real (token-based). Vision/DA costs in `/usage` are estimates (`COST_ESTIMATES` in `lib/db/queries/usage.ts`). If you add per-call cost tracking for those, update the usage page to use real numbers.
+
+## Claude ↔ Codex duo workflow
+
+This project uses a two-agent architecture: **Claude** (architect) + **Codex** (executor).
+
+```
+Claude writes spec → CODEX_SPECS/NNN-feature.md → codex exec → Claude reviews diff
+```
+
+### Claude's responsibilities
+- Architecture decisions, cross-file consistency, strategic trade-offs
+- Writing detailed specs in `CODEX_SPECS/NNN-feature.md` (numbered, sequential)
+- Reviewing Codex output (`git diff`) and fixing edge cases
+- Never implementing features that belong to a Codex spec unless there's no Codex session available
+
+### Codex's responsibilities
+- Verbose code generation, repetitive scaffolds, single-file implementations
+- Running `npx tsc --noEmit` + `npm run build` after every spec to validate
+- Writing a summary of what was created/modified
+
+### Spec format (CODEX_SPECS/NNN-feature.md)
+Each spec must include: **Context** (files to read), **Goal** (one-line outcome), **Files to modify** (exact paths + precise changes), **Don't touch**, **Validation** (commands to run), **Output expected**.
+
+### Invoking Codex (run from project root)
+```sh
+codex exec \
+  --cd /Users/bradleydave/Dev/ai-command-center \
+  --sandbox workspace-write \
+  --output-last-message /tmp/codex-last.md \
+  "$(cat CODEX_SPECS/NNN-feature.md)"
+```
+
+### When to write a new spec vs implement directly
+- **Write a spec** when the task is >50 lines of code, touches >2 files, or is mostly scaffolding
+- **Implement directly** for small fixes (<30 lines), urgent hotfixes, or when Codex is not available
+- Existing specs: `CODEX_SPECS/` — always check before starting an implementation to avoid duplication
