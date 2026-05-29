@@ -35,7 +35,7 @@ export function BottomNav() {
       {showMore && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu de navigation">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMore(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-[#07081A] border-t border-gray-800 rounded-t-2xl p-4 pb-8">
+          <div className="absolute bottom-0 left-0 right-0 bg-[#07081A] border-t border-indigo-950/60 rounded-t-2xl p-4 pb-8">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-semibold text-white" id="more-nav-title">Navigation</span>
               <button
