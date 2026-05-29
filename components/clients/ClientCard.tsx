@@ -8,36 +8,37 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
   return (
     <Link
       href={`/clients/${client.id}`}
-      className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 hover:border-purple-700/50 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-900/20 transition-all duration-200 group block"
+      className="hud-corners block bg-gray-900/60 border border-gray-800 hover:border-indigo-700/60 hover:shadow-[0_0_24px_rgba(99,102,241,0.12)] transition-all duration-200 group p-5"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${client.color} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform duration-200`}>
-          {client.emoji}
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 bg-gradient-to-br ${client.color} flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200`}>
+            {client.emoji}
+          </div>
+          <div>
+            <div className="text-[8px] text-indigo-600/60 font-mono tracking-[0.25em] uppercase mb-0.5">{typeCfg.label}{client.city ? ` // ${client.city}` : ''}</div>
+            <div className="text-sm font-medium text-[#E0E3FF] group-hover:text-indigo-300 transition-colors tracking-wide">{client.name}</div>
+          </div>
         </div>
-        <span className={`text-[10px] border rounded-full px-2 py-0.5 ${statusCfg.color}`}>
-          ● {statusCfg.label}
+        <span className={`text-[8px] border font-mono tracking-widest px-2 py-0.5 uppercase ${statusCfg.color}`}>
+          {statusCfg.label}
         </span>
       </div>
 
-      <div className="font-semibold text-white group-hover:text-purple-300 transition-colors">
-        {client.name}
-      </div>
-      <div className="text-xs text-gray-500">
-        {typeCfg.label}{client.city ? ` · ${client.city}` : ''}
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-gray-800 grid grid-cols-3 text-center divide-x divide-gray-800">
-        <div className="px-2">
-          <div className="text-sm font-bold text-white">{client.postsThisMonth}</div>
-          <div className="text-[10px] text-gray-500">posts/mois</div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 border-t border-gray-800 pt-3 divide-x divide-gray-800">
+        <div className="px-2 text-center">
+          <div className="text-sm font-bold text-[#E0E3FF] font-mono">{client.postsThisMonth}</div>
+          <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase mt-0.5">POSTS</div>
         </div>
-        <div className="px-2">
-          <div className="text-sm font-bold text-emerald-400">{client.engagement}%</div>
-          <div className="text-[10px] text-gray-500">engagement</div>
+        <div className="px-2 text-center">
+          <div className="text-sm font-bold text-emerald-400 font-mono">{client.engagement}%</div>
+          <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase mt-0.5">ENGAGE</div>
         </div>
-        <div className="px-2">
-          <div className="text-sm font-bold text-purple-400">{client.connectedPlatforms}</div>
-          <div className="text-[10px] text-gray-500">plateformes</div>
+        <div className="px-2 text-center">
+          <div className="text-sm font-bold text-indigo-400 font-mono">{client.connectedPlatforms}</div>
+          <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase mt-0.5">PLATF.</div>
         </div>
       </div>
     </Link>

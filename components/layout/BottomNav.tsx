@@ -35,13 +35,13 @@ export function BottomNav() {
       {showMore && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu de navigation">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMore(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800 rounded-t-2xl p-4 pb-8">
+          <div className="absolute bottom-0 left-0 right-0 bg-[#07081A] border-t border-gray-800 rounded-t-2xl p-4 pb-8">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-semibold text-white" id="more-nav-title">Navigation</span>
               <button
                 onClick={() => setShowMore(false)}
                 aria-label="Fermer le menu de navigation"
-                className="p-1.5 min-w-[44px] min-h-[44px] rounded-lg hover:bg-gray-800 flex items-center justify-center"
+                className="p-1.5 min-w-[44px] min-h-[44px] rounded-lg hover:bg-gray-800/60 flex items-center justify-center"
               >
                 <X aria-hidden="true" className="w-4 h-4 text-gray-400" />
               </button>
@@ -57,7 +57,7 @@ export function BottomNav() {
                       aria-current={active ? 'page' : undefined}
                       onClick={() => setShowMore(false)}
                       className={`flex flex-col items-center gap-1.5 p-3 min-h-[64px] rounded-xl transition-all ${
-                        active ? 'bg-purple-600/20 text-purple-300' : 'text-gray-400 hover:bg-gray-800/60'
+                        active ? 'bg-indigo-950/60 text-indigo-300' : 'text-gray-400 hover:bg-indigo-950/40'
                       }`}
                     >
                       <item.icon aria-hidden="true" className="w-5 h-5" />
@@ -72,7 +72,7 @@ export function BottomNav() {
       )}
 
       {/* Bottom tab bar */}
-      <nav aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-gray-950/90 backdrop-blur-xl border-t border-gray-800/50 pb-safe">
+      <nav aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#07081A]/95 backdrop-blur-xl border-t border-indigo-950/60 pb-safe">
         <div className="flex items-stretch h-16">
           {NAV_MAIN.map(item => {
             const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
@@ -82,12 +82,12 @@ export function BottomNav() {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
-                  active ? 'text-purple-400' : 'text-gray-500'
+                  active ? 'text-indigo-400' : 'text-gray-500'
                 }`}
               >
                 {item.href === '/studio' ? (
                   <div aria-hidden="true" className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    active ? 'bg-purple-600' : 'bg-purple-600/80'
+                    active ? 'bg-indigo-600' : 'bg-indigo-600'
                   }`}>
                     <item.icon className="w-5 h-5 text-white" />
                   </div>

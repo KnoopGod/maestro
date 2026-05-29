@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Safe area for iPhone notch / home indicator */
+/* Safe area for iPhone notch */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -53,6 +53,21 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── HUD Navy Palette — override Tailwind grays ─────────────────── */
+@theme {
+  --color-gray-950: #07081A;
+  --color-gray-900: #0D0E2A;
+  --color-gray-800: #151738;
+  --color-gray-700: #22245C;
+  --color-gray-600: #4A4E8A;
+  --color-gray-500: #6669A8;
+  --color-gray-400: #8E91C4;
+  --color-gray-300: #B4B7D8;
+  --color-gray-200: #D0D3EC;
+  --color-gray-100: #E6E8F6;
+  --color-gray-50:  #F2F3FB;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -77,7 +92,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.4rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -128,34 +143,99 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: #07081A;
+    background-image: radial-gradient(circle, rgba(99, 102, 241, 0.09) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
   html {
     @apply font-sans;
   }
 }
 
-/* WCAG 2.1 AA — Critère 2.4.7 : indicateurs de focus visibles */
+/* WCAG 2.1 AA — indicateurs de focus visibles */
 :focus-visible {
-  outline: 2px solid #a78bfa !important; /* purple-400, visible sur fond sombre */
+  outline: 2px solid #818cf8 !important;
   outline-offset: 2px !important;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
-/* Lien "Aller au contenu" — visible uniquement au clavier */
+/* Lien d'évitement clavier */
 .skip-link {
   position: fixed;
   top: -100%;
   left: 0.5rem;
   z-index: 9999;
   padding: 0.5rem 1rem;
-  background: #7c3aed;
+  background: #6366f1;
   color: #fff;
   font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   text-decoration: none;
   transition: top 0.1s;
 }
 .skip-link:focus {
   top: 0.5rem;
+}
+
+/* ── HUD Panel corner brackets ──────────────────────────────────── */
+.hud-corners {
+  position: relative;
+}
+.hud-corners::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) top left    / 12px 1px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) top left    / 1px 12px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) top right   / 12px 1px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) top right   / 1px 12px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) bottom left / 12px 1px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) bottom left / 1px 12px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) bottom right / 12px 1px no-repeat,
+    linear-gradient(rgba(99,102,241,0.55), rgba(99,102,241,0.55)) bottom right / 1px 12px no-repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+.hud-corners > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* HUD active corner — brighter on hover */
+.hud-corners:hover::before {
+  background:
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) top left    / 12px 1px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) top left    / 1px 12px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) top right   / 12px 1px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) top right   / 1px 12px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) bottom left / 12px 1px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) bottom left / 1px 12px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) bottom right / 12px 1px no-repeat,
+    linear-gradient(rgba(129,140,248,0.9), rgba(129,140,248,0.9)) bottom right / 1px 12px no-repeat;
+}
+
+/* ── Terminal typing cursor ─────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ── HUD scan-line overlay (subtle) ─────────────────────────────── */
+.hud-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(99, 102, 241, 0.012) 3px,
+    rgba(99, 102, 241, 0.012) 4px
+  );
+  pointer-events: none;
 }

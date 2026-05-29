@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} dark h-full`}>
-      <body className="min-h-full bg-gray-950 text-gray-100 antialiased">
+      <body className="min-h-full bg-[#07081A] text-[#E0E3FF] antialiased">
         {/* WCAG 2.4.1 — Lien d'évitement clavier */}
         <a href="#main-content" className="skip-link">
           Aller au contenu principal
