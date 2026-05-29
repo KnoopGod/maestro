@@ -1,5 +1,9 @@
 import Link from 'next/link'
-import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
+import type { ElementType } from 'react'
+import {
+  Users, Sparkles, CalendarDays, BarChart3, ArrowRight,
+  CheckCircle2, Layers3, Wand2, RadioTower,
+} from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { SetupBanner } from '@/components/SetupBanner'
 
@@ -23,11 +27,51 @@ export default async function HomePage() {
       <SetupBanner />
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">{greeting} Bradley 👋</h1>
-        <p className="text-gray-400 mt-1">
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+      <div className="codexrs-hero rounded-[28px] p-5 sm:p-7 lg:p-8 overflow-hidden relative">
+        <div className="absolute inset-x-0 top-0 hidden h-px bg-gradient-to-r from-transparent via-[#d9a441]/40 to-transparent lg:block" />
+        <div className="relative grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+          <div>
+            <div className="codexrs-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium">
+              <RadioTower className="h-3.5 w-3.5" />
+              Cockpit social HORECA
+            </div>
+            <h1 className="mt-5 max-w-3xl text-3xl font-semibold tracking-tight text-[#f5f1e8] sm:text-4xl lg:text-5xl">
+              {greeting} Bradley, pilote tes clients depuis un seul poste de travail.
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-[#aab5ac] sm:text-base">
+              Stratégie, génération créative, validation, calendrier et publication Meta restent connectés au même flux opérationnel.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {['Client', 'Stratégie', 'Studio', 'Validation', 'Publication'].map(step => (
+                <span key={step} className="rounded-full border border-white/[0.08] bg-black/20 px-3 py-1 text-xs text-[#d6ded7]">
+                  {step}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/[0.08] bg-black/20 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-[0.28em] text-[#7f8a81]">Flux MVP</span>
+              <span className="rounded-full bg-[#76c893]/12 px-2.5 py-1 text-xs font-medium text-[#9fe6b8]">Actif</span>
+            </div>
+            <div className="mt-4 space-y-3">
+              {[
+                ['Analyse client', 'Profil, DA, contexte et objectif'],
+                ['Proposition agents', 'Texte + image IA pour Facebook et Instagram'],
+                ['Validation humaine', 'Premier post contrôlé avant publication'],
+              ].map(([title, detail]) => (
+                <div key={title} className="flex gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#76c893]" />
+                  <div>
+                    <div className="text-sm font-medium text-[#f5f1e8]">{title}</div>
+                    <div className="text-xs text-[#8f9a91]">{detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
@@ -36,36 +80,28 @@ export default async function HomePage() {
           label="Clients actifs"
           value={activeClients.length}
           icon={Users}
-          color="from-purple-950/40"
-          accent="text-purple-300"
-          border="border-purple-800/30"
+          tone="gold"
           sub={`${clients.length} au total`}
         />
         <StatCard
           label="Posts ce mois"
           value={totalPosts}
           icon={Sparkles}
-          color="from-pink-950/40"
-          accent="text-pink-300"
-          border="border-pink-800/30"
+          tone="blue"
           sub="Tous clients confondus"
         />
         <StatCard
           label="Engagement moyen"
           value={`${avgEngagement}%`}
           icon={BarChart3}
-          color="from-emerald-950/40"
-          accent="text-emerald-300"
-          border="border-emerald-800/30"
+          tone="green"
           sub="vs 2.1% industrie"
         />
         <StatCard
           label="À valider"
           value={0}
           icon={CalendarDays}
-          color="from-amber-950/40"
-          accent="text-amber-300"
-          border="border-amber-800/30"
+          tone="red"
           sub="Aucun post en attente"
         />
       </div>
@@ -74,42 +110,42 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link
           href="/studio"
-          className="group bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-6 hover:border-purple-500/50 transition-all"
+          className="codexrs-action group rounded-3xl p-6"
         >
           <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-2xl shadow-lg">
-              ✨
+            <div className="w-12 h-12 rounded-2xl bg-[#d9a441] flex items-center justify-center shadow-lg shadow-black/30">
+              <Wand2 className="h-5 w-5 text-[#11140f]" />
             </div>
-            <ArrowRight className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5 text-[#d9a441] group-hover:translate-x-1 transition-transform" />
           </div>
-          <h3 className="text-lg font-semibold text-white">Créer un post</h3>
-          <p className="text-sm text-gray-400 mt-1">
+          <h3 className="text-lg font-semibold text-[#f5f1e8]">Créer un post</h3>
+          <p className="text-sm text-[#9ba89d] mt-1">
             Texte, image, vidéo — générés par tes agents spécialisés
           </p>
         </Link>
 
         <Link
           href="/clients"
-          className="group bg-gradient-to-br from-blue-950/40 to-cyan-950/30 border border-blue-700/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all"
+          className="codexrs-action group rounded-3xl p-6"
         >
           <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-2xl shadow-lg">
-              👥
+            <div className="w-12 h-12 rounded-2xl bg-[#76c893] flex items-center justify-center shadow-lg shadow-black/30">
+              <Layers3 className="h-5 w-5 text-[#07110b]" />
             </div>
-            <ArrowRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5 text-[#76c893] group-hover:translate-x-1 transition-transform" />
           </div>
-          <h3 className="text-lg font-semibold text-white">Gérer mes clients</h3>
-          <p className="text-sm text-gray-400 mt-1">
+          <h3 className="text-lg font-semibold text-[#f5f1e8]">Gérer mes clients</h3>
+          <p className="text-sm text-[#9ba89d] mt-1">
             {clients.length} clients HORECA — voir leurs stratégies et performances
           </p>
         </Link>
       </div>
 
       {/* Recent clients */}
-      <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+      <div className="codexrs-panel rounded-3xl p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">📋 Tes clients</h2>
-          <Link href="/clients" className="text-sm text-purple-400 hover:underline">
+          <h2 className="text-lg font-semibold text-[#f5f1e8]">Tes clients</h2>
+          <Link href="/clients" className="text-sm text-[#d9a441] hover:underline">
             Voir tous ({clients.length}) →
           </Link>
         </div>
@@ -118,14 +154,14 @@ export default async function HomePage() {
             <Link
               key={c.id}
               href={`/clients/${c.id}`}
-              className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-all"
+              className="flex items-center gap-3 p-3 rounded-2xl bg-black/20 border border-white/[0.07] hover:border-[#d9a441]/36 transition-all"
             >
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${c.color} flex items-center justify-center text-lg flex-shrink-0`}>
                 {c.emoji}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-white truncate">{c.name}</div>
-                <div className="text-[11px] text-gray-500">
+                <div className="text-sm font-medium text-[#f5f1e8] truncate">{c.name}</div>
+                <div className="text-[11px] text-[#7f8a81]">
                   {c.city || '—'} · {c.engagement}% engagement
                 </div>
               </div>
@@ -138,24 +174,31 @@ export default async function HomePage() {
 }
 
 function StatCard({
-  label, value, icon: Icon, color, accent, border, sub,
+  label, value, icon: Icon, tone, sub,
 }: {
   label: string
   value: string | number
-  icon: React.ElementType
-  color: string
-  accent: string
-  border: string
+  icon: ElementType
+  tone: 'gold' | 'blue' | 'green' | 'red'
   sub: string
 }) {
+  const tones = {
+    gold: { accent: 'text-[#d9a441]', bg: 'bg-[#d9a441]/10', border: 'border-[#d9a441]/22' },
+    blue: { accent: 'text-[#7db7d8]', bg: 'bg-[#7db7d8]/10', border: 'border-[#7db7d8]/22' },
+    green: { accent: 'text-[#76c893]', bg: 'bg-[#76c893]/10', border: 'border-[#76c893]/22' },
+    red: { accent: 'text-[#e56b6f]', bg: 'bg-[#e56b6f]/10', border: 'border-[#e56b6f]/22' },
+  }[tone]
+
   return (
-    <div className={`bg-gradient-to-br ${color} to-gray-900/40 border ${border} rounded-xl p-5 hover:border-opacity-50 transition-colors`}>
+    <div className={`codexrs-panel rounded-2xl p-5 border ${tones.border}`}>
       <div className="flex items-center justify-between mb-2">
-        <span className={`text-xs ${accent}`}>{label}</span>
-        <Icon className={`w-4 h-4 ${accent}`} />
+        <span className={`text-xs ${tones.accent}`}>{label}</span>
+        <span className={`rounded-lg ${tones.bg} p-2`}>
+          <Icon className={`w-4 h-4 ${tones.accent}`} />
+        </span>
       </div>
-      <div className="text-2xl lg:text-3xl font-bold text-white">{value}</div>
-      <div className="text-xs text-gray-500 mt-1">{sub}</div>
+      <div className="text-2xl lg:text-3xl font-bold text-[#f5f1e8]">{value}</div>
+      <div className="text-xs text-[#7f8a81] mt-1">{sub}</div>
     </div>
   )
 }

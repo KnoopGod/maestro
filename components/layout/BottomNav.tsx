@@ -35,11 +35,11 @@ export function BottomNav() {
       {showMore && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowMore(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-gray-950 border-t border-gray-800 rounded-t-2xl p-4 pb-8">
+          <div className="absolute bottom-0 left-0 right-0 bg-[#0d100e] border-t border-white/[0.08] rounded-t-3xl p-4 pb-8">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-semibold text-white">Navigation</span>
-              <button onClick={() => setShowMore(false)} className="p-1.5 rounded-lg hover:bg-gray-800">
-                <X className="w-4 h-4 text-gray-400" />
+              <span className="text-sm font-semibold text-[#f5f1e8]">Navigation</span>
+              <button onClick={() => setShowMore(false)} className="p-1.5 rounded-lg hover:bg-white/[0.06]">
+                <X className="w-4 h-4 text-[#9ba89d]" />
               </button>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -51,7 +51,7 @@ export function BottomNav() {
                     href={item.href}
                     onClick={() => setShowMore(false)}
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${
-                      active ? 'bg-purple-600/20 text-purple-300' : 'text-gray-400 hover:bg-gray-800/60'
+                      active ? 'bg-[#d9a441]/12 text-[#f5d38b]' : 'text-[#9ba89d] hover:bg-white/[0.06]'
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
@@ -65,7 +65,7 @@ export function BottomNav() {
       )}
 
       {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-gray-950/90 backdrop-blur-xl border-t border-gray-800/50 pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#0d100e]/92 backdrop-blur-xl border-t border-white/[0.08] pb-safe">
         <div className="flex items-stretch h-16">
           {NAV_MAIN.map(item => {
             const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
@@ -74,14 +74,14 @@ export function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
-                  active ? 'text-purple-400' : 'text-gray-500'
+                  active ? 'text-[#d9a441]' : 'text-[#7f8a81]'
                 }`}
               >
                 {item.href === '/studio' ? (
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    active ? 'bg-purple-600' : 'bg-purple-600/80'
+                    active ? 'bg-[#d9a441]' : 'bg-[#d9a441]/80'
                   }`}>
-                    <item.icon className="w-5 h-5 text-white" />
+                    <item.icon className="w-5 h-5 text-[#11140f]" />
                   </div>
                 ) : (
                   <>
@@ -94,7 +94,7 @@ export function BottomNav() {
           })}
           <button
             onClick={() => setShowMore(true)}
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-500"
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-[#7f8a81]"
           >
             <MoreHorizontal className="w-5 h-5" />
             <span className="text-[10px]">Plus</span>
