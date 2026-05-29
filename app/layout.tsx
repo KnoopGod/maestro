@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -11,8 +11,13 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 export const metadata: Metadata = {
   title: 'Maestro — AI Social Media Conductor',
   description: 'Plateforme unifiée de gestion sociale pour HORECA avec agents IA spécialisés',
-  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Maestro' },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
