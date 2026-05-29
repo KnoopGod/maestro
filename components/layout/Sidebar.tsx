@@ -63,9 +63,6 @@ function NavItem({
 export function Sidebar() {
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-[#07081A] border-r border-indigo-950/60 flex-col z-40">
-      {/* Scan-line overlay */}
-      <div className="absolute inset-0 pointer-events-none hud-scan" />
-
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-indigo-950/60">
         <div className="w-8 h-8 border border-indigo-600/50 flex items-center justify-center flex-shrink-0">
