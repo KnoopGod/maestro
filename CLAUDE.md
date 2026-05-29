@@ -8,6 +8,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Next.js 16.2.6**. This version has breaking changes from your training data — read `node_modules/next/dist/docs/` (especially `01-app/01-getting-started/`) before writing routes, actions, or layouts. Heed deprecation notices.
 - **Dev server runs on port 3010, not 3000** (`npm run dev` → http://localhost:3010).
 - A few legacy pages still exist from the original "AI Command Center" iteration (`/dashboard`, `/models`, `/task-router`, `/token-economy`, `/work-memory`, `/resume-for-claude`, `/setup-guide`). They are no longer in the sidebar but the files are still in `app/`. Do not refactor them unless asked.
+- **Claude should act primarily as product director, UX strategist, marketing strategist, and agent behavior reviewer.** Codex owns implementation on `codex/mvp-hardening` unless Bradley explicitly asks Claude to code.
+- Before proposing significant work, read:
+  - `docs/ai/ROLES.md`
+  - `docs/ai/WORKFLOW.md`
+  - `docs/ai/DECISIONS.md`
+  - `docs/ops/CONNECTIONS.md`
+  - `docs/ai/CODEX_HANDOFF.md`
+
+## Claude collaboration contract
+
+When Bradley asks for a new feature or improvement, default to a spec, not code.
+
+Use this format:
+
+1. Objective
+2. User workflow
+3. Agents involved
+4. Data needed
+5. Business rules
+6. MVP priority
+7. What Codex should code
+8. What should not be coded yet
+
+Do not create a second architecture, duplicate the data model, or rewrite broad UI/code areas without an explicit request. If implementation is requested, keep changes small, verifiable, and aligned with the client -> strategy -> Library -> Studio -> validation -> calendar/publication workflow.
 
 ## Common commands
 
@@ -105,6 +129,11 @@ CODEXRS_PUBLIC_URL=https://...  # Required in prod so Meta can fetch /uploads/*
 DATABASE_URL=                   # Default: file:./codexrs.db (swap to Turso URL for cloud)
 DATABASE_AUTH_TOKEN=            # Only if DATABASE_URL is a Turso URL
 OLLAMA_HOST=                    # Legacy, unused by CODEXRS core
+LUMA_API_KEY=                   # Optional, video generation
+BLOB_READ_WRITE_TOKEN=          # Optional in dev, recommended in prod for public assets
+CRON_SECRET=                    # Recommended in prod for scheduled publishing
+CODEXRS_PASSWORD=               # Required if auth protection is enabled
+NEXT_PUBLIC_APP_URL=            # Optional fallback URL
 ```
 
 ## Conventions
