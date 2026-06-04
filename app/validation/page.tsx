@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ShieldCheck, AlertCircle, Sparkles } from 'lucide-react'
+import { ShieldCheck, AlertCircle, Sparkles, Edit3 } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
@@ -128,6 +128,15 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       )}
 
       <PostSupervisor post={post} />
+      <div className="flex justify-end">
+        <Link
+          href={`/studio?postId=${post.id}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+          Modifier dans Studio
+        </Link>
+      </div>
       <PostActions post={post} />
     </article>
   )

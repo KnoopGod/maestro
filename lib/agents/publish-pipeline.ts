@@ -84,7 +84,7 @@ export async function publishPost(
 
       if (!publicImageUrl && postWithReview.imageUrl) {
         warnings.push(
-          "Facebook posté SANS image (l'image est sur localhost, Meta ne peut pas la fetcher). Configure MAESTRO_PUBLIC_URL pour publier les visuels."
+          "Facebook posté SANS image (l'image est sur localhost, Meta ne peut pas la fetcher). Configure CODEXRS_PUBLIC_URL pour publier les visuels."
         )
       }
     } catch (err) {
@@ -100,7 +100,7 @@ export async function publishPost(
     }
     if (!publicImageUrl) {
       warnings.push(
-        "Instagram non publié : l'API Instagram exige une image publiquement accessible. Configure MAESTRO_PUBLIC_URL ou déploie l'app."
+        "Instagram non publié : l'API Instagram exige une image publiquement accessible. Configure CODEXRS_PUBLIC_URL ou déploie l'app."
       )
     } else {
       try {
@@ -149,7 +149,7 @@ export function toPublicUrl(imageUrl: string | null) {
   if (!imageUrl) return null
   if (/^https?:\/\//.test(imageUrl)) return imageUrl
 
-  const base = process.env.MAESTRO_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL
+  const base = process.env.CODEXRS_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL
   if (!base) return null
   if (/localhost|127\.0\.0\.1/.test(base)) return null
   return `${base.replace(/\/$/, '')}${imageUrl}`
@@ -178,7 +178,7 @@ export function decorateMetaError(err: unknown, platform: string): Error {
   if (/#100/.test(msg) || /Invalid parameter/.test(msg)) {
     return new Error(
       `[${platform}] Paramètre invalide (souvent : URL image inaccessible depuis Meta). ` +
-      `Vérifie que MAESTRO_PUBLIC_URL pointe vers une URL publique. ` +
+      `Vérifie que CODEXRS_PUBLIC_URL pointe vers une URL publique. ` +
       `Détails : ${msg}`
     )
   }

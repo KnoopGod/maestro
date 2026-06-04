@@ -8,6 +8,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const post = await getPost(id)
     if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
+    if (post.status === 'published') {
+      return NextResponse.json({ error: 'Un post déjà publié ne peut pas être replanifié.' }, { status: 400 })
+    }
+    if (post.status === 'failed') {
+      return NextResponse.json({ error: 'Corrige ou régénère le post en échec avant de le planifier.' }, { status: 400 })
+    }
 
     const ts = typeof scheduledAt === 'number'
       ? scheduledAt
@@ -35,6 +41,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params
     const post = await getPost(id)
     if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
+    if (post.status !== 'scheduled') {
+      return NextResponse.json({ error: 'Seul un post planifié peut être déplanifié.' }, { status: 400 })
+    }
     const updated = await unschedulePost(id)
     return NextResponse.json({ post: updated })
   } catch (err) {

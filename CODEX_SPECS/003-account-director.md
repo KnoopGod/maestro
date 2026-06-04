@@ -2,7 +2,7 @@
 
 ## Context
 
-- Project: **Maestro** (Next.js 16 + LibSQL + TypeScript) at `/Users/bradleydave/Dev/ai-command-center`
+- Project: **CODEXRS** (Next.js 16 + LibSQL + TypeScript) at `/Users/bradleydave/Dev/ai-command-center`
 - After specs #001 (ClientStrategy) and #002 (Supervisor), the registry in `lib/agent-registry.ts` lists 8 active agents but **Account Director** has no implementation yet — only a description.
 - Account Director's job: BEFORE the user writes a brief, read the client's strategy, recent posts and DA, then **propose a priority + an enriched brief**. This stops the user from picking a redundant angle and feeds Social Expert + Visual Director with richer context.
 - This spec also adds a **pipeline orchestrator** (`runPostPipeline`) so that everything from Account Director → Social Expert → Visual Director → Supervisor runs in a single function call. The pipeline runs at generation time so the user sees a fully-supervised, ready-to-validate post.
@@ -20,7 +20,7 @@
 - `types/post.ts` — Post + SupervisorReview types
 - `types/client.ts` — Client + ClientStrategy types
 - `components/studio/PostIdeasPanel.tsx` — Studio panel that already calls the planner
-- `/Users/bradleydave/Dev/maestro/lib/agents.ts` — reference for prompt/JSON style (do NOT copy verbatim, adapt to our conventions: Opus 4.7 + adaptive thinking + cost tracking with `(input * 5 + output * 25) / 1_000_000`)
+- `/Users/bradleydave/Dev/codexrs/lib/agents.ts` — reference for prompt/JSON style (do NOT copy verbatim, adapt to our conventions: Opus 4.7 + adaptive thinking + cost tracking with `(input * 5 + output * 25) / 1_000_000`)
 
 ## Goal
 
@@ -59,7 +59,7 @@ export async function runAccountDirector(input: {
 }>
 ```
 
-- System prompt: French, persona "Account Director Maestro, chef de dossier client", strict JSON output.
+- System prompt: French, persona "Account Director CODEXRS, chef de dossier client", strict JSON output.
 - User prompt must include: client (name, type, city, description, brand voice tone/keywords/avoid), strategy (objective, contentPillars, frequency, avoid), DA summary if available, and a list of recent posts (brief + pillar guess) for repetition awareness.
 - If `recentPosts` is not provided, call `listPosts({ clientId: client.id, limit: 10 })`.
 - If `userBrief` is provided, the agent enriches it rather than replacing. If absent, the agent proposes a fresh brief on the priority pillar.

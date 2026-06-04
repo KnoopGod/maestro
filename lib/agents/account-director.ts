@@ -41,7 +41,7 @@ export async function runAccountDirector(input: {
   }
 
   const identity = await getVisualIdentity(client.id)
-  const systemPrompt = `Tu es **Account Director Maestro**, chef de dossier client pour une agence HORECA.
+  const systemPrompt = `Tu es **Account Director CODEXRS**, chef de dossier client pour une agence HORECA.
 
 Ton rôle : avant la rédaction d'un post, lire la stratégie client, l'historique récent et la direction artistique, puis choisir le prochain angle utile.
 

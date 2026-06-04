@@ -2,9 +2,9 @@
 
 ## Context
 
-- Project: **Maestro** (Next.js 16 + LibSQL + TypeScript) at `/Users/bradleydave/Dev/ai-command-center`
+- Project: **CODEXRS** (Next.js 16 + LibSQL + TypeScript) at `/Users/bradleydave/Dev/ai-command-center`
 - After Codex spec #001, clients now carry a typed `ClientStrategy`.
-- We want to add a **quality gate** that reviews every generated post BEFORE allowing publication. Inspired by `supervisePost()` in the parallel Codex codebase at `/Users/bradleydave/Dev/maestro/lib/agents.ts` (lines 159-225 + fallback at 347-367).
+- We want to add a **quality gate** that reviews every generated post BEFORE allowing publication. Inspired by `supervisePost()` in the parallel Codex codebase at `/Users/bradleydave/Dev/codexrs/lib/agents.ts` (lines 159-225 + fallback at 347-367).
 - The supervisor uses Opus 4.7 + adaptive thinking (qualitative judgment matters).
 
 **Files to read first**:
@@ -12,7 +12,7 @@
 - `lib/agents/strategy-director.ts` — for the helper-style pattern
 - `lib/db/queries/posts.ts` — to see the Post shape + status enum
 - `app/api/studio/publish-post/route.ts` — where the supervisor will be wired in
-- `/Users/bradleydave/Dev/maestro/lib/agents.ts` — reference implementation (DO NOT copy verbatim, adapt to our conventions)
+- `/Users/bradleydave/Dev/codexrs/lib/agents.ts` — reference implementation (DO NOT copy verbatim, adapt to our conventions)
 
 ## Goal
 
@@ -51,7 +51,7 @@ The supervisor is wired into `/api/studio/publish-post`:
      post: Post
    }): Promise<{ review: SupervisorReview; cost: number; tokensUsed: number; model: string }>
    ```
-   - System prompt: French, Claude Supervisor persona, role = critic + quality director for Maestro HORECA platform
+   - System prompt: French, Claude Supervisor persona, role = critic + quality director for CODEXRS HORECA platform
    - User prompt: include client (name, type, city, positioning if available — fallback to `description` + brand voice + strategy.objective + strategy.avoid) + post (brief, platforms, caption, hashtags, hook, cta, imagePrompt, current impactScore)
    - Ask Claude to respond in JSON strict with the SupervisorReview shape
    - Use the SAME robust JSON extraction as `social-expert.ts` (strip code fences then regex match)

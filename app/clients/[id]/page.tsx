@@ -32,6 +32,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
   const publishedPosts = clientPosts.filter(p => p.status === 'published')
+  const contentPillars = client.strategy?.contentPillars ?? []
+  const setupComplete = Boolean(client.description && client.brandVoiceTone && contentPillars.length > 0)
+  const metaConnected = socialAccounts.some(a => a.platform === 'facebook' || a.platform === 'instagram')
+  const daAnalyzed = Boolean(identity?.stylePrompt)
+  const firstPostReady = clientPosts.length > 0
   const avgImpact = publishedPosts.length
     ? publishedPosts.reduce((s, p) => s + p.impactScore, 0) / publishedPosts.length
     : null
@@ -121,7 +126,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
 
-        <Link href={`/analytics?client=${client.id}`} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 transition-all flex items-center gap-3 group">
+        <Link href={`/clients/${client.id}/analytics`} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 transition-all flex items-center gap-3 group">
           <BarChart3 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Analytics</div>
@@ -137,6 +142,69 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
       </div>
+
+      {/* V1 startup checklist */}
+      <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Checklist de démarrage</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Les 4 prérequis pour passer du profil client au premier post publié.
+            </p>
+          </div>
+          <Link
+            href={`/clients/${client.id}/setup`}
+            className="text-xs text-purple-300 hover:underline flex-shrink-0"
+          >
+            Ouvrir le guide →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+          <StartupStep
+            done={setupComplete}
+            label="Setup"
+            detail={setupComplete ? 'Profil prêt' : 'Compléter profil'}
+            href={`/clients/${client.id}/edit`}
+          />
+          <StartupStep
+            done={metaConnected}
+            label="Meta connecté"
+            detail={metaConnected ? 'FB/IG disponible' : 'Connecter Meta'}
+            href={`/clients/${client.id}/connections`}
+          />
+          <StartupStep
+            done={daAnalyzed}
+            label="DA analysée"
+            detail={daAnalyzed ? 'Style actif' : 'Importer/analyser'}
+            href={`/clients/${client.id}/library`}
+          />
+          <StartupStep
+            done={firstPostReady}
+            label="Premier post"
+            detail={firstPostReady ? `${clientPosts.length} post${clientPosts.length > 1 ? 's' : ''}` : 'Créer le premier'}
+            href={`/studio?client=${client.id}`}
+          />
+        </div>
+      </div>
+
+      {contentPillars.length > 0 && (
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+          <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">
+            Piliers de contenu
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {contentPillars.map(pillar => (
+              <Link
+                key={pillar}
+                href={`/studio?client=${client.id}&pillar=${encodeURIComponent(pillar)}`}
+                className="px-2.5 py-1.5 rounded-full bg-purple-950/30 border border-purple-700/30 text-xs text-purple-200 hover:bg-purple-900/40 hover:border-purple-500/50 transition-colors"
+              >
+                {pillar}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* DA Banner if identity exists */}
       {identity && identity.stylePrompt && (
@@ -324,6 +392,31 @@ const POST_STATUS_CFG: Record<string, { label: string; icon: React.ElementType; 
   scheduled: { label: 'Planifié',  icon: CalendarDays,  color: 'text-blue-400' },
   published: { label: 'Publié',    icon: CheckCircle2,  color: 'text-emerald-400' },
   failed:    { label: 'Échec',     icon: AlertCircle,   color: 'text-red-400' },
+}
+
+function StartupStep({ done, label, detail, href }: { done: boolean; label: string; detail: string; href: string }) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-xl border p-3 transition-colors ${
+        done
+          ? 'bg-emerald-950/20 border-emerald-800/40 hover:border-emerald-600/60'
+          : 'bg-gray-950/40 border-gray-800 hover:border-purple-700/50'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {done ? (
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+        ) : (
+          <Clock className="w-4 h-4 text-gray-500" />
+        )}
+        <span className="text-sm font-medium text-white">{label}</span>
+      </div>
+      <div className={`text-[11px] mt-1 ${done ? 'text-emerald-300/80' : 'text-gray-500'}`}>
+        {done ? '✅' : '⬜'} {detail}
+      </div>
+    </Link>
+  )
 }
 
 function RecentPostRow({ post }: { post: Post }) {

@@ -39,13 +39,29 @@ const PLATFORM_INFO: Record<Platform, { label: string; emoji: string; color: str
   linkedin:  { label: 'LinkedIn',  emoji: '💼', color: 'bg-sky-600/20 border-sky-600/40 text-sky-300' },
 }
 
-export function StudioForm({ clients, initialClientId }: { clients: Client[]; initialClientId?: string }) {
+export function StudioForm({
+  clients,
+  initialClientId,
+  initialPost,
+  initialPillar,
+}: {
+  clients: Client[]
+  initialClientId?: string
+  initialPost?: Post
+  initialPillar?: string
+}) {
   const [clientId, setClientId] = useState(initialClientId || clients[0]?.id || '')
-  const [brief, setBrief] = useState('')
-  const [platforms, setPlatforms] = useState<Platform[]>(['instagram'])
-  const [contentType, setContentType] = useState<ContentType>('photo')
+  const [brief, setBrief] = useState(
+    initialPost?.brief || (initialPillar ? `Créer un post autour du pilier : ${initialPillar}` : '')
+  )
+  const [platforms, setPlatforms] = useState<Platform[]>(
+    initialPost?.platforms.filter((p): p is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)) ?? ['instagram']
+  )
+  const [contentType, setContentType] = useState<ContentType>(initialPost?.contentType ?? 'photo')
 
-  const [result, setResult] = useState<GenerationResult | null>(null)
+  const [result, setResult] = useState<GenerationResult | null>(
+    initialPost ? createLoadedPostResult(initialPost) : null
+  )
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -136,6 +152,13 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
             <div className="mt-3 p-3 rounded-lg bg-purple-950/30 border border-purple-700/30 text-xs">
               <div className="text-purple-300 font-medium mb-1">Voix de marque chargée :</div>
               <div className="text-gray-300">{selectedClient.brandVoiceTone || 'Non définie'}</div>
+            </div>
+          )}
+
+          {initialPost && (
+            <div className="mt-3 p-3 rounded-lg bg-blue-950/30 border border-blue-700/30 text-xs">
+              <div className="text-blue-300 font-medium mb-1">Draft chargé depuis la validation</div>
+              <div className="text-gray-300">Post #{initialPost.id} · {initialPost.status}</div>
             </div>
           )}
         </div>
@@ -480,6 +503,27 @@ export function StudioForm({ clients, initialClientId }: { clients: Client[]; in
       </div>
     </div>
   )
+}
+
+function createLoadedPostResult(post: Post): GenerationResult {
+  return {
+    post,
+    reasoning: post.reasoning ?? 'Draft existant chargé depuis la file de validation.',
+    captions: post.platforms
+      .filter((platform): platform is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(platform))
+      .map(platform => ({
+        platform,
+        caption: post.caption,
+        hashtags: post.hashtags,
+        hook: post.hook ?? '',
+        cta: post.cta ?? '',
+        characterCount: post.caption.length,
+      })),
+    cost: post.cost,
+    tokensUsed: post.tokensUsed,
+    model: 'draft-existant',
+    review: post.supervisorReview ?? undefined,
+  }
 }
 
 // ─── Caption Result Component ─────────────────────────────────────────────────

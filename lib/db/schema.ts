@@ -1,7 +1,7 @@
 import { db } from './index'
 
 /**
- * Maestro database schema
+ * CODEXRS database schema
  * Run `npm run db:init` to create tables (or auto-runs on first server start)
  */
 

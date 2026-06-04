@@ -25,7 +25,7 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
   const hasIdentity = Boolean(identity?.stylePrompt)
   const aiReady = Boolean(process.env.ANTHROPIC_API_KEY && process.env.OPENAI_API_KEY)
   const publicUrlReady = Boolean(
-    process.env.MAESTRO_PUBLIC_URL && !/localhost|127\.0\.0\.1/.test(process.env.MAESTRO_PUBLIC_URL || '')
+    process.env.CODEXRS_PUBLIC_URL && !/localhost|127\.0\.0\.1/.test(process.env.CODEXRS_PUBLIC_URL || '')
   )
   const fbAccount = socialAccounts.find(a => a.platform === 'facebook')
   const igAccount = socialAccounts.find(a => a.platform === 'instagram')
@@ -91,7 +91,7 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
       title: '5. URL publique',
       done: publicUrlReady,
       detail: publicUrlReady
-        ? `MAESTRO_PUBLIC_URL configurée — Meta peut fetcher tes images.`
+        ? `CODEXRS_PUBLIC_URL configurée — Meta peut fetcher tes images.`
         : 'Sans URL publique, Instagram ne peut pas publier les visuels (Facebook fonctionne en text-only).',
       href: '/connections',
       action: 'Voir le guide',

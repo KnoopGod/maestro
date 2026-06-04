@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { CalendarDays, ExternalLink, AlertCircle, Sparkles } from 'lucide-react'
-import type { Post } from '@/types/post'
+import type { Post, PostStatus } from '@/types/post'
 import type { Client } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
@@ -44,7 +44,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const [posts, clients] = await Promise.all([
     listPosts({
       clientId: clientFilter,
-      status: statusFilter as 'draft' | 'published' | 'failed' | undefined,
+      status: statusFilter as PostStatus | undefined,
       limit: 100,
     }),
     listClients(),
@@ -52,6 +52,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
   const totalPublished = posts.filter(p => p.status === 'published').length
+  const totalScheduled = posts.filter(p => p.status === 'scheduled').length
   const totalDraft = posts.filter(p => p.status === 'draft').length
   const totalFailed = posts.filter(p => p.status === 'failed').length
 
@@ -77,9 +78,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <StatBox label="Total" value={posts.length} color="text-white" />
         <StatBox label="Publiés" value={totalPublished} color="text-emerald-400" />
+        <StatBox label="Planifiés" value={totalScheduled} color="text-blue-400" />
         <StatBox label="Brouillons" value={totalDraft} color="text-amber-400" />
         <StatBox label="Échecs" value={totalFailed} color="text-red-400" />
       </div>
@@ -88,7 +90,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       <div className="flex flex-wrap gap-2 items-center">
         <span className="text-xs text-gray-500">Filtres :</span>
         <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter} />
+        <FilterChip href="/plan?status=scheduled" label="Planifiés" active={statusFilter === 'scheduled'} />
         <FilterChip href="/plan?status=published" label="Publiés" active={statusFilter === 'published'} />
+        <FilterChip href="/plan?status=ready" label="Prêts" active={statusFilter === 'ready'} />
         <FilterChip href="/plan?status=draft" label="Brouillons" active={statusFilter === 'draft'} />
         <FilterChip href="/plan?status=failed" label="Échecs" active={statusFilter === 'failed'} />
         {clientFilter && (

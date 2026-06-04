@@ -201,7 +201,7 @@ function buildIdentityBlock(identity: VisualIdentity | null): string {
   if (!identity || !identity.stylePrompt) return ''
 
   return `
-# IDENTITÉ VISUELLE DU CLIENT (DA détectée par Maestro)
+# IDENTITÉ VISUELLE DU CLIENT (DA détectée par CODEXRS)
 
 **Mood global :** ${identity.overallMood}
 **Lumière :** ${identity.lightingStyle}

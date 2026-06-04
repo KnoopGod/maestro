@@ -2,7 +2,7 @@
 
 ## Context
 
-- Project: **Maestro** (Next.js 16.2.6 + LibSQL + TypeScript)
+- Project: **CODEXRS** (Next.js 16.2.6 + LibSQL + TypeScript)
 - Working directory: `/Users/bradleydave/Dev/ai-command-center`
 - The codebase manages HORECA clients (restaurants, hotels, bars, B&Bs). Each `Client` row currently has basic brand-voice fields (`tone`, `keywords`, `avoid`) but no formal marketing strategy.
 - We are adopting a strategy structure inspired by a parallel codebase, adapted to our schema and conventions.
