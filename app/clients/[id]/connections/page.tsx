@@ -38,7 +38,7 @@ export default async function ClientConnectionsPage({ params }: { params: Promis
           Meta (Facebook + Instagram)
         </h2>
 
-        <MetaPreflightChecklist onReady={() => {}} />
+        <MetaPreflightChecklist />
 
         <MetaConnectionWizard
           clientId={id}

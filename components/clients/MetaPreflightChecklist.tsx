@@ -37,7 +37,7 @@ const STEPS = [
   },
 ]
 
-export function MetaPreflightChecklist({ onReady }: { onReady: () => void }) {
+export function MetaPreflightChecklist() {
   const [checked, setChecked] = useState<Record<string, boolean>>({})
   const [openStep, setOpenStep] = useState<string | null>('instagram_pro')
   const [dismissed, setDismissed] = useState(false)
@@ -64,13 +64,12 @@ export function MetaPreflightChecklist({ onReady }: { onReady: () => void }) {
           const open = openStep === step.id
           return (
             <div key={step.id} className={`rounded-xl border transition-colors ${done ? 'border-emerald-800/40 bg-emerald-950/20' : 'border-gray-800 bg-gray-950/30'}`}>
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-left"
-                onClick={() => setOpenStep(open ? null : step.id)}
-              >
+              <div className="w-full flex items-center gap-3 px-3 py-2.5 text-left">
                 <button
-                  onClick={e => { e.stopPropagation(); setChecked(c => ({ ...c, [step.id]: !done })) }}
+                  type="button"
+                  onClick={() => setChecked(c => ({ ...c, [step.id]: !done }))}
                   className="flex-shrink-0"
+                  aria-label={done ? `Marquer ${step.label} comme non vérifié` : `Marquer ${step.label} comme vérifié`}
                 >
                   {done
                     ? <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400" />
@@ -80,8 +79,15 @@ export function MetaPreflightChecklist({ onReady }: { onReady: () => void }) {
                 <span className={`flex-1 text-sm ${done ? 'text-emerald-300' : 'text-gray-200'}`}>
                   {step.label}
                 </span>
-                {open ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500" />}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenStep(open ? null : step.id)}
+                  className="rounded p-1 text-gray-500 hover:text-gray-300"
+                  aria-label={open ? `Replier ${step.label}` : `Déplier ${step.label}`}
+                >
+                  {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
+              </div>
 
               {open && (
                 <div className="px-10 pb-3 space-y-2">
@@ -108,14 +114,14 @@ export function MetaPreflightChecklist({ onReady }: { onReady: () => void }) {
 
       <div className="flex items-center gap-3 mt-4">
         <button
-          onClick={() => { setDismissed(true); onReady() }}
+          onClick={() => setDismissed(true)}
           disabled={!allChecked}
           className="flex-1 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
         >
           {allChecked ? 'Tout est prêt — Connecter Meta' : `${Object.values(checked).filter(Boolean).length}/${STEPS.length} points vérifiés`}
         </button>
         <button
-          onClick={() => { setDismissed(true); onReady() }}
+          onClick={() => setDismissed(true)}
           className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
         >
           Ignorer

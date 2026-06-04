@@ -252,9 +252,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 <dt className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Mots-clés</dt>
                 <dd className="text-gray-200">
                   {client.brandVoiceKeywords
-                    ? client.brandVoiceKeywords.split(',').map((k, i) => (
+                    ? client.brandVoiceKeywords.split(',').map((k, i, arr) => (
                         <span key={i} className="inline-block mr-1.5 mb-1 px-2 py-0.5 rounded bg-purple-900/30 border border-purple-700/30 text-purple-300 text-xs">
-                          {k.trim()}
+                          {k.trim()}{i < arr.length - 1 ? ' ' : ''}
                         </span>
                       ))
                     : <span className="text-gray-600 italic">Non définis</span>

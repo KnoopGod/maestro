@@ -48,7 +48,7 @@ export default async function ValidationPage() {
       </div>
 
       <div className="bg-purple-950/20 border border-purple-700/30 rounded-2xl p-4 text-sm text-purple-200">
-        <strong className="text-white">Règle MVP :</strong> aucun post ne part automatiquement.
+        <strong className="text-white">Règle MVP :</strong>{' '}aucun post ne part automatiquement.
         Tu valides le texte, l&apos;image, le timing et la cohérence DA avant de planifier ou publier.
       </div>
 
