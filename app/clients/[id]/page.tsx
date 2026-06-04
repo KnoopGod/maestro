@@ -34,7 +34,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const publishedPosts = clientPosts.filter(p => p.status === 'published')
   const contentPillars = client.strategy?.contentPillars ?? []
   const setupComplete = Boolean(client.description && client.brandVoiceTone && contentPillars.length > 0)
-  const metaConnected = socialAccounts.some(a => a.platform === 'facebook' || a.platform === 'instagram')
+  const facebookConnected = socialAccounts.some(a => a.platform === 'facebook')
+  const instagramConnected = socialAccounts.some(a => a.platform === 'instagram')
+  const metaConnected = facebookConnected && instagramConnected
   const daAnalyzed = Boolean(identity?.stylePrompt)
   const firstPostReady = clientPosts.length > 0
   const avgImpact = publishedPosts.length
@@ -169,7 +171,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <StartupStep
             done={metaConnected}
             label="Meta connecté"
-            detail={metaConnected ? 'FB/IG disponible' : 'Connecter Meta'}
+            detail={metaConnected ? 'FB/IG disponible' : facebookConnected ? 'Instagram à ajouter' : 'Connecter Meta'}
             href={`/clients/${client.id}/connections`}
           />
           <StartupStep

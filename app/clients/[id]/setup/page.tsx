@@ -29,7 +29,9 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
   )
   const fbAccount = socialAccounts.find(a => a.platform === 'facebook')
   const igAccount = socialAccounts.find(a => a.platform === 'instagram')
-  const metaReady = Boolean(fbAccount?.accessToken && fbAccount?.accountId)
+  const metaReady = Boolean(
+    fbAccount?.accessToken && fbAccount?.accountId && igAccount?.accessToken && igAccount?.accountId
+  )
   const hasFirstPost = posts.length > 0
 
   const steps: Step[] = [
@@ -77,7 +79,9 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
       title: '4. Connexions Meta',
       done: metaReady,
       detail: metaReady
-        ? `Page Facebook${igAccount ? ' + Instagram' : ''} connectée — token actif.`
+        ? 'Page Facebook + Instagram connectées — token actif.'
+        : fbAccount
+          ? 'Page Facebook connectée — Instagram reste à ajouter.'
         : 'Coller un Page Access Token pour publier sur Facebook + Instagram.',
       href: `/clients/${client.id}/connections`,
       action: metaReady ? 'Diagnostiquer' : 'Connecter Meta',

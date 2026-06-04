@@ -169,6 +169,27 @@ export function MetaConnectionWizard({
     })
   }
 
+  const handleSyncInstagram = () => {
+    setError(null)
+    setSuccess(null)
+    setDebugInfo(null)
+    startTransition(async () => {
+      try {
+        const res = await fetch('/api/meta/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId, syncInstagram: true }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Erreur connexion Instagram')
+        setSuccess(`Instagram connecté : @${data.instagram.handle}`)
+        router.refresh()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur')
+      }
+    })
+  }
+
   const handleDisconnect = (platform: 'facebook' | 'instagram') => {
     if (!confirm(`Déconnecter ${platform} ?`)) return
     setError(null)
@@ -244,6 +265,36 @@ export function MetaConnectionWizard({
                 className="text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:border-red-700/50 hover:text-red-400"
               >
                 <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!igAccount && (
+          <div className="bg-gradient-to-br from-pink-950/30 to-gray-900/40 border border-pink-700/30 rounded-2xl p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-600 to-fuchsia-600 flex items-center justify-center flex-shrink-0">
+                <Instagram className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-white">Instagram à connecter</h3>
+                  <span className="text-[10px] bg-amber-900/40 text-amber-300 border border-amber-800/40 rounded-full px-2 py-0.5">Manquant</span>
+                </div>
+                <p className="text-sm text-gray-400 mt-1">
+                  Si l&apos;Instagram professionnel est déjà lié à cette page Facebook dans Meta, CODEXRS peut l&apos;ajouter automatiquement.
+                </p>
+                <p className="text-[11px] text-gray-500 mt-2">
+                  Requis : compte Instagram professionnel, page Facebook liée, permissions <code>instagram_basic</code> + <code>instagram_content_publish</code>.
+                </p>
+              </div>
+              <button
+                onClick={handleSyncInstagram}
+                disabled={isPending}
+                className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Instagram className="w-3.5 h-3.5" />}
+                Ajouter Instagram
               </button>
             </div>
           </div>

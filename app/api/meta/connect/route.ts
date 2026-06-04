@@ -1,14 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { saveSocialAccount } from '@/lib/db/queries/social-accounts'
-import { verifyPageToken } from '@/lib/agents/meta-publisher'
+import { getSocialAccount, saveSocialAccount } from '@/lib/db/queries/social-accounts'
+import { discoverInstagramAccountForPage, verifyPageToken } from '@/lib/agents/meta-publisher'
 
 export async function POST(req: NextRequest) {
   try {
-    const { clientId, page, connectInstagram } = await req.json()
+    const { clientId, page, connectInstagram, syncInstagram } = await req.json()
 
-    if (!clientId || !page) {
-      return NextResponse.json({ error: 'clientId et page requis' }, { status: 400 })
+    if (!clientId) {
+      return NextResponse.json({ error: 'clientId requis' }, { status: 400 })
+    }
+
+    if (syncInstagram) {
+      const fbAccount = await getSocialAccount(clientId, 'facebook')
+      if (!fbAccount?.accountId || !fbAccount.accessToken) {
+        return NextResponse.json({ error: 'Facebook doit être connecté avant Instagram' }, { status: 400 })
+      }
+
+      const instagramAccount = await discoverInstagramAccountForPage(fbAccount.accountId, fbAccount.accessToken)
+      if (!instagramAccount) {
+        return NextResponse.json(
+          { error: 'Aucun compte Instagram professionnel lié à cette page Facebook' },
+          { status: 404 }
+        )
+      }
+
+      const igAccount = await saveSocialAccount({
+        clientId,
+        platform: 'instagram',
+        handle: instagramAccount.username,
+        accountId: instagramAccount.id,
+        accessToken: fbAccount.accessToken,
+      })
+
+      revalidatePath(`/clients/${clientId}`)
+      revalidatePath(`/clients/${clientId}/setup`)
+      revalidatePath(`/clients/${clientId}/connections`)
+
+      return NextResponse.json({
+        success: true,
+        instagram: igAccount,
+      })
+    }
+
+    if (!page) {
+      return NextResponse.json({ error: 'page requise' }, { status: 400 })
     }
 
     // Verify the page token works
@@ -43,6 +79,7 @@ export async function POST(req: NextRequest) {
     }
 
     revalidatePath(`/clients/${clientId}`)
+    revalidatePath(`/clients/${clientId}/setup`)
     revalidatePath(`/clients/${clientId}/connections`)
 
     return NextResponse.json({
