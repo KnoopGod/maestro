@@ -11,13 +11,10 @@ const PUBLIC_PATHS = [
   '/uploads',
 ]
 
-async function signToken(password: string): Promise<string> {
+async function hashPassword(password: string): Promise<string> {
   const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw', enc.encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('maestro-session'))
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(password))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 export async function proxy(req: NextRequest) {
@@ -31,7 +28,7 @@ export async function proxy(req: NextRequest) {
   if (!password) return NextResponse.next()
 
   const sessionCookie = req.cookies.get('maestro_session')?.value
-  const expected = await signToken(password)
+  const expected = await hashPassword(password)
 
   if (sessionCookie !== expected) {
     if (pathname.startsWith('/api/')) {
