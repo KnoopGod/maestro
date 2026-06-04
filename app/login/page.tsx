@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect, useCallback, FormEvent, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useCallback, useTransition } from 'react'
 import { Loader2 } from 'lucide-react'
+import { loginAction } from './actions'
 
 const BOOT_LINES = [
   { text: '> MAESTRO SYSTEM :: BOOT v4.2.1', delay: 300, accent: false },
@@ -13,14 +13,11 @@ const BOOT_LINES = [
   { text: '> WELCOME, OPERATOR', delay: 2700, accent: true },
 ]
 
-function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+export default function LoginPage() {
   const [bootLines, setBootLines] = useState<number[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState('')
+  const [isPending, startTransition] = useTransition()
 
   const completeBootSequence = useCallback(() => {
     setTimeout(() => setShowForm(true), 400)
@@ -35,24 +32,14 @@ function LoginForm() {
     })
   }, [completeBootSequence])
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setLoading(true)
     setError('')
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      })
-      if (!res.ok) { setError('ACCESS DENIED — INVALID CREDENTIALS'); return }
-      const next = searchParams.get('next') || '/'
-      window.location.href = next
-    } catch {
-      setError('CONNECTION ERROR — RETRY')
-    } finally {
-      setLoading(false)
-    }
+    const formData = new FormData(e.currentTarget)
+    startTransition(async () => {
+      const result = await loginAction(formData)
+      if (result?.error) setError(result.error)
+    })
   }
 
   return (
@@ -73,7 +60,6 @@ function LoginForm() {
             </div>
             <span className="text-[9px] text-indigo-600/50 font-mono tracking-[0.2em] ml-2">TTY/0 :: FIELD-STATION // MAESTRO</span>
           </div>
-
           <div className="space-y-1.5 min-h-[140px]">
             {BOOT_LINES.map((line, i) => (
               <div
@@ -91,8 +77,8 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Login form — appears after boot */}
-        <div className={`transition-all duration-500 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* Login form */}
+        <div className={`transition-all duration-500 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
           <div className="border border-indigo-900/60 bg-gray-900/60 p-6 hud-corners">
             <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">
               AUTHENTICATION REQUIRED
@@ -108,11 +94,8 @@ function LoginForm() {
                 </label>
                 <input
                   id="login-password"
+                  name="password"
                   type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  aria-describedby={error ? 'login-error' : undefined}
-                  aria-invalid={!!error}
                   className="w-full bg-[#07081A] border border-indigo-900/60 focus:border-indigo-600/80 px-3 py-2.5 text-[11px] text-[#E0E3FF] font-mono tracking-wider placeholder:text-indigo-900/60 focus:outline-none transition-colors"
                   placeholder="••••••••"
                   autoFocus
@@ -120,39 +103,29 @@ function LoginForm() {
               </div>
 
               {error && (
-                <p id="login-error" role="alert" className="text-[10px] text-red-400 bg-red-950/20 border border-red-900/40 px-3 py-2 font-mono">
+                <p role="alert" className="text-[10px] text-red-400 bg-red-950/20 border border-red-900/40 px-3 py-2 font-mono">
                   ✕ {error}
                 </p>
               )}
 
               <button
                 type="submit"
-                disabled={loading || !password}
+                disabled={isPending}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono text-[11px] tracking-[0.2em] uppercase py-2.5 transition-colors flex items-center justify-center gap-2 border border-indigo-500/40"
               >
-                {loading ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> CONNEXION EN COURS...</>
-                ) : (
-                  'AUTHENTICATE ►'
-                )}
+                {isPending
+                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> CONNEXION EN COURS...</>
+                  : 'AUTHENTICATE ►'
+                }
               </button>
             </form>
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-[8px] text-indigo-900/60 font-mono tracking-widest">
           MAESTRO // CRAFTED FOR HORECA OPERATORS
         </p>
       </div>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense>
-      <LoginForm />
-    </Suspense>
   )
 }
