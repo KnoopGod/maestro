@@ -9,10 +9,17 @@ import { CLIENT_TYPES } from '@/types/client'
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const [clients, toValidate] = await Promise.all([
-    listClientsWithStats(),
-    countPostsByStatus(['draft', 'ready']),
-  ])
+  let clients: Awaited<ReturnType<typeof listClientsWithStats>> = []
+  let toValidate = 0
+  try {
+    ;[clients, toValidate] = await Promise.all([
+      listClientsWithStats(),
+      countPostsByStatus(['draft', 'ready']),
+    ])
+  } catch (err) {
+    console.error('[HomePage] DB error:', err)
+    // Continue with empty data — the SetupBanner will indicate DB misconfiguration
+  }
   const activeClients = clients.filter(c => c.status === 'active')
   const totalPosts = clients.reduce((sum, c) => sum + c.postsThisMonth, 0)
   const avgEngagement = clients.length

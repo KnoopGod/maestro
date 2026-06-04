@@ -1,6 +1,17 @@
 import { createClient } from '@libsql/client'
 
-const url = process.env.DATABASE_URL || 'file:./maestro.db'
+// On Vercel, /var/task is read-only. Use /tmp for local SQLite fallback.
+// In production, DATABASE_URL should be a libsql:// Turso URL.
+function resolveDbUrl(): string {
+  const raw = process.env.DATABASE_URL || 'file:./maestro.db'
+  if (raw.startsWith('file:') && process.env.VERCEL) {
+    // Remap local file path to /tmp which is writable on Vercel
+    return 'file:/tmp/maestro.db'
+  }
+  return raw
+}
+
+const url = resolveDbUrl()
 const authToken = process.env.DATABASE_AUTH_TOKEN
 
 export const db = createClient({
