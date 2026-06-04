@@ -1,7 +1,19 @@
 import { createClient } from '@libsql/client'
 
-const url = process.env.DATABASE_URL || 'file:./codexrs.db'
-const authToken = process.env.DATABASE_AUTH_TOKEN
+function cleanEnv(value: string | undefined) {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1)
+  }
+  return trimmed
+}
+
+const url = cleanEnv(process.env.DATABASE_URL) || 'file:./codexrs.db'
+const authToken = cleanEnv(process.env.DATABASE_AUTH_TOKEN)
 
 export const db = createClient({
   url,
@@ -24,7 +36,12 @@ async function ensureSchema() {
     }
   })()
 
-  await schemaReady
+  try {
+    await schemaReady
+  } catch (error) {
+    schemaReady = null
+    throw error
+  }
 }
 
 // Helper for transactions (single-statement DB ops)
