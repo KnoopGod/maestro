@@ -24,7 +24,7 @@ export async function supervisePost(input: {
   }
 
   const { client, post } = input
-  const systemPrompt = `Tu es **Claude Supervisor**, directeur qualité et critique éditorial pour Maestro, plateforme HORECA.
+  const systemPrompt = `Tu es **Claude Supervisor**, directeur qualité et critique éditorial pour CODEXRS, plateforme HORECA.
 
 Ton rôle : relire chaque post avant publication, détecter les risques de marque, de conversion, de clarté, de cohérence locale et de qualité créative.
 

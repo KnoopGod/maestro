@@ -1,10 +1,10 @@
 /**
- * Maestro agent registry — describes every agent in the runtime pipeline,
+ * CODEXRS agent registry — describes every agent in the runtime pipeline,
  * in the order they execute when a post is created and published.
  */
 export type AgentStatus = 'active' | 'next' | 'planned'
 
-export interface MaestroAgent {
+export interface CODEXRSAgent {
   id: string
   name: string
   role: string
@@ -20,7 +20,9 @@ export interface MaestroAgent {
   color: string
 }
 
-export const AGENTS: MaestroAgent[] = [
+export type MaestroAgent = CODEXRSAgent
+
+export const AGENTS: CODEXRSAgent[] = [
   {
     id: 'account-director',
     name: 'Account Director',

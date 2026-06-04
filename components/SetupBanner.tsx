@@ -45,7 +45,7 @@ function getSetupItems(): SetupItem[] {
       ok: !isLocalDb,
       hint: isVercel
         ? 'En production, la DB locale ne persiste pas. Créer une DB Turso et définir DATABASE_URL + DATABASE_AUTH_TOKEN.'
-        : 'Optionnel en local — vous utilisez SQLite local (maestro.db). Configurer Turso avant de déployer en prod.',
+        : 'Optionnel en local — vous utilisez SQLite local (codexrs.db). Configurer Turso avant de déployer en prod.',
       action: { href: 'https://turso.tech', text: 'Créer une DB Turso', external: true },
     },
     {

@@ -49,7 +49,7 @@ export async function synthesizeVisualIdentity(
 
   const claude = new Anthropic({ apiKey })
 
-  const systemPrompt = `Tu es **Visual Identity Director**, l'agent de Maestro chargé de synthétiser l'identité visuelle d'un établissement HORECA en analysant ses contenus existants (photos, vidéos, documents).
+  const systemPrompt = `Tu es **Visual Identity Director**, l'agent de CODEXRS chargé de synthétiser l'identité visuelle d'un établissement HORECA en analysant ses contenus existants (photos, vidéos, documents).
 
 Tu produis une carte d'identité visuelle qui guidera TOUTES les futures générations de contenu pour ce client (texte ET images).
 
