@@ -1,7 +1,19 @@
 import { createClient } from '@libsql/client'
 
-const url = process.env.DATABASE_URL || 'file:./maestro.db'
-const authToken = process.env.DATABASE_AUTH_TOKEN
+function cleanEnv(value: string | undefined) {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1)
+  }
+  return trimmed
+}
+
+const url = cleanEnv(process.env.DATABASE_URL) || 'file:./maestro.db'
+const authToken = cleanEnv(process.env.DATABASE_AUTH_TOKEN)
 
 export const db = createClient({
   url,
@@ -9,21 +21,39 @@ export const db = createClient({
 })
 
 let schemaReady: Promise<void> | null = null
+let initializingSchema = false
 
 async function ensureSchema() {
-  const { initSchema } = await import('./schema')
-  await initSchema()
+  if (initializingSchema) return
+
+  schemaReady ??= (async () => {
+    initializingSchema = true
+    try {
+      const { initSchema } = await import('./schema')
+      await initSchema()
+    } finally {
+      initializingSchema = false
+    }
+  })()
+
+  try {
+    await schemaReady
+  } catch (error) {
+    schemaReady = null
+    throw error
+  }
 }
 
 // Auto-init schema on first use (idempotent — uses CREATE TABLE IF NOT EXISTS)
 export function getDb() {
-  if (!schemaReady) schemaReady = ensureSchema().catch(() => { schemaReady = null })
+  void ensureSchema().catch(() => {
+    schemaReady = null
+  })
   return db
 }
 
 export async function query<T = unknown>(sql: string, args?: unknown[]): Promise<T[]> {
-  if (!schemaReady) schemaReady = ensureSchema().catch(() => { schemaReady = null })
-  await schemaReady
+  await ensureSchema()
   const result = await db.execute({ sql, args: args as never })
   return result.rows as unknown as T[]
 }
