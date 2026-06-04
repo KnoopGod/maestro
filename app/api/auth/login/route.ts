@@ -7,16 +7,25 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json().catch(() => ({}))
+  let password: string | undefined
+
+  const ct = req.headers.get('content-type') || ''
+  if (ct.includes('application/json')) {
+    const body = await req.json().catch(() => ({}))
+    password = body.password
+  } else {
+    const fd = await req.formData().catch(() => new FormData())
+    password = fd.get('password') as string | undefined
+  }
+
   const expected = process.env.MAESTRO_PASSWORD
 
   if (!expected || !password || password !== expected) {
-    await new Promise(r => setTimeout(r, 500))
-    return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 })
+    return NextResponse.redirect(new URL('/login?error=1', req.url), 303)
   }
 
   const token = await hashPassword(expected)
-  const res = NextResponse.json({ ok: true })
+  const res = NextResponse.redirect(new URL('/', req.url), 303)
   res.cookies.set('maestro_session', token, {
     httpOnly: true,
     secure: true,

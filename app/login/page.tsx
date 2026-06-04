@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect, useCallback, useTransition } from 'react'
-import { Loader2 } from 'lucide-react'
-import { loginAction } from './actions'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
 const BOOT_LINES = [
   { text: '> MAESTRO SYSTEM :: BOOT v4.2.1', delay: 300, accent: false },
@@ -13,11 +13,11 @@ const BOOT_LINES = [
   { text: '> WELCOME, OPERATOR', delay: 2700, accent: true },
 ]
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const hasError = searchParams.get('error') === '1'
   const [bootLines, setBootLines] = useState<number[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [error, setError] = useState('')
-  const [isPending, startTransition] = useTransition()
 
   const completeBootSequence = useCallback(() => {
     setTimeout(() => setShowForm(true), 400)
@@ -31,16 +31,6 @@ export default function LoginPage() {
       }, line.delay)
     })
   }, [completeBootSequence])
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    const formData = new FormData(e.currentTarget)
-    startTransition(async () => {
-      const result = await loginAction(formData)
-      if (result?.error) setError(result.error)
-    })
-  }
 
   return (
     <div className="min-h-screen bg-[#07081A] flex items-center justify-center p-4"
@@ -62,12 +52,9 @@ export default function LoginPage() {
           </div>
           <div className="space-y-1.5 min-h-[140px]">
             {BOOT_LINES.map((line, i) => (
-              <div
-                key={i}
-                className={`text-[11px] font-mono transition-all duration-300 ${
-                  bootLines.includes(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
-                } ${line.accent ? 'text-indigo-400' : 'text-gray-500'}`}
-              >
+              <div key={i} className={`text-[11px] font-mono transition-all duration-300 ${
+                bootLines.includes(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
+              } ${line.accent ? 'text-indigo-400' : 'text-gray-500'}`}>
                 {line.text}
                 {bootLines.includes(i) && i === bootLines[bootLines.length - 1] && i < BOOT_LINES.length - 1 && (
                   <span className="cursor-blink text-indigo-400">_</span>
@@ -77,7 +64,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Login form */}
+        {/* Login form — pure HTML POST, no JS auth logic */}
         <div className={`transition-all duration-500 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
           <div className="border border-indigo-900/60 bg-gray-900/60 p-6 hud-corners">
             <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">
@@ -87,7 +74,7 @@ export default function LoginPage() {
               OPERATOR ACCESS
             </h1>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form method="POST" action="/api/auth/login" className="space-y-4">
               <div>
                 <label htmlFor="login-password" className="block text-[8px] text-indigo-600/60 font-mono tracking-[0.25em] uppercase mb-1.5">
                   PASSPHRASE //
@@ -102,21 +89,17 @@ export default function LoginPage() {
                 />
               </div>
 
-              {error && (
+              {hasError && (
                 <p role="alert" className="text-[10px] text-red-400 bg-red-950/20 border border-red-900/40 px-3 py-2 font-mono">
-                  ✕ {error}
+                  ✕ ACCESS DENIED — INVALID CREDENTIALS
                 </p>
               )}
 
               <button
                 type="submit"
-                disabled={isPending}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono text-[11px] tracking-[0.2em] uppercase py-2.5 transition-colors flex items-center justify-center gap-2 border border-indigo-500/40"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[11px] tracking-[0.2em] uppercase py-2.5 transition-colors flex items-center justify-center gap-2 border border-indigo-500/40"
               >
-                {isPending
-                  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> CONNEXION EN COURS...</>
-                  : 'AUTHENTICATE ►'
-                }
+                AUTHENTICATE ►
               </button>
             </form>
           </div>
@@ -127,5 +110,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
