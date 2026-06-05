@@ -3,7 +3,15 @@ import { useState, useTransition } from 'react'
 import { Trash2, AlertTriangle } from 'lucide-react'
 import { deleteClientAction } from '@/lib/actions/clients'
 
-export function DeleteClientButton({ clientId, clientName }: { clientId: string; clientName: string }) {
+export function DeleteClientButton({
+  clientId,
+  clientName,
+  compact = false,
+}: {
+  clientId: string
+  clientName: string
+  compact?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -16,10 +24,12 @@ export function DeleteClientButton({ clientId, clientName }: { clientId: string;
   return (
     <>
       <button
+        type="button"
+        aria-label={`Supprimer ${clientName}`}
         onClick={() => setOpen(true)}
-        className="px-3 py-2 rounded-lg border border-gray-800 hover:border-red-700/50 hover:bg-red-950/30 text-gray-400 hover:text-red-400 text-sm flex items-center gap-1.5 transition-colors"
+        className={`${compact ? 'h-7 w-7 justify-center p-0' : 'px-3 py-2'} rounded-lg border border-gray-800 hover:border-red-700/50 hover:bg-red-950/30 text-gray-400 hover:text-red-400 text-sm flex items-center gap-1.5 transition-colors`}
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
       </button>
 
       {open && (
