@@ -112,6 +112,31 @@ export async function discoverPages(userToken: string): Promise<DiscoverResult> 
   }
 }
 
+export async function discoverInstagramAccountForPage(
+  pageId: string,
+  pageToken: string
+): Promise<MetaPage['instagramAccount']> {
+  const res = await fetch(
+    `${GRAPH_API}/${pageId}?` +
+      `fields=instagram_business_account{id,username,profile_picture_url}` +
+      `&access_token=${encodeURIComponent(pageToken)}`
+  )
+  const data = await res.json()
+
+  if (!res.ok) {
+    throw new Error(data.error?.message || 'Impossible de vérifier Instagram pour cette page')
+  }
+
+  const account = data.instagram_business_account
+  if (!account?.id || !account?.username) return null
+
+  return {
+    id: account.id,
+    username: account.username,
+    profilePictureUrl: account.profile_picture_url,
+  }
+}
+
 // ─── Verify a Page token ─────────────────────────────────────────────────────
 
 export async function verifyPageToken(pageId: string, pageToken: string): Promise<{
