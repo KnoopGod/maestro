@@ -1,18 +1,8 @@
-'use client'
 import { Search, Bell, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { WipTag } from '@/components/ui/WipTag'
 
 export function TopBar() {
-  const router = useRouter()
-
-  function handleSearch(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const q = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value.trim()
-    if (q) router.push(`/search?q=${encodeURIComponent(q)}`)
-  }
-
   return (
     <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-[#07081A]/95 backdrop-blur-xl border-b border-indigo-950/60 flex items-center px-4 lg:px-6 z-30">
       {/* Left label */}
@@ -21,7 +11,7 @@ export function TopBar() {
       </div>
 
       {/* Search */}
-      <form role="search" onSubmit={handleSearch} className="flex-1 max-w-sm relative">
+      <form role="search" action="/search" className="flex-1 max-w-sm relative">
         <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-indigo-700/50 pointer-events-none" />
         <label htmlFor="topbar-search" className="sr-only">Rechercher</label>
         <input
