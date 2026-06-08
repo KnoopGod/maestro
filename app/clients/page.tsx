@@ -2,10 +2,17 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { ClientGridWithFilters } from '@/components/clients/ClientFilters'
+import { CLIENT_TYPES, type ClientType } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ClientsPage() {
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>
+}) {
+  const { type } = await searchParams
+  const filter = isClientType(type) ? type : 'all'
   const clients = await listClientsWithStats()
 
   return (
@@ -27,7 +34,11 @@ export default async function ClientsPage() {
         </Link>
       </div>
 
-      <ClientGridWithFilters clients={clients} />
+      <ClientGridWithFilters clients={clients} filter={filter} />
     </div>
   )
+}
+
+function isClientType(value: string | undefined): value is ClientType {
+  return !!value && value in CLIENT_TYPES
 }

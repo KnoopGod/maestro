@@ -1,13 +1,16 @@
-'use client'
-import { useState } from 'react'
+import Link from 'next/link'
 import { CLIENT_TYPES, type ClientType, type ClientWithStats } from '@/types/client'
 import { ClientCard } from './ClientCard'
 
 type Filter = 'all' | ClientType
 
-export function ClientGridWithFilters({ clients }: { clients: ClientWithStats[] }) {
-  const [filter, setFilter] = useState<Filter>('all')
-
+export function ClientGridWithFilters({
+  clients,
+  filter = 'all',
+}: {
+  clients: ClientWithStats[]
+  filter?: Filter
+}) {
   const counts: Record<Filter, number> = {
     all: clients.length,
     restaurant: clients.filter(c => c.type === 'restaurant').length,
@@ -24,8 +27,8 @@ export function ClientGridWithFilters({ clients }: { clients: ClientWithStats[] 
   return (
     <>
       <div className="flex gap-2 flex-wrap mb-6">
-        <button
-          onClick={() => setFilter('all')}
+        <Link
+          href="/clients"
           className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all ${
             filter === 'all'
               ? 'bg-purple-600 text-white'
@@ -33,14 +36,14 @@ export function ClientGridWithFilters({ clients }: { clients: ClientWithStats[] 
           }`}
         >
           Tous ({counts.all})
-        </button>
+        </Link>
         {(Object.keys(CLIENT_TYPES) as ClientType[]).filter(t => counts[t] > 0).map(t => {
           const cfg = CLIENT_TYPES[t]
           const active = filter === t
           return (
-            <button
+            <Link
               key={t}
-              onClick={() => setFilter(t)}
+              href={`/clients?type=${t}`}
               className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 active
                   ? 'bg-purple-600 text-white'
@@ -49,7 +52,7 @@ export function ClientGridWithFilters({ clients }: { clients: ClientWithStats[] 
             >
               <span>{cfg.emoji}</span>
               {cfg.label} ({counts[t]})
-            </button>
+            </Link>
           )
         })}
       </div>
