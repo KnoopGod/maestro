@@ -151,7 +151,7 @@ export default async function UsagePage() {
             {stats.byClient.filter(c => c.cost > 0 || c.postsCount > 0).map(c => (
               <Link
                 key={c.clientId}
-                href={`/plan?client=${c.clientId}`}
+                href={`/clients/${c.clientId}/finance`}
                 className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-800/40 transition-colors"
               >
                 <div className="text-xl">{c.emoji}</div>

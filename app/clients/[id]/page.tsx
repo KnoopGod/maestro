@@ -1,7 +1,7 @@
 import type React from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
@@ -103,7 +103,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Link href={`/clients/${client.id}/library`} className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-xl p-4 hover:border-purple-500/50 transition-all flex items-center gap-3 group">
           <FolderOpen className="w-5 h-5 text-purple-400 flex-shrink-0" />
           <div>
@@ -133,6 +133,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <div>
             <div className="text-sm font-medium text-white">Analytics</div>
             <div className="text-[11px] text-gray-500">{avgImpact != null ? `Impact ${avgImpact.toFixed(0)}/100` : 'Aucun post publié'}</div>
+          </div>
+        </Link>
+
+        <Link href={`/clients/${client.id}/finance`} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-emerald-700/50 transition-all flex items-center gap-3 group">
+          <Euro className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-white">Rentabilité</div>
+            <div className="text-[11px] text-gray-500">Marge · Budget</div>
           </div>
         </Link>
 
