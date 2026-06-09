@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { CalendarDays, Clock, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react'
+import { CalendarDays, Clock, CheckCircle2, AlertCircle, Sparkles, Plus } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
-import { listClients } from '@/lib/db/queries/clients'
+import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { PublishDueButton } from '@/components/posts/PostActions'
 import type { Post } from '@/types/post'
-import type { Client } from '@/types/client'
+import type { ClientWithStats } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,8 +17,8 @@ const STATUS_INFO: Record<string, { label: string; color: string; icon: typeof C
 }
 
 export default async function CalendarPage() {
-  const [posts, clients] = await Promise.all([listPosts({ limit: 200 }), listClients()])
-  const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
+  const [posts, clients] = await Promise.all([listPosts({ limit: 200 }), listClientsWithStats()])
+  const clientsMap = new Map<string, ClientWithStats>(clients.map(c => [c.id, c]))
 
   // Sort: scheduled posts first (by date asc), then drafts/ready (newest first), then published (newest first)
   const planned = posts
@@ -31,6 +31,40 @@ export default async function CalendarPage() {
 
   const dueSoonCount = planned.filter(p => (p.scheduledAt ?? Infinity) <= Date.now()).length
   const next7d = planned.filter(p => (p.scheduledAt ?? 0) <= Date.now() + 7 * 24 * 3600_000).length
+
+  // ─── Weekly grid ────────────────────────────────────────────────────────────
+  const today = new Date()
+  // Monday of current week
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  weekStart.setHours(0, 0, 0, 0)
+  const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart)
+    d.setDate(weekStart.getDate() + i)
+    return d
+  })
+
+  // Map: clientId → Set of day indices (0=Mon…6=Sun) with post status
+  type DayStatus = 'published' | 'scheduled' | 'draft'
+  const clientDayMap = new Map<string, Map<number, DayStatus>>()
+  for (const p of posts) {
+    const at = p.publishedAt ?? p.scheduledAt ?? p.createdAt
+    const d = new Date(at)
+    const dayMs = d.setHours(0, 0, 0, 0)
+    const dayIndex = Math.floor((dayMs - weekStart.getTime()) / 86_400_000)
+    if (dayIndex < 0 || dayIndex > 6) continue
+    if (!clientDayMap.has(p.clientId)) clientDayMap.set(p.clientId, new Map())
+    const current = clientDayMap.get(p.clientId)!.get(dayIndex)
+    const priority: DayStatus[] = ['published', 'scheduled', 'draft']
+    const status: DayStatus = p.status === 'published' ? 'published' : p.status === 'scheduled' ? 'scheduled' : 'draft'
+    if (!current || priority.indexOf(status) < priority.indexOf(current)) {
+      clientDayMap.get(p.clientId)!.set(dayIndex, status)
+    }
+  }
+
+  const activeClients = clients.filter(c => c.status === 'active')
+  const todayIndex = (today.getDay() + 6) % 7
 
   return (
     <div className="space-y-6">
@@ -60,6 +94,85 @@ export default async function CalendarPage() {
         <StatBox label="Dus maintenant" value={dueSoonCount} color="text-red-400" />
         <StatBox label="Prochains 7 jours" value={next7d} color="text-purple-400" />
       </div>
+
+      {/* Weekly grid */}
+      {activeClients.length > 0 && (
+        <section className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-800 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-indigo-400" />
+              Vue semaine
+            </h2>
+            <span className="text-[10px] text-gray-500 font-mono">
+              {weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – {weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-800">
+                  <th className="text-left px-4 py-2 text-[10px] text-gray-600 font-mono w-36">CLIENT</th>
+                  {weekDays.map((d, i) => (
+                    <th key={i} className={`text-center py-2 px-2 text-[10px] font-mono w-12 ${i === todayIndex ? 'text-indigo-400' : 'text-gray-600'}`}>
+                      <div>{DAYS_FR[i]}</div>
+                      <div className={`text-[9px] mt-0.5 ${i === todayIndex ? 'text-indigo-300' : 'text-gray-700'}`}>{d.getDate()}</div>
+                    </th>
+                  ))}
+                  <th className="px-3 py-2 w-10" />
+                </tr>
+              </thead>
+              <tbody>
+                {activeClients.map((c, idx) => {
+                  const dayMap = clientDayMap.get(c.id) ?? new Map()
+                  return (
+                    <tr key={c.id} className={`border-b border-gray-800/50 ${idx % 2 === 1 ? 'bg-gray-900/20' : ''}`}>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{c.emoji}</span>
+                          <span className="text-[11px] text-gray-300 truncate max-w-[90px]">{c.name}</span>
+                        </div>
+                      </td>
+                      {weekDays.map((_, i) => {
+                        const status = dayMap.get(i)
+                        return (
+                          <td key={i} className={`text-center py-2.5 px-2 ${i === todayIndex ? 'bg-indigo-950/20' : ''}`}>
+                            {status === 'published' && (
+                              <span title="Publié" className="inline-block w-3 h-3 rounded-full bg-emerald-500 mx-auto" />
+                            )}
+                            {status === 'scheduled' && (
+                              <span title="Planifié" className="inline-block w-3 h-3 rounded-full bg-blue-400 mx-auto" />
+                            )}
+                            {status === 'draft' && (
+                              <span title="Brouillon" className="inline-block w-3 h-3 rounded-full bg-amber-400/60 mx-auto" />
+                            )}
+                            {!status && (
+                              <span className="inline-block w-2 h-px bg-gray-800 mx-auto" />
+                            )}
+                          </td>
+                        )
+                      })}
+                      <td className="pr-3 py-2.5">
+                        <Link
+                          href={`/studio?client=${c.id}`}
+                          className="text-gray-700 hover:text-indigo-400 transition-colors"
+                          title="Créer un post"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-5 py-2.5 border-t border-gray-800 flex items-center gap-4 text-[9px] text-gray-600 font-mono">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Publié</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />Planifié</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400/60 inline-block" />Brouillon</span>
+          </div>
+        </section>
+      )}
 
       {/* Planifiés */}
       <Section title="🗓 Planifiés" emptyLabel="Aucun post planifié.">
@@ -101,7 +214,7 @@ function Section({ title, emptyLabel, children }: { title: string; emptyLabel: s
   )
 }
 
-function TimelineRow({ post, client }: { post: Post; client: Client | undefined }) {
+function TimelineRow({ post, client }: { post: Post; client: ClientWithStats | undefined }) {
   const cfg = STATUS_INFO[post.status] ?? STATUS_INFO.draft
   const Icon = cfg.icon
   const when = post.scheduledAt

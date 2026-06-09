@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Sparkles } from 'lucide-react'
 import { CLIENT_TYPES, CLIENT_STATUS, type ClientWithStats } from '@/types/client'
 import { DeleteClientButton } from './DeleteClientButton'
 
@@ -52,6 +53,14 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
           <span className="text-[10px] text-purple-400/80 font-mono truncate">{client.nextPillar}</span>
         </div>
       )}
+
+      <Link
+        href={`/studio?client=${client.id}${client.nextPillar ? `&pillar=${encodeURIComponent(client.nextPillar)}` : ''}`}
+        className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-mono tracking-[0.15em] text-purple-400/70 border border-purple-800/30 hover:border-purple-500/60 hover:text-purple-300 hover:bg-purple-950/20 transition-all uppercase"
+      >
+        <Sparkles className="w-3 h-3" />
+        Créer un post
+      </Link>
 
       <Link href={`/clients/${client.id}`} className="grid grid-cols-3 border-t border-gray-800 pt-3 divide-x divide-gray-800">
         <div className="px-2 text-center">
