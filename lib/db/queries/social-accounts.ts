@@ -30,12 +30,53 @@ function mapRow(row: SocialAccountRow): ClientSocialAccount {
   }
 }
 
+export interface ClientSocialAccountSummary {
+  platform: SocialPlatform
+  handle: string | null
+  accountId: string | null
+  connectedAt: number | null
+  expiresAt: number | null
+  hasAccessToken: boolean
+}
+
 export async function listClientSocialAccounts(clientId: string): Promise<ClientSocialAccount[]> {
   const rows = await query<SocialAccountRow>(
     `SELECT * FROM client_social_accounts WHERE client_id = ? ORDER BY created_at DESC`,
     [clientId]
   )
   return rows.map(mapRow)
+}
+
+export async function listClientSocialAccountSummaries(clientId: string): Promise<ClientSocialAccountSummary[]> {
+  const rows = await query<{
+    platform: SocialPlatform
+    handle: string | null
+    account_id: string | null
+    connected_at: number | null
+    expires_at: number | null
+    has_access_token: number
+  }>(
+    `SELECT
+      platform,
+      handle,
+      account_id,
+      connected_at,
+      expires_at,
+      CASE WHEN access_token IS NOT NULL AND access_token != '' THEN 1 ELSE 0 END AS has_access_token
+    FROM client_social_accounts
+    WHERE client_id = ?
+    ORDER BY created_at DESC`,
+    [clientId]
+  )
+
+  return rows.map(row => ({
+    platform: row.platform,
+    handle: row.handle,
+    accountId: row.account_id,
+    connectedAt: row.connected_at,
+    expiresAt: row.expires_at,
+    hasAccessToken: row.has_access_token === 1,
+  }))
 }
 
 export async function getSocialAccount(clientId: string, platform: SocialPlatform): Promise<ClientSocialAccount | null> {

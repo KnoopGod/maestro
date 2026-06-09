@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, CheckCircle2, Circle, Sparkles, Bot, FolderOpen, Plug, Globe, FileImage } from 'lucide-react'
 import { getClient } from '@/lib/db/queries/clients'
-import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
-import { listClientSocialAccounts } from '@/lib/db/queries/social-accounts'
+import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
+import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listPosts } from '@/lib/db/queries/posts'
 
 export const dynamic = 'force-dynamic'
@@ -13,15 +13,15 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assets, identity, socialAccounts, posts] = await Promise.all([
-    listClientAssets(id),
+  const [assetSummary, identity, socialAccounts, posts] = await Promise.all([
+    getClientAssetSummary(id),
     getVisualIdentity(id),
-    listClientSocialAccounts(id),
-    listPosts({ clientId: id, limit: 1 }),
+    listClientSocialAccountSummaries(id),
+    listPosts({ clientId: id, limit: 1, includeInsights: false }),
   ])
 
-  const hasImages = assets.some(a => a.type === 'image')
-  const hasDocuments = assets.some(a => a.type === 'document' || a.type === 'brand_guide')
+  const hasImages = assetSummary.images > 0 || assetSummary.logos > 0
+  const hasDocuments = assetSummary.documents > 0 || assetSummary.brandGuides > 0
   const hasIdentity = Boolean(identity?.stylePrompt)
   const aiReady = Boolean(process.env.ANTHROPIC_API_KEY && process.env.OPENAI_API_KEY)
   const publicUrlReady = Boolean(
@@ -30,7 +30,7 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
   const fbAccount = socialAccounts.find(a => a.platform === 'facebook')
   const igAccount = socialAccounts.find(a => a.platform === 'instagram')
   const metaReady = Boolean(
-    fbAccount?.accessToken && fbAccount?.accountId && igAccount?.accessToken && igAccount?.accountId
+    fbAccount?.hasAccessToken && fbAccount?.accountId && igAccount?.hasAccessToken && igAccount?.accountId
   )
   const hasFirstPost = posts.length > 0
 
@@ -48,9 +48,9 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
       title: '2. Library + DA',
       done: hasImages && hasIdentity,
       detail: hasIdentity
-        ? `DA synthétisée à partir de ${identity?.assetsCount || assets.length} ressource(s).`
+          ? `DA synthétisée à partir de ${identity?.assetsCount || assetSummary.total} ressource(s).`
         : hasImages
-          ? `${assets.length} ressource(s) — clique « Analyser la DA » pour générer le style.`
+          ? `${assetSummary.total} ressource(s) — clique « Analyser la DA » pour générer le style.`
           : 'Ajouter photos, logo, documents DA pour guider les agents visuels.',
       href: `/clients/${client.id}/library`,
       action: 'Gérer la library',
@@ -86,8 +86,8 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
       href: `/clients/${client.id}/connections`,
       action: metaReady ? 'Diagnostiquer' : 'Connecter Meta',
       sublist: [
-        { label: 'Facebook Page', ok: Boolean(fbAccount?.accessToken) },
-        { label: 'Instagram Business', ok: Boolean(igAccount?.accessToken) },
+        { label: 'Facebook Page', ok: Boolean(fbAccount?.hasAccessToken) },
+        { label: 'Instagram Business', ok: Boolean(igAccount?.hasAccessToken) },
       ],
     },
     {

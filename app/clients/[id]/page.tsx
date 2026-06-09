@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
-import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
+import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
-import { listClientSocialAccounts } from '@/lib/db/queries/social-accounts'
+import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
 import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
@@ -21,12 +21,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assets, identity, aiStrategy, socialAccounts, clientPosts, clientJobs] = await Promise.all([
-    listClientAssets(id),
+  const [assetSummary, identity, aiStrategy, socialAccounts, clientPosts, clientJobs] = await Promise.all([
+    getClientAssetSummary(id),
     getVisualIdentity(id),
     getAiStrategy(id),
-    listClientSocialAccounts(id),
-    listPosts({ clientId: id, limit: 100 }),
+    listClientSocialAccountSummaries(id),
+    listPosts({ clientId: id, limit: 100, includeInsights: false }),
     listJobsByClient(id, 8),
   ])
 
@@ -108,7 +108,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <FolderOpen className="w-5 h-5 text-purple-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Bibliothèque</div>
-            <div className="text-[11px] text-gray-500">{assets.length} éléments{identity?.stylePrompt ? ' · DA' : ''}</div>
+            <div className="text-[11px] text-gray-500">{assetSummary.total} éléments{identity?.stylePrompt ? ' · DA' : ''}</div>
           </div>
         </Link>
 

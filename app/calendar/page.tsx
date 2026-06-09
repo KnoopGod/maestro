@@ -17,7 +17,10 @@ const STATUS_INFO: Record<string, { label: string; color: string; icon: typeof C
 }
 
 export default async function CalendarPage() {
-  const [posts, clients] = await Promise.all([listPosts({ limit: 200 }), listClients()])
+  const [posts, clients] = await Promise.all([
+    listPosts({ statuses: ['scheduled', 'draft', 'ready'], limit: 200, includeInsights: false }),
+    listClients(),
+  ])
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
 
   // Sort: scheduled posts first (by date asc), then drafts/ready (newest first), then published (newest first)
@@ -29,8 +32,9 @@ export default async function CalendarPage() {
     .filter(p => p.status === 'draft' || p.status === 'ready')
     .sort((a, b) => b.createdAt - a.createdAt)
 
-  const dueSoonCount = planned.filter(p => (p.scheduledAt ?? Infinity) <= Date.now()).length
-  const next7d = planned.filter(p => (p.scheduledAt ?? 0) <= Date.now() + 7 * 24 * 3600_000).length
+  const now = new Date().getTime()
+  const dueSoonCount = planned.filter(p => (p.scheduledAt ?? Infinity) <= now).length
+  const next7d = planned.filter(p => (p.scheduledAt ?? 0) <= now + 7 * 24 * 3600_000).length
 
   return (
     <div className="space-y-6">
@@ -64,14 +68,14 @@ export default async function CalendarPage() {
       {/* Planifiés */}
       <Section title="🗓 Planifiés" emptyLabel="Aucun post planifié.">
         {planned.map(p => (
-          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} />
+          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} />
         ))}
       </Section>
 
       {/* Brouillons / prêts */}
       <Section title="📝 En préparation" emptyLabel="Aucun brouillon en cours.">
         {inProgress.map(p => (
-          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} />
+          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} />
         ))}
       </Section>
     </div>
@@ -101,14 +105,14 @@ function Section({ title, emptyLabel, children }: { title: string; emptyLabel: s
   )
 }
 
-function TimelineRow({ post, client }: { post: Post; client: Client | undefined }) {
+function TimelineRow({ post, client, now }: { post: Post; client: Client | undefined; now: number }) {
   const cfg = STATUS_INFO[post.status] ?? STATUS_INFO.draft
   const Icon = cfg.icon
   const when = post.scheduledAt
     ? new Date(post.scheduledAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     : 'non planifié'
 
-  const overdue = post.status === 'scheduled' && post.scheduledAt && post.scheduledAt < Date.now()
+  const overdue = post.status === 'scheduled' && post.scheduledAt && post.scheduledAt < now
 
   return (
     <Link

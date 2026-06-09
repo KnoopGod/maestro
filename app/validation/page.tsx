@@ -17,8 +17,10 @@ const POST_STATUS_BORDER: Record<string, string> = {
 }
 
 export default async function ValidationPage() {
-  const [allPosts, clients] = await Promise.all([listPosts({ limit: 200 }), listClients()])
-  const queue = allPosts.filter(p => p.status === 'draft' || p.status === 'ready' || p.status === 'failed')
+  const [queue, clients] = await Promise.all([
+    listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false }),
+    listClients(),
+  ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
 
@@ -92,7 +94,7 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       <div className="flex items-start gap-3">
         {post.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.imageUrl} alt="" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
+          <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
         ) : (
           <div className={`w-20 h-20 rounded-lg bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-2xl flex-shrink-0`}>
             {client?.emoji ?? '📝'}

@@ -515,7 +515,7 @@ export function MetaConnectionWizard({
               />
               {page.pictureUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- Meta returns dynamic external page pictures; next/image domains are not stable here.
-                <img src={page.pictureUrl} alt="" className="w-10 h-10 rounded-lg" />
+                <img src={page.pictureUrl} alt="" loading="lazy" decoding="async" className="w-10 h-10 rounded-lg" />
               ) : (
                 <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center">
                   <Facebook className="w-5 h-5 text-gray-500" />

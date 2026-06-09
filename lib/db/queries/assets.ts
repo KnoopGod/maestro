@@ -54,6 +54,15 @@ function mapAssetRow(row: AssetRow): ClientAsset {
   }
 }
 
+export interface ClientAssetSummary {
+  total: number
+  images: number
+  videos: number
+  logos: number
+  documents: number
+  brandGuides: number
+}
+
 export async function listClientAssets(clientId: string, type?: AssetType): Promise<ClientAsset[]> {
   const rows = type
     ? await query<AssetRow>(
@@ -65,6 +74,37 @@ export async function listClientAssets(clientId: string, type?: AssetType): Prom
         [clientId]
       )
   return rows.map(mapAssetRow)
+}
+
+export async function getClientAssetSummary(clientId: string): Promise<ClientAssetSummary> {
+  const row = await queryOne<{
+    total: number
+    images: number | null
+    videos: number | null
+    logos: number | null
+    documents: number | null
+    brand_guides: number | null
+  }>(
+    `SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN type = 'image' THEN 1 ELSE 0 END) AS images,
+      SUM(CASE WHEN type = 'video' THEN 1 ELSE 0 END) AS videos,
+      SUM(CASE WHEN type = 'logo' THEN 1 ELSE 0 END) AS logos,
+      SUM(CASE WHEN type = 'document' THEN 1 ELSE 0 END) AS documents,
+      SUM(CASE WHEN type = 'brand_guide' THEN 1 ELSE 0 END) AS brand_guides
+    FROM client_assets
+    WHERE client_id = ?`,
+    [clientId]
+  )
+
+  return {
+    total: Number(row?.total ?? 0),
+    images: Number(row?.images ?? 0),
+    videos: Number(row?.videos ?? 0),
+    logos: Number(row?.logos ?? 0),
+    documents: Number(row?.documents ?? 0),
+    brandGuides: Number(row?.brand_guides ?? 0),
+  }
 }
 
 export async function getAsset(id: string): Promise<ClientAsset | null> {

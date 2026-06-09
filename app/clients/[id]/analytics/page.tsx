@@ -56,7 +56,7 @@ function AnalyticsPostRow({ post }: { post: Post }) {
       <div className="flex items-start gap-4">
         {post.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.imageUrl} alt="" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
+          <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
         ) : (
           <div className="w-20 h-20 rounded-lg bg-gray-950 border border-gray-800 flex items-center justify-center text-2xl flex-shrink-0">
             📊

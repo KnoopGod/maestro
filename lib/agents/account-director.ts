@@ -33,7 +33,7 @@ export async function runAccountDirector(input: {
   model: string
 }> {
   const { client, userBrief } = input
-  const recentPosts = input.recentPosts ?? await listPosts({ clientId: client.id, limit: 10 })
+  const recentPosts = input.recentPosts ?? await listPosts({ clientId: client.id, limit: 10, includeInsights: false })
   const fallback = fallbackDirective(client, userBrief, recentPosts)
   const apiKey = process.env.ANTHROPIC_API_KEY
 

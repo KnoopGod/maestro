@@ -11,13 +11,6 @@ import {
 import { CLIENT_TYPES, type ClientType } from '@/types/client'
 
 export async function createClientAction(formData: FormData) {
-  console.log('[createClientAction] called', {
-    name: formData.get('name'),
-    type: formData.get('type'),
-    clientId: formData.get('clientId'),
-    stack: new Error().stack?.split('\n').slice(1, 4).join(' | '),
-  })
-
   const clientId = String(formData.get('clientId') ?? '').trim() || nanoid(12)
   const name = String(formData.get('name') ?? '').trim()
   const type = String(formData.get('type') ?? '') as ClientType
