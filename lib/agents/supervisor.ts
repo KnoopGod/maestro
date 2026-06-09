@@ -1,10 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
-import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
+import {
+  buildExpertSystemPrompt,
+  createAgentQualityEnvelope,
+  type AgentQualityEnvelope,
+} from '@/lib/agents/prompts'
 
-interface SupervisorResult {
+export interface SupervisorResult {
   review: SupervisorReview
+  qualityEnvelope: AgentQualityEnvelope<SupervisorReview>
   cost: number
   tokensUsed: number
   model: string
@@ -16,8 +21,10 @@ export async function supervisePost(input: {
 }): Promise<SupervisorResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
+    const review = fallbackSupervisorReview(input)
     return {
-      review: fallbackSupervisorReview(input),
+      review,
+      qualityEnvelope: buildSupervisorEnvelope(review, ['ANTHROPIC_API_KEY absente : contrôle local limité.']),
       cost: 0,
       tokensUsed: 0,
       model: 'fallback',
@@ -108,15 +115,20 @@ Réponds en français, en JSON strict, sans markdown.`)
     const outputTokens = message.usage.output_tokens
     const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
 
+    const review = normalizeReview(parsed, post.impactScore)
+
     return {
-      review: normalizeReview(parsed, post.impactScore),
+      review,
+      qualityEnvelope: buildSupervisorEnvelope(review),
       cost: parseFloat(cost.toFixed(6)),
       tokensUsed: inputTokens + outputTokens,
       model: 'claude-opus-4-7',
     }
   } catch {
+    const review = fallbackSupervisorReview(input)
     return {
-      review: fallbackSupervisorReview(input),
+      review,
+      qualityEnvelope: buildSupervisorEnvelope(review, ['Claude indisponible ou réponse non parsable : fallback local utilisé.']),
       cost: 0,
       tokensUsed: 0,
       model: 'fallback',
@@ -177,6 +189,21 @@ function normalizeReview(review: SupervisorReview, fallbackScore: number): Super
     improvements: Array.isArray(review.improvements) ? review.improvements.slice(0, 5) : [],
     nextAction: review.nextAction || 'Relire le post avant publication.',
   }
+}
+
+function buildSupervisorEnvelope(
+  review: SupervisorReview,
+  assumptions: string[] = []
+): AgentQualityEnvelope<SupervisorReview> {
+  return createAgentQualityEnvelope({
+    agentId: 'supervisor',
+    confidence: review.score / 100,
+    assumptions,
+    risks: review.risks,
+    recommendations: review.improvements,
+    nextAgent: review.verdict === 'ready' ? 'publisher' : 'social-expert',
+    payload: review,
+  })
 }
 
 function clampScore(score: number) {

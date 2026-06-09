@@ -463,5 +463,6 @@ function formatSection(title: string, items: string[]): string {
 
 function clampConfidence(confidence: number): number {
   if (Number.isNaN(confidence)) return 0
-  return Math.min(1, Math.max(0, confidence))
+  const clamped = Math.min(1, Math.max(0, confidence))
+  return Math.round(clamped * 100) / 100
 }

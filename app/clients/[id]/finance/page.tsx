@@ -90,6 +90,39 @@ export default async function ClientFinancePage({ params }: { params: Promise<{ 
         </div>
       </section>
 
+      <section className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Contrôle agent</h2>
+            <p className="mt-1 text-xs text-gray-500">
+              Enveloppe qualité du Profit Controller : confiance, risques et prochain relais recommandé.
+            </p>
+          </div>
+          <div className="rounded-full border border-emerald-700/40 bg-emerald-950/30 px-3 py-1 text-xs text-emerald-300">
+            Confiance {(report.qualityEnvelope.confidence * 100).toFixed(0)}%
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">Prochain agent</div>
+            <div className="mt-1 text-sm text-white">{report.qualityEnvelope.nextAgent ?? 'non défini'}</div>
+          </div>
+          <div className="rounded-xl border border-gray-800 bg-gray-950/40 p-3 lg:col-span-2">
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">Risques détectés</div>
+            {report.qualityEnvelope.risks.length > 0 ? (
+              <ul className="mt-2 space-y-1">
+                {report.qualityEnvelope.risks.map(risk => (
+                  <li key={risk} className="text-xs text-amber-100/80">• {risk}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-xs text-emerald-200/80">Aucun risque financier majeur détecté.</p>
+            )}
+          </div>
+        </div>
+      </section>
+
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <FinanceForm clientId={id} report={report} />
 

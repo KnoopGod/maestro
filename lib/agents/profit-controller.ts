@@ -2,6 +2,10 @@ import { getClient } from '@/lib/db/queries/clients'
 import { getClientFinanceSettings } from '@/lib/db/queries/finance'
 import { queryOne } from '@/lib/db'
 import type { ProfitReport } from '@/types/finance'
+import {
+  createAgentQualityEnvelope,
+  type AgentQualityEnvelope,
+} from '@/lib/agents/prompts'
 
 const EUR_PER_USD = 0.93
 
@@ -55,7 +59,11 @@ interface CurrentMonthAssetRow {
   da_syntheses: number
 }
 
-export async function runProfitController(clientId: string): Promise<ProfitReport> {
+export interface ProfitControllerResult extends ProfitReport {
+  qualityEnvelope: AgentQualityEnvelope<ProfitReport>
+}
+
+export async function runProfitController(clientId: string): Promise<ProfitControllerResult> {
   const client = await getClient(clientId)
   if (!client) throw new Error('Client introuvable')
 
@@ -112,7 +120,7 @@ export async function runProfitController(clientId: string): Promise<ProfitRepor
     ? roundMoney(totalCost / settings.plannedPostsPerMonth)
     : totalCost
 
-  return {
+  const report: ProfitReport = {
     clientId,
     clientName: client.name,
     status: resolveStatus(revenue, marginPct, settings.targetMarginPct, profit),
@@ -158,6 +166,11 @@ export async function runProfitController(clientId: string): Promise<ProfitRepor
       'Le temps interne est valorisé avec ton taux horaire configuré pour obtenir une marge réaliste.',
     ],
     settings,
+  }
+
+  return {
+    ...report,
+    qualityEnvelope: buildProfitEnvelope(report),
   }
 }
 
@@ -217,6 +230,37 @@ function buildRecommendations(input: {
   }
 
   return recommendations
+}
+
+function buildProfitEnvelope(report: ProfitReport): AgentQualityEnvelope<ProfitReport> {
+  const risks = [
+    ...(report.status === 'missing_budget' ? ['Abonnement mensuel client non renseigné.'] : []),
+    ...(report.status === 'loss' ? ['Client projeté en perte sur le mois.'] : []),
+    ...(report.status === 'watch' ? ['Marge prévisionnelle inférieure à la cible.'] : []),
+    ...(report.budgetUse.apiPct > 85 ? ['Budget API proche de la limite configurée.'] : []),
+    ...(report.settings.plannedVideosPerMonth > 0 && report.forecast.marginPct < report.targetMarginPct + 10
+      ? ['Vidéos IA prévues avec une marge de sécurité faible.']
+      : []),
+  ]
+
+  return createAgentQualityEnvelope({
+    agentId: 'profit-controller',
+    confidence: resolveProfitConfidence(report),
+    assumptions: report.assumptions,
+    risks,
+    recommendations: report.recommendations,
+    nextAgent: report.status === 'profitable' ? 'performance-analyst' : 'account-director',
+    payload: report,
+  })
+}
+
+function resolveProfitConfidence(report: ProfitReport) {
+  let confidence = 0.8
+  if (report.revenue <= 0) confidence -= 0.35
+  if (report.currentMonth.postsGenerated === 0) confidence -= 0.15
+  if (report.settings.monthlyInternalHours === 0) confidence -= 0.1
+  if (report.settings.monthlyApiBudget === 0) confidence -= 0.1
+  return confidence
 }
 
 function usdToEur(value: number) {

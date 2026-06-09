@@ -48,7 +48,14 @@ Keep the profile as the source of truth. Do not duplicate large prompt text in r
 }
 ```
 
-Adopt it progressively when a caller benefits from explicit uncertainty or next-agent routing. Do not force every existing agent to return it in one migration. Good first candidates are Supervisor, Performance Analyst and Profit Controller because they already produce risks, recommendations or gate decisions.
+Adopt it progressively when a caller benefits from explicit uncertainty or next-agent routing. Do not force every existing agent to return it in one migration.
+
+Current adoption:
+
+- Supervisor returns a quality envelope around its `SupervisorReview`.
+- Profit Controller returns a quality envelope around its `ProfitReport`.
+
+Good next candidate: Performance Analyst, because it already produces patterns, recommendations and uncertainty around small samples.
 
 Use `createAgentQualityEnvelope` so confidence is clamped between 0 and 1 and empty arrays default cleanly.
 
