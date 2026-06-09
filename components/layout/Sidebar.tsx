@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   Home, Users, Sparkles, Bot, CalendarDays, BarChart3,
   FolderOpen, Plug, Settings, DollarSign, ShieldCheck,
+  LogOut,
 } from 'lucide-react'
 import { WipTag } from '@/components/ui/WipTag'
 
@@ -108,6 +109,15 @@ export function Sidebar() {
             </div>
           </div>
         </div>
+        <form action="/api/auth/logout" method="post">
+          <button
+            type="submit"
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-[9px] text-gray-600 hover:text-red-300 hover:bg-red-950/20 border border-transparent hover:border-red-900/40 font-mono tracking-widest transition-colors"
+          >
+            <LogOut className="w-3 h-3" />
+            DECONNEXION
+          </button>
+        </form>
       </div>
     </aside>
   )
