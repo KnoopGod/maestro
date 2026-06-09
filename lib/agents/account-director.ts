@@ -19,12 +19,24 @@ export interface AccountDirective {
   recentPillarsCovered: string[]
 }
 
+function engRate(post: Post): number {
+  if (!post.metaInsights?.length) return 0
+  const total = post.metaInsights.reduce((sum, i) => {
+    const reach = i.reach ?? 0
+    if (reach === 0) return sum
+    return sum + ((i.likes ?? 0) + (i.comments ?? 0) + (i.shares ?? 0)) / reach * 100
+  }, 0)
+  return parseFloat((total / post.metaInsights.length).toFixed(2))
+}
+
 export async function runAccountDirector(input: {
   client: Client
   /** Brief utilisateur optionnel : Account Director l'enrichit sans le remplacer. */
   userBrief?: string
   /** Posts récents optionnels pour détecter les répétitions. Si absent, l'agent charge les 10 derniers. */
   recentPosts?: Post[]
+  /** Top performers (par engagement) pour le learning loop. */
+  topPosts?: Post[]
 }): Promise<{
   directive: AccountDirective
   cost: number
@@ -32,6 +44,7 @@ export async function runAccountDirector(input: {
   model: string
 }> {
   const { client, userBrief } = input
+  const topPosts = input.topPosts ?? []
   const recentPosts = input.recentPosts ?? await listPosts({ clientId: client.id, limit: 10 })
   const fallback = fallbackDirective(client, userBrief, recentPosts)
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -84,12 +97,30 @@ ${identity ? [
     `**Synthèse :** ${identity.visualSummary || identity.stylePrompt || 'non renseignée'}`,
   ].join('\n') : 'Aucune DA analysée disponible.'}
 
-# POSTS RÉCENTS
+# POSTS RÉCENTS (${recentPosts.length} derniers)
 
 ${recentPosts.length ? recentPosts.map((post, index) => {
     const pillar = guessPillar(post, client.strategy.contentPillars)
-    return `${index + 1}. Brief : ${post.brief} | Pilier probable : ${pillar} | Hook : ${post.hook || 'non renseigné'}`
+    const rate = engRate(post)
+    const perf = rate > 0 ? ` | Engagement : ${rate}%` : ''
+    const flag = rate >= 3 ? ' ★ SURPERFORMANT' : rate > 0 && rate < 1 ? ' ↓ faible' : ''
+    return `${index + 1}. Brief : ${post.brief} | Pilier : ${pillar} | Hook : ${post.hook || '—'}${perf}${flag}`
   }).join('\n') : 'Aucun post récent.'}
+
+${topPosts.length > 0 ? `# APPRENTISSAGE — CE QUI A MARCHÉ POUR CE CLIENT
+
+Les posts suivants ont généré le meilleur engagement réel. Utilise ces patterns pour choisir le prochain angle.
+
+${topPosts.map((p, i) => {
+    const rate = engRate(p)
+    const pillar = guessPillar(p, client.strategy.contentPillars)
+    return `${i + 1}. Engagement ${rate}% · Pilier : ${pillar}
+   Hook : ${p.hook || p.caption.slice(0, 80)}
+   Brief : ${p.brief}`
+  }).join('\n\n')}
+
+Si un pattern est clair (ex : les coulisses surperforment systématiquement les plats seuls), intègre-le dans ton choix de pilier et ton enrichedBrief.
+` : '# APPRENTISSAGE\n\nPas encore de données de performance disponibles — utiliser la stratégie de base.'}
 
 # BRIEF UTILISATEUR
 

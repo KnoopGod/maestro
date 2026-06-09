@@ -1,13 +1,24 @@
 import type { Client } from '@/types/client'
 import type { Post, PostContentType, PostPlatform, SupervisorReview } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
-import { createPost, getPost, setPostStatus, setSupervisorReview } from '@/lib/db/queries/posts'
+import { createPost, getPost, listPosts, setPostStatus, setSupervisorReview } from '@/lib/db/queries/posts'
 import { runAccountDirector, type AccountDirective } from '@/lib/agents/account-director'
 import { generateCaption, type GeneratedCaption } from '@/lib/agents/social-expert'
 import { generateAndStoreImage } from '@/lib/agents/image-generator'
 import { supervisePost } from '@/lib/agents/supervisor'
 import { buildImpactAnalysis, scoreImpact } from '@/lib/agents/impact-scorer'
 import { withTracking, skipTracking } from '@/lib/agents/tracking'
+
+function engagementRate(post: Post): number {
+  if (!post.metaInsights.length) return 0
+  const total = post.metaInsights.reduce((sum, i) => {
+    const reach = i.reach ?? 0
+    if (reach === 0) return sum
+    const eng = ((i.likes ?? 0) + (i.comments ?? 0) + (i.shares ?? 0)) / reach * 100
+    return sum + eng
+  }, 0)
+  return parseFloat((total / post.metaInsights.length).toFixed(2))
+}
 
 export interface PipelineResult {
   post: Post
@@ -42,9 +53,19 @@ export async function runPostPipeline(input: {
     return withTracking(fn, { jobId, ...opts }, meta)
   }
 
+  // ── Learning loop : charger les top performers avant Account Director ────────
+  const publishedPosts = await listPosts({ clientId: client.id, status: 'published', limit: 30 })
+  const postsWithInsights = publishedPosts
+    .filter(p => p.metaInsights.length > 0)
+    .map(p => ({ ...p, _engRate: engagementRate(p) }))
+    .sort((a, b) => b._engRate - a._engRate)
+
+  const topPosts = postsWithInsights.slice(0, 3)
+  const allRecentForAD = publishedPosts.slice(0, 10)
+
   // ── Étape 1 : Account Director ─────────────────────────────────────────────
   const account = await track(
-    () => runAccountDirector({ client, userBrief }),
+    () => runAccountDirector({ client, userBrief, recentPosts: allRecentForAD, topPosts }),
     { agent: 'account-director', sequence: 1, taskLabel: 'Analyse du profil client et préparation du brief' },
     {
       onComplete: r => ({
@@ -58,7 +79,7 @@ export async function runPostPipeline(input: {
 
   // ── Étape 2 : Social Expert ────────────────────────────────────────────────
   const text = await track(
-    () => generateCaption({ client, brief: effectiveBrief, platforms, contentType }),
+    () => generateCaption({ client, brief: effectiveBrief, platforms, contentType, topPosts: topPosts.slice(0, 2) }),
     { agent: 'social-expert', sequence: 2, taskLabel: `Rédaction des captions pour ${platforms.join(', ')}` },
     {
       onComplete: r => ({

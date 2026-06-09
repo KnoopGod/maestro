@@ -1,15 +1,27 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { VisualIdentity } from '@/types/asset'
+import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
+
+function engRate(post: Post): number {
+  if (!post.metaInsights?.length) return 0
+  const total = post.metaInsights.reduce((sum, i) => {
+    const reach = i.reach ?? 0
+    if (reach === 0) return sum
+    return sum + ((i.likes ?? 0) + (i.comments ?? 0) + (i.shares ?? 0)) / reach * 100
+  }, 0)
+  return parseFloat((total / post.metaInsights.length).toFixed(2))
+}
 
 interface GenerateCaptionInput {
   client: Client
   brief: string
   platforms: Platform[]
   contentType?: 'photo' | 'reel' | 'story'
+  topPosts?: Post[]
 }
 
 export interface GeneratedCaption {
@@ -75,7 +87,7 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY non configurée')
 
-  const { client, brief, platforms, contentType = 'photo' } = input
+  const { client, brief, platforms, contentType = 'photo', topPosts = [] } = input
 
   // Build platform-specific guidelines
   const platformInstructions = platforms.map(p => PLATFORM_GUIDELINES[p]).join('\n\n')
@@ -119,7 +131,21 @@ ${brief}
 
 **Type de contenu :** ${contentType}
 
-# PLATEFORMES CIBLES
+${topPosts.length > 0 ? `# RÉFÉRENCES — TOP POSTS DE CE CLIENT
+
+Ces captions ont généré le meilleur engagement réel pour ${client.name}.
+Inspire-toi du style, du ton, de la structure du hook et du CTA. Ne copie pas — adapte.
+
+${topPosts.map((p, i) => {
+    const rate = engRate(p)
+    return `--- Référence ${i + 1} (${rate}% engagement) ---
+${p.caption}
+Hook utilisé : ${p.hook || '—'}
+CTA : ${p.cta || '—'}
+Hashtags : ${p.hashtags.slice(0, 5).join(' ')}`
+  }).join('\n\n')}
+
+` : ''}# PLATEFORMES CIBLES
 
 ${platforms.map(p => `- ${p}`).join('\n')}
 
