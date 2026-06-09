@@ -125,8 +125,15 @@ Required production variables:
 - `DATABASE_URL`
 - `DATABASE_AUTH_TOKEN`
 - `CODEXRS_PUBLIC_URL`
+- `CODEXRS_PASSWORD`
 - `CRON_SECRET`
 - `BLOB_READ_WRITE_TOKEN` if using Vercel Blob
+
+Auth:
+
+- If `CODEXRS_PASSWORD` is set, all app pages and internal API routes require login.
+- `/api/cron/publish-due` remains callable by Vercel Cron with `CRON_SECRET`.
+- `MAESTRO_PASSWORD` is supported only as a legacy fallback; prefer `CODEXRS_PASSWORD`.
 
 Cron:
 

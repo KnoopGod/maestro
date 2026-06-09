@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { listDuePosts, markPostFailed } from '@/lib/db/queries/posts'
 import { publishPost, PublishBlockedError } from '@/lib/agents/publish-pipeline'
+import { SESSION_COOKIE, getAuthPassword, isValidSessionToken, timingSafeEqual } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET
@@ -51,35 +52,9 @@ export async function GET(req: NextRequest) {
   return POST(req)
 }
 
-function timingSafeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false
-  let mismatch = 0
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  }
-  return mismatch === 0
-}
-
 async function hasValidCODEXRSSession(req: NextRequest) {
-  const password = process.env.CODEXRS_PASSWORD
+  const password = getAuthPassword()
   if (!password) return false
 
-  const sessionCookie = req.cookies.get('codexrs_session')?.value
-  if (!sessionCookie) return false
-
-  const expected = await signSessionToken(password)
-  return timingSafeEqual(sessionCookie, expected)
-}
-
-async function signSessionToken(password: string): Promise<string> {
-  const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(password),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode('codexrs-session'))
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')
+  return isValidSessionToken(req.cookies.get(SESSION_COOKIE)?.value)
 }
