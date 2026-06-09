@@ -133,6 +133,38 @@ export default function ConnectionsPage() {
         </div>
       </div>
 
+      <section className="bg-blue-950/20 border border-blue-700/30 rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Meta · à retenir</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              La configuration Meta mélange une app globale et des tokens par client.
+            </p>
+          </div>
+          <span className="text-[10px] border rounded-full px-2 py-0.5 bg-blue-900/30 text-blue-300 border-blue-700/40">
+            Facebook + Instagram
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+          <MetaNote
+            label="Credentials globaux"
+            value="META_APP_ID et META_APP_SECRET identifient l'app Meta CODEXRS. Ils se configurent une fois."
+          />
+          <MetaNote
+            label="Tokens par client"
+            value="Chaque Page Access Token se connecte depuis /clients/[id]/connections pour la Page Facebook du client."
+          />
+          <MetaNote
+            label="Instagram"
+            value="Le compte Instagram doit être professionnel et lié à cette Page Facebook."
+          />
+          <MetaNote
+            label="Images"
+            value="En production, Instagram exige des URLs publiques HTTPS. Les images localhost ne sont pas publiables."
+          />
+        </div>
+      </section>
+
       {/* Quick-flow recap */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
         <h2 className="text-sm font-semibold text-white mb-3">📋 Ordre recommandé</h2>
@@ -263,6 +295,15 @@ export default function ConnectionsPage() {
           Voir tous les clients →
         </Link>
       </div>
+    </div>
+  )
+}
+
+function MetaNote({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-3">
+      <div className="text-[10px] uppercase tracking-wider text-blue-300 mb-1">{label}</div>
+      <p className="text-gray-300">{value}</p>
     </div>
   )
 }

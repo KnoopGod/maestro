@@ -53,6 +53,8 @@ Variables:
 
 ## Meta Facebook / Instagram
 
+Guide détaillé : [META_SETUP.md](./META_SETUP.md)
+
 Purpose:
 
 - page discovery;
@@ -80,6 +82,14 @@ Minimum practical Meta permissions:
 - `pages_manage_posts`
 - `instagram_basic`
 - `instagram_content_publish`
+
+Setup summary:
+
+- `META_APP_ID` and `META_APP_SECRET` are global app credentials.
+- A User Access Token is pasted only to discover Pages.
+- The app stores the per-client Page Access Token returned by Meta.
+- Instagram must be professional and linked to the selected Facebook Page.
+- Production Instagram images must use public HTTPS URLs.
 
 ## GitHub
 

@@ -282,10 +282,10 @@ export function MetaConnectionWizard({
                   <span className="text-[10px] bg-amber-900/40 text-amber-300 border border-amber-800/40 rounded-full px-2 py-0.5">Manquant</span>
                 </div>
                 <p className="text-sm text-gray-400 mt-1">
-                  Si l&apos;Instagram professionnel est déjà lié à cette page Facebook dans Meta, CODEXRS peut l&apos;ajouter automatiquement.
+                  Si l&apos;Instagram professionnel est déjà lié à cette Page Facebook, CODEXRS peut l&apos;ajouter automatiquement avec le Page Access Token déjà stocké.
                 </p>
                 <p className="text-[11px] text-gray-500 mt-2">
-                  Requis : compte Instagram professionnel, page Facebook liée, permissions <code>instagram_basic</code> + <code>instagram_content_publish</code>.
+                  Si rien n&apos;est trouvé : compte Instagram non professionnel, Instagram lié à une autre Page, ou token sans <code>instagram_basic</code>.
                 </p>
               </div>
               <button
@@ -357,7 +357,10 @@ export function MetaConnectionWizard({
           <div>
             <h3 className="font-semibold text-white">Étape 1 — Récupère ton User Access Token</h3>
             <p className="text-sm text-gray-400 mt-1">
-              Va sur le Graph API Explorer, génère un token avec les permissions nécessaires, puis colle-le ci-dessous.
+              Génère un User Access Token dans Graph API Explorer. Il sert à découvrir tes Pages et les comptes Instagram liés.
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              CODEXRS ne stocke pas ce User Token : après sélection, Meta renvoie un Page Access Token et c&apos;est ce token par client qui est sauvegardé.
             </p>
           </div>
 
@@ -373,16 +376,28 @@ export function MetaConnectionWizard({
 
           <details className="text-xs text-gray-400 bg-gray-950/60 rounded-lg p-3 border border-gray-800">
             <summary className="cursor-pointer text-purple-300 font-medium">
-              💡 Permissions nécessaires (clique pour voir)
+              Permissions à cocher dans Graph API Explorer
             </summary>
             <div className="mt-2 space-y-0.5 font-mono">
               <div>✅ pages_show_list</div>
               <div>✅ pages_read_engagement</div>
               <div>✅ pages_manage_posts</div>
-              <div>✅ pages_manage_metadata</div>
               <div>✅ instagram_basic</div>
               <div>✅ instagram_content_publish</div>
-              <div>✅ business_management</div>
+            </div>
+            <div className="mt-2 text-[11px] text-gray-500">
+              À ajouter si Meta le demande pour ton app : <code>pages_manage_metadata</code>, <code>business_management</code>.
+            </div>
+          </details>
+
+          <details className="text-xs text-gray-400 bg-gray-950/60 rounded-lg p-3 border border-gray-800">
+            <summary className="cursor-pointer text-blue-300 font-medium">
+              User Token vs Page Token
+            </summary>
+            <div className="mt-2 space-y-1.5">
+              <p>Le User Access Token prouve que ton compte admin peut voir les Pages du client.</p>
+              <p>Le wizard appelle Meta, liste les Pages, puis sauvegarde le Page Access Token retourné pour la Page choisie.</p>
+              <p>Chaque client doit donc être reconnecté depuis sa propre page Connexions.</p>
             </div>
           </details>
 
@@ -502,6 +517,15 @@ export function MetaConnectionWizard({
         </label>
       )}
 
+      {selectedPageId && !discovered?.pages.find(p => p.id === selectedPageId)?.instagramAccount && (
+        <div className="rounded-lg bg-amber-950/20 border border-amber-800/30 p-3">
+          <p className="text-xs text-amber-300 font-medium">Instagram non détecté sur cette Page</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Causes probables : le compte Instagram n&apos;est pas professionnel, il n&apos;est pas lié à cette Page Facebook, ou le token/app n&apos;inclut pas <code>instagram_basic</code>.
+          </p>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <button
           onClick={() => setStep('token')}
@@ -595,10 +619,14 @@ function TokenDebugPanel({ info }: { info: TokenDebugInfo }) {
       </div>
 
       {info.missingPermissions.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-amber-800/30">
-          <p className="text-xs text-amber-300">
-            💡 <strong>Pour corriger</strong> : déconnecte ce client, retourne sur le Graph API Explorer, ajoute les {info.missingPermissions.length} permission(s) manquante(s), regénère un User Access Token et reconnecte.
-          </p>
+        <div className="mt-4 pt-4 border-t border-amber-800/30 space-y-2">
+          <p className="text-xs font-semibold text-amber-300">Action requise</p>
+          <ol className="space-y-1 text-xs text-gray-300">
+            <li>1. Retourne dans Graph API Explorer et regénère un User Access Token.</li>
+            <li>2. Ajoute les scopes manquants : <code className="font-mono text-amber-200">{info.missingPermissions.join(', ')}</code>.</li>
+            <li>3. Reconnecte ce client pour stocker un nouveau Page Access Token.</li>
+            <li>4. Relance le diagnostic avant de publier.</li>
+          </ol>
         </div>
       )}
     </div>
