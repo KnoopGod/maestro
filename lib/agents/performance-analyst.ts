@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { PostInsights } from '@/types/post'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 const GRAPH_API = 'https://graph.facebook.com/v23.0'
 
@@ -109,9 +110,9 @@ export async function analyzePerformance(input: {
     return { analysis: fallbackAnalysis(posts), cost: 0, tokensUsed: 0, model: 'fallback' }
   }
 
-  const systemPrompt = `Tu es le **Performance Analyst** de CODEXRS, spécialiste analytics HORECA.
+  const systemPrompt = buildExpertSystemPrompt('performance-analyst', `Tu es le **Performance Analyst** de CODEXRS, spécialiste analytics HORECA.
 Analyse les métriques Meta des posts d'un client, identifie les patterns et formule des recommandations actionnables pour améliorer les prochains posts.
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const postsData = posts.slice(0, 10).map((p, i) => ({
     num: i + 1,

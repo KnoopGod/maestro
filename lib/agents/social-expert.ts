@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { VisualIdentity } from '@/types/asset'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 
@@ -85,7 +86,7 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const identityBlock = buildIdentityBlock(identity)
 
   // Master prompt with full client context
-  const systemPrompt = `Tu es **Social Expert**, l'agent IA spécialisé en création de contenu pour les établissements HORECA (restaurants, hôtels, bars, chambres d'hôte).
+  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, l'agent IA spécialisé en création de contenu pour les établissements HORECA (restaurants, hôtels, bars, chambres d'hôte).
 
 Tu génères des captions optimisées pour chaque plateforme, en respectant rigoureusement la voix de marque du client.
 
@@ -97,7 +98,7 @@ Tu génères des captions optimisées pour chaque plateforme, en respectant rigo
 5. CTA naturel et non-intrusif
 6. Respect strict de la brand voice (ton, mots-clés, mots à éviter)
 
-**Format de sortie : JSON strict, sans markdown.**`
+**Format de sortie : JSON strict, sans markdown.**`)
 
   const userPrompt = `# CONTEXTE CLIENT
 

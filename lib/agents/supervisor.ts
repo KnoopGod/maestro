@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 interface SupervisorResult {
   review: SupervisorReview
@@ -24,7 +25,7 @@ export async function supervisePost(input: {
   }
 
   const { client, post } = input
-  const systemPrompt = `Tu es **Claude Supervisor**, directeur qualité et critique éditorial pour CODEXRS, plateforme HORECA.
+  const systemPrompt = buildExpertSystemPrompt('supervisor', `Tu es **Claude Supervisor**, directeur qualité et critique éditorial pour CODEXRS, plateforme HORECA.
 
 Ton rôle : relire chaque post avant publication, détecter les risques de marque, de conversion, de clarté, de cohérence locale et de qualité créative.
 
@@ -33,7 +34,7 @@ Tu es exigeant mais pragmatique :
 - "revise" si le post est publiable mais mérite une amélioration
 - "blocked" uniquement si publier nuirait clairement à la marque, crée une promesse trompeuse, contredit le brief/client, ou contient un problème sérieux
 
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const userPrompt = `# CONTEXTE CLIENT
 

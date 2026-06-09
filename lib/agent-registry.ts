@@ -2,6 +2,8 @@
  * CODEXRS agent registry — describes every agent in the runtime pipeline,
  * in the order they execute when a post is created and published.
  */
+import { AGENT_EXPERTISE_PROFILES } from '@/lib/agents/prompts'
+
 export type AgentStatus = 'active' | 'next' | 'planned'
 
 export interface CODEXRSAgent {
@@ -18,11 +20,16 @@ export interface CODEXRSAgent {
   file?: string
   emoji: string
   color: string
+  seniorPersona?: string
+  feedbackLoop?: string[]
+  failureModes?: string[]
 }
 
 export type MaestroAgent = CODEXRSAgent
 
-export const AGENTS: CODEXRSAgent[] = [
+type AgentRegistryDefinition = Omit<CODEXRSAgent, 'seniorPersona' | 'feedbackLoop' | 'failureModes'>
+
+const AGENT_DEFINITIONS: AgentRegistryDefinition[] = [
   {
     id: 'account-director',
     name: 'Account Director',
@@ -160,11 +167,11 @@ export const AGENTS: CODEXRSAgent[] = [
     id: 'profit-controller',
     name: 'Profit Controller',
     role: 'Contrôle marge, budget et rendement',
-    specialty: 'Calcule le coût client mensuel : API, images, vidéos, temps interne, budgets Meta/Google, puis vérifie la marge.',
+    specialty: 'Agent de contrôle post-campagne/mensuel : vérifie marge, budget et coût des livrables avant d’engager vidéo, ads ou génération coûteuse.',
     order: 8,
-    inputs: ['budget client', 'coûts posts', 'volumes prévus', 'budgets ads', 'temps interne'],
-    outputs: ['marge prévisionnelle', 'alertes budget', 'coût/post', 'recommandations ROI'],
-    qualityChecks: ['marge cible respectée', 'budget API maîtrisé', 'charges visibles', 'optimisation proposée'],
+    inputs: ['abonnement client', 'coûts posts réels', 'coûts médias estimés', 'budgets ads', 'temps interne'],
+    outputs: ['statut marge', 'alertes blocage/warning', 'coût/post', 'recommandations ROI'],
+    qualityChecks: ['marge cible respectée', 'données réelles vs estimées visibles', 'dépenses coûteuses justifiées', 'optimisation proposée'],
     status: 'active',
     model: 'règles métier + données usage',
     file: 'lib/agents/profit-controller.ts',
@@ -187,3 +194,15 @@ export const AGENTS: CODEXRSAgent[] = [
     color: 'from-orange-600 to-red-700',
   },
 ]
+
+export const AGENTS: CODEXRSAgent[] = AGENT_DEFINITIONS.map(agent => {
+  const profile = AGENT_EXPERTISE_PROFILES[agent.id]
+  if (!profile) return agent
+
+  return {
+    ...agent,
+    seniorPersona: profile.seniorPersona,
+    feedbackLoop: profile.feedbackLoop,
+    failureModes: profile.commonFailureModes,
+  }
+})

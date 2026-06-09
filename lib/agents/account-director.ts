@@ -3,6 +3,7 @@ import type { Client } from '@/types/client'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export interface AccountDirective {
   /** Pilier prioritaire à traiter ensuite (issu de client.strategy.contentPillars). */
@@ -41,7 +42,7 @@ export async function runAccountDirector(input: {
   }
 
   const identity = await getVisualIdentity(client.id)
-  const systemPrompt = `Tu es **Account Director CODEXRS**, chef de dossier client pour une agence HORECA.
+  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Account Director CODEXRS**, chef de dossier client pour une agence HORECA.
 
 Ton rôle : avant la rédaction d'un post, lire la stratégie client, l'historique récent et la direction artistique, puis choisir le prochain angle utile.
 
@@ -51,7 +52,7 @@ Principes :
 3. Donner un brief exploitable directement par Social Expert et Visual Director.
 4. Éviter les redites, les promesses floues et le ton générique.
 
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const userPrompt = `# CLIENT
 

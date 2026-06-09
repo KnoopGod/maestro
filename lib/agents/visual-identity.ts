@@ -10,6 +10,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { ClientAsset } from '@/types/asset'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export interface IdentitySynthesisResult {
   palette: string[]
@@ -49,13 +50,13 @@ export async function synthesizeVisualIdentity(
 
   const claude = new Anthropic({ apiKey })
 
-  const systemPrompt = `Tu es **Visual Identity Director**, l'agent de CODEXRS chargé de synthétiser l'identité visuelle d'un établissement HORECA en analysant ses contenus existants (photos, vidéos, documents).
+  const systemPrompt = buildExpertSystemPrompt('da-curator', `Tu es **Visual Identity Director**, l'agent de CODEXRS chargé de synthétiser l'identité visuelle d'un établissement HORECA en analysant ses contenus existants (photos, vidéos, documents).
 
 Tu produis une carte d'identité visuelle qui guidera TOUTES les futures générations de contenu pour ce client (texte ET images).
 
 **Tu dois être précis, opérationnel, pas générique.**
 
-**Format de sortie : JSON strict, sans markdown.**`
+**Format de sortie : JSON strict, sans markdown.**`)
 
   const userPrompt = `# CLIENT
 

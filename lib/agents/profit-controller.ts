@@ -13,6 +13,37 @@ const COST_ASSUMPTIONS = {
   generatedVideoCost: 0.35,
 }
 
+export const PROFIT_CONTROLLER_CONTROL_GATE = {
+  cadence: 'post-campaign/monthly',
+  role: 'Control margin, budget use and expensive deliverables before scaling production.',
+  realData: [
+    'stored post API cost',
+    'stored post token usage',
+    'generated post count',
+    'analyzed image count',
+    'DA synthesis count',
+    'client finance settings',
+  ],
+  estimatedData: [
+    'image analysis unit cost',
+    'DA synthesis unit cost',
+    'generated image unit cost',
+    'generated video unit cost',
+    'fallback API cost per remaining post',
+    'internal time cost from configured hours and hourly rate',
+  ],
+  warnBefore: [
+    'margin drops below target',
+    'API budget use exceeds 85%',
+    'planned videos leave less than 10 points of margin buffer',
+  ],
+  blockBefore: [
+    'projected client profit is negative',
+    'monthly retainer is missing for a paid production plan',
+    'expensive video or ad spend is requested without configured budget assumptions',
+  ],
+} as const
+
 interface CurrentMonthCostRow {
   posts_count: number
   post_api_cost: number
