@@ -48,9 +48,11 @@ Scopes parfois demandés selon l'app ou le compte Business :
 2. Lier cet Instagram à la Page Facebook exacte du client.
 3. Vérifier dans Meta Developer Console que l'app globale a les cas d'usage Pages + Instagram.
 4. Dans Graph API Explorer, générer un User Access Token avec les scopes requis.
-5. Dans CODEXRS, ouvrir `/clients/[id]/connections`, coller le User Token, choisir la Page du client, connecter Instagram si détecté.
-6. Lancer `Diagnostiquer le token`.
-7. Publier un `Test post réel` Facebook, vérifier la Page, puis supprimer le test si besoin.
+5. Dans CODEXRS, ouvrir `/clients/[id]/connections`, coller le User Token, lancer `Pré-diagnostiquer`, puis `Découvrir mes pages`.
+6. Choisir la Page du client. Le navigateur envoie seulement la Page ID + le User Token ; le serveur redécouvre la Page et stocke le Page Access Token côté serveur.
+7. Connecter Instagram si détecté.
+8. Lancer `Diagnostiquer le token`.
+9. Publier un `Test post réel` Facebook, vérifier la Page, puis supprimer le test si besoin.
 
 ## Images et Instagram
 
@@ -64,7 +66,8 @@ Le wizard appelle Meta avec le User Access Token :
 
 - `/me/accounts` liste les Pages accessibles ;
 - `instagram_business_account` révèle l'Instagram lié à chaque Page ;
-- la Page sélectionnée fournit le Page Access Token stocké pour ce client.
+- la découverte envoyée au navigateur ne contient pas les Page Access Tokens ;
+- au moment de connecter, le serveur redécouvre la Page choisie et stocke le Page Access Token pour ce client.
 
 Si Instagram n'apparaît pas, les causes probables sont :
 
@@ -76,7 +79,9 @@ Si Instagram n'apparaît pas, les causes probables sont :
 
 ## Diagnostic token
 
-Le bouton `Diagnostiquer le token` vérifie le token stocké pour le client :
+Le bouton `Pré-diagnostiquer` vérifie le User Token avant découverte.
+
+Le bouton `Diagnostiquer le token` vérifie le Page Access Token stocké pour le client :
 
 - validité ;
 - app Meta ;
@@ -86,6 +91,11 @@ Le bouton `Diagnostiquer le token` vérifie le token stocké pour le client :
 - scopes présents ou manquants.
 
 Si des scopes manquent, regénère le User Access Token dans Graph API Explorer avec les scopes listés, reconnecte le client, puis relance le diagnostic.
+
+Différence importante :
+
+- avant connexion, `pages_show_list` est requis pour découvrir les Pages ;
+- après connexion, le Page Token doit surtout permettre publication/lecture : `pages_read_engagement`, `pages_manage_posts`, `instagram_basic`, `instagram_content_publish`.
 
 ## Erreurs courantes
 

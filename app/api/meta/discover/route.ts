@@ -23,7 +23,13 @@ export async function POST(req: NextRequest) {
       success: true,
       userName: result.userName,
       userId: result.userId,
-      pages: result.pages,
+      pages: result.pages.map(page => ({
+        id: page.id,
+        name: page.name,
+        category: page.category,
+        instagramAccount: page.instagramAccount,
+        pictureUrl: page.pictureUrl,
+      })),
       pagesCount: result.pages.length,
       pagesWithInstagram: result.pages.filter(p => p.instagramAccount).length,
     })
