@@ -29,8 +29,8 @@ function elapsed(ms?: number) {
   return `${(ms / 1000).toFixed(1)}s`
 }
 
-function since(ts: number) {
-  const s = Math.floor((Date.now() - ts) / 1000)
+function since(ts: number, now: number) {
+  const s = Math.floor((now - ts) / 1000)
   if (s < 60) return `il y a ${s}s`
   if (s < 3600) return `il y a ${Math.floor(s / 60)}min`
   return `il y a ${Math.floor(s / 3600)}h`
@@ -122,21 +122,25 @@ export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [job, setJob] = useState<JobWithEvents | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState(Date.now())
+  const [lastUpdated, setLastUpdated] = useState(0)
+  const [now, setNow] = useState(0)
 
   const fetchJob = useCallback(async () => {
     try {
+      const fetchedAt = new Date().getTime()
       const res = await fetch(`/api/agents/jobs/${id}`)
       if (!res.ok) return
       const data = await res.json()
       setJob(data.job)
-      setLastUpdated(Date.now())
+      setLastUpdated(fetchedAt)
+      setNow(fetchedAt)
     } catch { /* silent */ }
     finally { setLoading(false) }
   }, [id])
 
   useEffect(() => {
-    fetchJob()
+    const timer = window.setTimeout(fetchJob, 0)
+    return () => window.clearTimeout(timer)
   }, [fetchJob])
 
   // Polling toutes les 2s si le job est en cours
@@ -165,7 +169,7 @@ export default function JobDetailPage() {
   }
 
   const jobCfg = JOB_STATUS_CFG[job.status]
-  const totalDuration = job.completedAt ? job.completedAt - job.startedAt : Date.now() - job.startedAt
+  const totalDuration = job.completedAt ? job.completedAt - job.startedAt : now - job.startedAt
   const runningEvent = job.events?.find(e => e.status === 'running')
 
   return (
@@ -188,7 +192,7 @@ export default function JobDetailPage() {
           </div>
           <p className="text-sm text-gray-400">{job.briefSummary}</p>
           <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
-            <span>{since(job.startedAt)}</span>
+            <span>{since(job.startedAt, now)}</span>
             <span>·</span>
             <span>{elapsed(totalDuration)} total</span>
             {job.totalCost > 0 && <><span>·</span><span>${job.totalCost.toFixed(4)}</span></>}

@@ -4,14 +4,15 @@ import { discoverPages, exchangeForLongLivedUserToken } from '@/lib/agents/meta-
 export async function POST(req: NextRequest) {
   try {
     const { userToken } = await req.json()
-    if (!userToken) {
+    const cleanToken = typeof userToken === 'string' ? userToken.trim() : ''
+    if (!cleanToken) {
       return NextResponse.json({ error: 'userToken requis' }, { status: 400 })
     }
 
     // Try to exchange for a long-lived token (works only if META_APP_ID/SECRET set)
-    let longLivedToken = userToken
+    let longLivedToken = cleanToken
     try {
-      longLivedToken = await exchangeForLongLivedUserToken(userToken)
+      longLivedToken = await exchangeForLongLivedUserToken(cleanToken)
     } catch {
       // Fallback to short-lived token
     }

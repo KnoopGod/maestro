@@ -1,5 +1,3 @@
-import { Badge } from '@/components/ui/badge'
-
 interface Props {
   badge: 'premium' | 'creative' | 'local' | 'free' | 'draft' | 'future'
 }

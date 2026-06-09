@@ -9,6 +9,9 @@ import {
   verifyPageToken,
   type MetaPage,
 } from '@/lib/agents/meta-publisher'
+import type { SocialPlatform } from '@/types/client'
+
+const DELETABLE_META_PLATFORMS = new Set<SocialPlatform>(['facebook', 'instagram'])
 
 export async function POST(req: NextRequest) {
   try {
@@ -149,6 +152,12 @@ async function resolvePageForConnection(input: {
 export async function DELETE(req: NextRequest) {
   try {
     const { clientId, platform } = await req.json()
+    if (!clientId) {
+      return NextResponse.json({ error: 'clientId requis' }, { status: 400 })
+    }
+    if (!DELETABLE_META_PLATFORMS.has(platform)) {
+      return NextResponse.json({ error: 'platform invalide' }, { status: 400 })
+    }
     const { deleteSocialAccount } = await import('@/lib/db/queries/social-accounts')
     await deleteSocialAccount(clientId, platform)
     revalidatePath(`/clients/${clientId}`)

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import type React from 'react'
 import { Loader2, Sparkles, RefreshCw, ChevronDown, ChevronUp, Target, Lightbulb, Calendar, Hash, XCircle } from 'lucide-react'
 import type { StrategyAdvice } from '@/lib/agents/strategy-advisor'
 
@@ -23,24 +24,6 @@ export function StrategyPanel({ clientId, initial }: { clientId: string; initial
     } finally {
       setLoading(false)
     }
-  }
-
-  function Section({ id, icon, title, children }: { id: string; icon: React.ReactNode; title: string; children: React.ReactNode }) {
-    const open = expanded === id
-    return (
-      <div className="border border-gray-800 rounded-xl overflow-hidden">
-        <button
-          onClick={() => setExpanded(open ? null : id)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-gray-950/40 hover:bg-gray-900/40 transition-colors"
-        >
-          <span className="flex items-center gap-2 text-sm font-medium text-white">
-            {icon} {title}
-          </span>
-          {open ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-        </button>
-        {open && <div className="px-4 py-4 space-y-3">{children}</div>}
-      </div>
-    )
   }
 
   if (!strategy) {
@@ -101,7 +84,7 @@ export function StrategyPanel({ clientId, initial }: { clientId: string; initial
       </div>
 
       {/* Content pillars */}
-      <Section id="pillars" icon={<Lightbulb className="w-4 h-4 text-amber-400" />} title={`Piliers de contenu (${strategy.contentPillars?.length ?? 0})`}>
+      <StrategySection expanded={expanded} setExpanded={setExpanded} id="pillars" icon={<Lightbulb className="w-4 h-4 text-amber-400" />} title={`Piliers de contenu (${strategy.contentPillars?.length ?? 0})`}>
         {strategy.contentPillars?.map((p, i) => (
           <div key={i} className="border border-gray-800 rounded-xl p-3 space-y-2">
             <div className="flex items-center justify-between">
@@ -118,10 +101,10 @@ export function StrategyPanel({ clientId, initial }: { clientId: string; initial
             </div>
           </div>
         ))}
-      </Section>
+      </StrategySection>
 
       {/* Platform strategy */}
-      <Section id="platforms" icon={<span className="text-sm">📱</span>} title="Par plateforme">
+      <StrategySection expanded={expanded} setExpanded={setExpanded} id="platforms" icon={<span className="text-sm">📱</span>} title="Par plateforme">
         {strategy.platformStrategy?.map((p, i) => (
           <div key={i} className="border border-gray-800 rounded-xl p-3">
             <div className="font-medium text-sm text-white capitalize mb-1">{p.platform}</div>
@@ -137,10 +120,10 @@ export function StrategyPanel({ clientId, initial }: { clientId: string; initial
             </div>
           </div>
         ))}
-      </Section>
+      </StrategySection>
 
       {/* Monthly plan */}
-      <Section id="plan" icon={<Calendar className="w-4 h-4 text-blue-400" />} title="Plan mensuel">
+      <StrategySection expanded={expanded} setExpanded={setExpanded} id="plan" icon={<Calendar className="w-4 h-4 text-blue-400" />} title="Plan mensuel">
         <div className="grid grid-cols-2 gap-2">
           {strategy.monthlyPlan?.map((w, i) => (
             <div key={i} className="border border-gray-800 rounded-xl p-3">
@@ -152,10 +135,10 @@ export function StrategyPanel({ clientId, initial }: { clientId: string; initial
             </div>
           ))}
         </div>
-      </Section>
+      </StrategySection>
 
       {/* Hashtags */}
-      <Section id="hashtags" icon={<Hash className="w-4 h-4 text-cyan-400" />} title="Clusters hashtags">
+      <StrategySection expanded={expanded} setExpanded={setExpanded} id="hashtags" icon={<Hash className="w-4 h-4 text-cyan-400" />} title="Clusters hashtags">
         {strategy.hashtagClusters?.map((c, i) => (
           <div key={i}>
             <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">{c.theme}</div>
@@ -166,29 +149,61 @@ export function StrategyPanel({ clientId, initial }: { clientId: string; initial
             </div>
           </div>
         ))}
-      </Section>
+      </StrategySection>
 
       {/* Key messages */}
-      <Section id="messages" icon={<span className="text-sm">💬</span>} title="Messages clés">
+      <StrategySection expanded={expanded} setExpanded={setExpanded} id="messages" icon={<span className="text-sm">💬</span>} title="Messages clés">
         {strategy.keyMessages?.map((m, i) => (
           <div key={i} className="flex items-start gap-2 text-sm text-gray-200">
             <span className="text-purple-400 mt-0.5">→</span> {m}
           </div>
         ))}
-      </Section>
+      </StrategySection>
 
       {/* Do not do */}
-      <Section id="donot" icon={<XCircle className="w-4 h-4 text-red-400" />} title="À éviter absolument">
+      <StrategySection expanded={expanded} setExpanded={setExpanded} id="donot" icon={<XCircle className="w-4 h-4 text-red-400" />} title="À éviter absolument">
         {strategy.doNotDo?.map((d, i) => (
           <div key={i} className="flex items-start gap-2 text-sm text-red-300">
             <span className="mt-0.5">✕</span> {d}
           </div>
         ))}
-      </Section>
+      </StrategySection>
 
       {strategy.cost > 0 && (
         <p className="text-[10px] text-gray-600 text-right">Coût IA : ${strategy.cost.toFixed(4)}</p>
       )}
+    </div>
+  )
+}
+
+function StrategySection({
+  id,
+  icon,
+  title,
+  children,
+  expanded,
+  setExpanded,
+}: {
+  id: string
+  icon: React.ReactNode
+  title: string
+  children: React.ReactNode
+  expanded: string | null
+  setExpanded: (id: string | null) => void
+}) {
+  const open = expanded === id
+  return (
+    <div className="border border-gray-800 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setExpanded(open ? null : id)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-gray-950/40 hover:bg-gray-900/40 transition-colors"
+      >
+        <span className="flex items-center gap-2 text-sm font-medium text-white">
+          {icon} {title}
+        </span>
+        {open ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+      </button>
+      {open && <div className="px-4 py-4 space-y-3">{children}</div>}
     </div>
   )
 }

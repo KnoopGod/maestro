@@ -73,7 +73,7 @@ export function Sidebar() {
         </div>
         <div>
           <div className="text-xs font-bold text-[#E0E3FF] tracking-[0.15em] font-mono uppercase">MAESTRO</div>
-          <div className="text-[9px] text-indigo-500/70 tracking-[0.25em] font-mono">// AI CONDUCTOR</div>
+          <div className="text-[9px] text-indigo-500/70 tracking-[0.25em] font-mono">{'// AI CONDUCTOR'}</div>
         </div>
       </div>
 
@@ -81,10 +81,10 @@ export function Sidebar() {
       <nav aria-label="Navigation principale" className="flex-1 py-3 overflow-y-auto">
         {NAV_PRIMARY.map(item => <NavItem key={item.href} {...item} />)}
 
-        <p className="px-4 pt-4 pb-1.5 text-[8px] text-indigo-600/60 tracking-[0.3em] font-mono">// WORKFLOW</p>
+        <p className="px-4 pt-4 pb-1.5 text-[8px] text-indigo-600/60 tracking-[0.3em] font-mono">{'// WORKFLOW'}</p>
         {NAV_WORK.map(item => <NavItem key={item.href} {...item} />)}
 
-        <p className="px-4 pt-4 pb-1.5 text-[8px] text-indigo-600/60 tracking-[0.3em] font-mono">// SYSTÈME</p>
+        <p className="px-4 pt-4 pb-1.5 text-[8px] text-indigo-600/60 tracking-[0.3em] font-mono">{'// SYSTÈME'}</p>
         {NAV_SYSTEM.map(item => <NavItem key={item.href} {...item} />)}
       </nav>
 

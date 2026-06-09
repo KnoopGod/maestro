@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
       }
       token = account.accessToken
       pageId = account.accountId ?? undefined
-    } else if (body.token) {
-      token = body.token
+    } else if (typeof body.token === 'string' && body.token.trim()) {
+      token = body.token.trim()
       pageId = body.pageId
     } else {
       return NextResponse.json({ error: 'clientId+platform OU token requis' }, { status: 400 })

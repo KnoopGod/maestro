@@ -6,6 +6,7 @@ import { createAgentJob, completeAgentJob, createAgentEvent, startAgentEvent, co
 export async function POST(req: NextRequest) {
   let postId: string | null = null
   let jobId: string | undefined
+  let eventId: string | undefined
 
   try {
     const body = await req.json()
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
       jobId, agent: 'publisher', sequence: 1,
       taskLabel: `Publication sur ${post.platforms.join(' + ')}`,
     })
+    eventId = event.id
     await startAgentEvent(event.id)
 
     const outcome = await publishPost(post, { forceTextOnly })
@@ -49,6 +51,13 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     if (err instanceof PublishBlockedError) {
+      if (eventId) {
+        await completeAgentEvent(eventId, {
+          status: 'skipped',
+          outputSummary: `Publication bloquée : ${err.review.summary}`,
+          outputData: { review: err.review },
+        }).catch(() => undefined)
+      }
       if (jobId) {
         await completeAgentJob(jobId, { status: 'awaiting_validation', totalCost: 0 }).catch(() => undefined)
       }
@@ -56,6 +65,13 @@ export async function POST(req: NextRequest) {
     }
     const message = err instanceof Error ? err.message : 'Erreur publication'
     if (postId) await markPostFailed(postId, message).catch(() => undefined)
+    if (eventId) {
+      await completeAgentEvent(eventId, {
+        status: 'failed',
+        outputSummary: message,
+        errorMessage: message,
+      }).catch(() => undefined)
+    }
     if (jobId) await completeAgentJob(jobId, { status: 'failed', totalCost: 0 }).catch(() => undefined)
     return NextResponse.json({ error: message }, { status: 500 })
   }

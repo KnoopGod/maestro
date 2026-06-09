@@ -52,9 +52,12 @@ export function LiveStatus() {
   }
 
   useEffect(() => {
-    fetchStatus()
+    const timer = window.setTimeout(fetchStatus, 0)
     const interval = setInterval(fetchStatus, 30000) // refresh toutes les 30s
-    return () => clearInterval(interval)
+    return () => {
+      window.clearTimeout(timer)
+      clearInterval(interval)
+    }
   }, [])
 
   if (!data) return null

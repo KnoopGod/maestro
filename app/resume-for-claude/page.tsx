@@ -143,7 +143,7 @@ export default function ResumeForClaudePage() {
           </div>
 
           <div className="bg-purple-900/20 border border-purple-800/30 rounded-lg p-3 text-xs text-purple-300">
-            <strong>Comment l'utiliser :</strong> Copie ce résumé et colle-le en début de conversation avec Claude. Il aura tout le contexte pour reprendre le travail exactement là où tu t'es arrêté.
+            <strong>Comment l&apos;utiliser :</strong> Copie ce résumé et colle-le en début de conversation avec Claude. Il aura tout le contexte pour reprendre le travail exactement là où tu t&apos;es arrêté.
           </div>
         </div>
       </div>

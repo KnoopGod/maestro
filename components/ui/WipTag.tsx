@@ -11,7 +11,7 @@ export function WipTag({ label = 'À VENIR', className = '' }: WipTagProps) {
       aria-hidden="true"
       className={`inline-flex items-center gap-1 text-[7px] font-mono tracking-[0.2em] uppercase px-1.5 py-0.5 border text-amber-400 border-amber-700/50 bg-amber-950/30 ${className}`}
     >
-      <span className="opacity-60">//</span> {label}
+      <span className="opacity-60">{'//'}</span> {label}
     </span>
   )
 }

@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       results.push({ postId: outcome.post.id, status: 'published' })
     } catch (err) {
       if (err instanceof PublishBlockedError) {
+        await markPostFailed(post.id, `Supervisor blocked: ${err.review.summary}`).catch(() => undefined)
         results.push({ postId: post.id, status: 'blocked', error: err.review.summary })
         continue
       }

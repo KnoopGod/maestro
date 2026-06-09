@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Send, Loader2, Zap, GitBranch, RefreshCw } from 'lucide-react'
+import { Send, Loader2, Zap, GitBranch } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type AITarget = 'router' | 'ollama' | 'claude' | 'chatgpt'
@@ -43,7 +43,7 @@ export function LiveTest() {
     if (customPrompt) setPrompt(customPrompt)
     setLoading(true)
     setResult(null)
-    const t0 = Date.now()
+    const t0 = window.performance.now()
 
     const endpoint = target === 'router' ? '/api/router' : `/api/${target}`
 
@@ -54,9 +54,9 @@ export function LiveTest() {
         body: JSON.stringify({ prompt: p }),
       })
       const data = await res.json()
-      setResult({ ...data, latencyMs: data.latencyMs ?? Date.now() - t0 })
+      setResult({ ...data, latencyMs: data.latencyMs ?? Math.round(window.performance.now() - t0) })
     } catch {
-      setResult({ ai: target, error: 'Erreur réseau', latencyMs: Date.now() - t0 })
+      setResult({ ai: target, error: 'Erreur réseau', latencyMs: Math.round(window.performance.now() - t0) })
     } finally {
       setLoading(false)
     }

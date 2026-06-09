@@ -520,13 +520,16 @@ export default function ConnectionsPage() {
 
   // Persist connections in localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) setConnections(JSON.parse(saved))
-    } catch {}
+    const timer = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY)
+        if (saved) setConnections(JSON.parse(saved))
+      } catch {}
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
-  const saveConnection = (id: string, _key: string) => {
+  const saveConnection = (id: string) => {
     const next = { ...connections, [id]: 'connected' as Status }
     setConnections(next)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
