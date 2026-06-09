@@ -1,9 +1,14 @@
 import Link from 'next/link'
+import { nanoid } from 'nanoid'
 import { ArrowLeft } from 'lucide-react'
 import { createClientAction } from '@/lib/actions/clients'
 import { CLIENT_TYPES, type ClientType } from '@/types/client'
 
+export const dynamic = 'force-dynamic'
+
 export default function NewClientPage() {
+  const draftClientId = nanoid(12)
+
   return (
     <div className="max-w-2xl space-y-6">
       <Link href="/clients" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
@@ -19,6 +24,8 @@ export default function NewClientPage() {
       </div>
 
       <form action={createClientAction} className="space-y-6">
+        <input type="hidden" name="clientId" value={draftClientId} />
+
         {/* Identité */}
         <fieldset className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-4">
           <legend className="text-sm font-semibold text-white px-1">Identité</legend>

@@ -109,6 +109,7 @@ export async function getClient(id: string): Promise<Client | null> {
 }
 
 export async function createClient(input: {
+  id?: string
   name: string
   type: ClientType
   city?: string
@@ -121,7 +122,7 @@ export async function createClient(input: {
   languages?: string[]
   strategy?: ClientStrategy
 }): Promise<Client> {
-  const id = nanoid(12)
+  const id = input.id ?? nanoid(12)
   const now = Date.now()
   const strategy = input.strategy ?? createClientStrategy({
     type: input.type,
@@ -133,7 +134,7 @@ export async function createClient(input: {
   })
 
   await db.execute({
-    sql: `INSERT INTO clients (
+    sql: `INSERT OR IGNORE INTO clients (
       id, name, type, city, status, emoji, color, description,
       brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
       languages, strategy, created_at, updated_at
