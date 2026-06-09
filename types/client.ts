@@ -47,6 +47,9 @@ export interface ClientWithStats extends Client {
   engagement: number
   agentsCount: number
   connectedPlatforms: number
+  lastPostAt: number | null
+  daysSincePost: number | null
+  nextPillar: string | null
 }
 
 // ─── Type config (for UI) ─────────────────────────────────────────────────

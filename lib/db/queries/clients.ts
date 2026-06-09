@@ -70,32 +70,56 @@ export async function listClientsWithStats(): Promise<ClientWithStats[]> {
   startOfMonth.setHours(0, 0, 0, 0)
   const monthTs = startOfMonth.getTime()
 
-  const [postStats, socialStats] = await Promise.all([
-    query<{ client_id: string; posts_this_month: number; avg_impact: number | null }>(
+  const [postStats, socialStats, recentPosts] = await Promise.all([
+    query<{ client_id: string; posts_this_month: number; avg_impact: number | null; last_post_at: number | null }>(
       `SELECT
         client_id,
         COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
-        AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact
+        AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact,
+        MAX(created_at) AS last_post_at
       FROM posts GROUP BY client_id`,
       [monthTs]
     ),
     query<{ client_id: string; count: number }>(
       `SELECT client_id, COUNT(*) as count FROM client_social_accounts GROUP BY client_id`
     ),
+    query<{ client_id: string; brief: string; caption: string; hook: string | null }>(
+      `SELECT client_id, brief, caption, hook FROM posts
+       WHERE id IN (
+         SELECT id FROM posts p2
+         WHERE p2.client_id = posts.client_id
+         ORDER BY created_at DESC LIMIT 5
+       )`
+    ),
   ])
 
   const postMap = new Map(postStats.map(r => [r.client_id, r]))
   const socialMap = new Map(socialStats.map(r => [r.client_id, r.count]))
+  const recentMap = new Map<string, typeof recentPosts>()
+  for (const p of recentPosts) {
+    if (!recentMap.has(p.client_id)) recentMap.set(p.client_id, [])
+    recentMap.get(p.client_id)!.push(p)
+  }
 
+  const now = Date.now()
   return clients.map(c => {
     const ps = postMap.get(c.id)
     const avgImpact = ps?.avg_impact
+    const lastPostAt = ps?.last_post_at ?? null
+    const daysSincePost = lastPostAt
+      ? Math.floor((now - lastPostAt) / 86_400_000)
+      : null
+    const recent = recentMap.get(c.id) ?? []
+    const nextPillar = pickNextPillar(c.strategy.contentPillars, recent)
     return {
       ...c,
       postsThisMonth: ps?.posts_this_month ?? 0,
       engagement: avgImpact != null ? parseFloat((avgImpact / 20).toFixed(1)) : 0,
       agentsCount: socialMap.get(c.id) ?? 0,
       connectedPlatforms: socialMap.get(c.id) ?? 0,
+      lastPostAt,
+      daysSincePost,
+      nextPillar,
     }
   })
 }
@@ -242,4 +266,19 @@ export async function getAiStrategy(id: string): Promise<unknown | null> {
   )
   if (!row?.ai_strategy) return null
   try { return JSON.parse(row.ai_strategy) } catch { return null }
+}
+
+function pickNextPillar(
+  pillars: string[],
+  recentPosts: { brief: string; caption: string; hook: string | null }[]
+): string | null {
+  if (!pillars.length) return null
+  if (!recentPosts.length) return pillars[0]
+  const recentlyCovered = new Set(
+    recentPosts.map(p => {
+      const src = `${p.brief} ${p.caption} ${p.hook ?? ''}`.toLowerCase()
+      return pillars.find(pillar => src.includes(pillar.toLowerCase()))
+    }).filter(Boolean)
+  )
+  return pillars.find(p => !recentlyCovered.has(p)) ?? pillars[0]
 }
