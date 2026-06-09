@@ -65,7 +65,7 @@ export async function runPostPipeline(input: {
 
   // ── Étape 1 : Account Director ─────────────────────────────────────────────
   const account = await track(
-    () => runAccountDirector({ client, userBrief, recentPosts: allRecentForAD, topPosts }),
+    () => runAccountDirector({ client, userBrief, recentPosts: allRecentForAD, topPosts, runAt: new Date().toISOString() }),
     { agent: 'account-director', sequence: 1, taskLabel: 'Analyse du profil client et préparation du brief' },
     {
       onComplete: r => ({
