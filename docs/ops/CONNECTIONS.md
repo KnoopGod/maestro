@@ -23,6 +23,7 @@ CODEXRS_PASSWORD=
 CRON_SECRET=
 LUMA_API_KEY=
 OLLAMA_HOST=
+CODEXRS_AUTO_INIT_SCHEMA=
 ```
 
 ## Anthropic
@@ -152,6 +153,12 @@ Local fallback:
 - `DATABASE_URL=file:./codexrs.db`
 
 Do not use the local file fallback for real production client data.
+
+Schema init:
+
+- local/dev and local file DBs auto-initialize the schema;
+- production Turso skips automatic schema initialization by default to avoid slow Vercel cold starts;
+- set `CODEXRS_AUTO_INIT_SCHEMA=true` only temporarily if a production migration must be forced from the app runtime.
 
 ## Vercel Blob
 

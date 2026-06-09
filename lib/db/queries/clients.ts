@@ -23,6 +23,12 @@ interface ClientRow {
   updated_at: number
 }
 
+interface ClientWithStatsRow extends ClientRow {
+  posts_this_month: number
+  avg_impact: number | null
+  connected_platforms: number
+}
+
 function mapRow(row: ClientRow): Client {
   const strategy = JSON.parse(row.strategy ?? 'null') ?? createClientStrategy({
     type: row.type,
@@ -62,40 +68,45 @@ export async function listClients(): Promise<Client[]> {
 }
 
 export async function listClientsWithStats(): Promise<ClientWithStats[]> {
-  const clients = await listClients()
-  if (clients.length === 0) return []
-
   const startOfMonth = new Date()
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
   const monthTs = startOfMonth.getTime()
 
-  const [postStats, socialStats] = await Promise.all([
-    query<{ client_id: string; posts_this_month: number; avg_impact: number | null }>(
-      `SELECT
+  const rows = await query<ClientWithStatsRow>(
+    `SELECT
+      c.*,
+      COALESCE(p.posts_this_month, 0) AS posts_this_month,
+      p.avg_impact,
+      COALESCE(s.connected_platforms, 0) AS connected_platforms
+    FROM clients c
+    LEFT JOIN (
+      SELECT
         client_id,
         COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
         AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact
-      FROM posts GROUP BY client_id`,
-      [monthTs]
-    ),
-    query<{ client_id: string; count: number }>(
-      `SELECT client_id, COUNT(*) as count FROM client_social_accounts GROUP BY client_id`
-    ),
-  ])
+      FROM posts
+      GROUP BY client_id
+    ) p ON p.client_id = c.id
+    LEFT JOIN (
+      SELECT client_id, COUNT(*) AS connected_platforms
+      FROM client_social_accounts
+      GROUP BY client_id
+    ) s ON s.client_id = c.id
+    ORDER BY c.created_at DESC`,
+    [monthTs]
+  )
 
-  const postMap = new Map(postStats.map(r => [r.client_id, r]))
-  const socialMap = new Map(socialStats.map(r => [r.client_id, r.count]))
-
-  return clients.map(c => {
-    const ps = postMap.get(c.id)
-    const avgImpact = ps?.avg_impact
+  return rows.map(row => {
+    const client = mapRow(row)
+    const avgImpact = row.avg_impact
+    const connectedPlatforms = Number(row.connected_platforms ?? 0)
     return {
-      ...c,
-      postsThisMonth: ps?.posts_this_month ?? 0,
+      ...client,
+      postsThisMonth: Number(row.posts_this_month ?? 0),
       engagement: avgImpact != null ? parseFloat((avgImpact / 20).toFixed(1)) : 0,
-      agentsCount: socialMap.get(c.id) ?? 0,
-      connectedPlatforms: socialMap.get(c.id) ?? 0,
+      agentsCount: connectedPlatforms,
+      connectedPlatforms,
     }
   })
 }

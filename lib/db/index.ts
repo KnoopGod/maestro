@@ -14,6 +14,17 @@ function cleanEnv(value: string | undefined) {
 
 const url = cleanEnv(process.env.DATABASE_URL) || 'file:./maestro.db'
 const authToken = cleanEnv(process.env.DATABASE_AUTH_TOKEN)
+const isLocalDb = url.startsWith('file:')
+const schemaAutoInit =
+  cleanEnv(process.env.CODEXRS_AUTO_INIT_SCHEMA) === 'true' ||
+  process.env.NODE_ENV !== 'production' ||
+  isLocalDb
+
+export const dbConfig = {
+  url,
+  isLocalDb,
+  schemaAutoInit,
+}
 
 export const db = createClient({
   url,
@@ -24,6 +35,7 @@ let schemaReady: Promise<void> | null = null
 let initializingSchema = false
 
 async function ensureSchema() {
+  if (!schemaAutoInit) return
   if (initializingSchema) return
 
   schemaReady ??= (async () => {
@@ -44,7 +56,8 @@ async function ensureSchema() {
   }
 }
 
-// Auto-init schema on first use (idempotent — uses CREATE TABLE IF NOT EXISTS)
+// Auto-init schema on first use in dev/local DBs. Production Turso skips this to
+// avoid running every migration during Vercel cold starts.
 export function getDb() {
   void ensureSchema().catch(() => {
     schemaReady = null
