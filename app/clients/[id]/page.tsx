@@ -1,7 +1,7 @@
 import type React from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
@@ -106,7 +106,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <Link href={`/clients/${client.id}/launch`} title="Tunnel guidé : unifier, configurer et connecter les réseaux sociaux du client en 5 étapes" className="bg-gradient-to-br from-indigo-950/40 to-blue-950/30 border border-indigo-700/30 rounded-xl p-4 hover:border-indigo-500/50 transition-all flex items-center gap-3 group">
+          <Rocket className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-white">Lancement</div>
+            <div className="text-[11px] text-gray-500">Tunnel 5 étapes</div>
+          </div>
+        </Link>
+
         <Link href={`/clients/${client.id}/library`} title="Ajouter photos, vidéos, logos et documents de DA du client" className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-xl p-4 hover:border-purple-500/50 transition-all flex items-center gap-3 group">
           <FolderOpen className="w-5 h-5 text-purple-400 flex-shrink-0" />
           <div>
