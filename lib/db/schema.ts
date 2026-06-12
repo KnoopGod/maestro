@@ -157,4 +157,6 @@ export async function initSchema() {
   await migrateClientFinance()
   const { migrateCTAFields } = await import('./migrations/007-add-cta-fields')
   await migrateCTAFields()
+  const { migrateLaunchTunnel } = await import('./migrations/008-add-launch-tunnel')
+  await migrateLaunchTunnel()
 }
