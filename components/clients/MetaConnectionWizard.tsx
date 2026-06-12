@@ -43,6 +43,7 @@ interface ConnectedAccount {
   handle: string | null
   accountId: string | null
   connectedAt: number | null
+  expiresAt?: number | null
 }
 
 interface MetaConfigStatus {
@@ -95,6 +96,7 @@ export function MetaConnectionWizard({
 
   const fbAccount = existingAccounts.find(a => a.platform === 'facebook')
   const igAccount = existingAccounts.find(a => a.platform === 'instagram')
+  const facebookTokenStatus = getTokenExpiryStatus(fbAccount?.expiresAt)
 
   const handleDiscover = () => {
     setError(null)
@@ -271,6 +273,18 @@ export function MetaConnectionWizard({
                 <p className="text-[11px] text-gray-500 mt-1">
                   Connecté le {new Date(fbAccount.connectedAt).toLocaleDateString('fr-FR')}
                 </p>
+              )}
+              {facebookTokenStatus && (
+                <div className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+                  facebookTokenStatus.severity === 'expired'
+                    ? 'border-red-800/40 bg-red-950/30 text-red-200'
+                    : facebookTokenStatus.severity === 'soon'
+                      ? 'border-amber-800/40 bg-amber-950/30 text-amber-200'
+                      : 'border-gray-800 bg-gray-950/40 text-gray-400'
+                }`}>
+                  <strong>{facebookTokenStatus.label}</strong>
+                  <span className="block mt-0.5">{facebookTokenStatus.action}</span>
+                </div>
               )}
             </div>
             <button
@@ -667,7 +681,9 @@ function MetaConfigNotice({ config }: { config: MetaConfigStatus }) {
 }
 
 function TokenDebugPanel({ info }: { info: TokenDebugInfo }) {
-  const allGood = info.valid && info.hasRequiredPermissions
+  const expiry = getTokenExpiryStatus(info.expiresAt)
+  const tokenExpiredOrSoon = expiry?.severity === 'expired' || expiry?.severity === 'soon'
+  const allGood = info.valid && info.hasRequiredPermissions && !tokenExpiredOrSoon
   const required = info.requiredPermissions ?? [
     'pages_show_list',
     'pages_read_engagement',
@@ -705,6 +721,18 @@ function TokenDebugPanel({ info }: { info: TokenDebugInfo }) {
               }
             </p>
           )}
+          {expiry && (
+            <div className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+              expiry.severity === 'expired'
+                ? 'border-red-800/40 bg-red-950/30 text-red-200'
+                : expiry.severity === 'soon'
+                  ? 'border-amber-800/40 bg-amber-950/30 text-amber-200'
+                  : 'border-gray-800 bg-gray-950/40 text-gray-400'
+            }`}>
+              <strong>{expiry.label}</strong>
+              <span className="block mt-0.5">{expiry.action}</span>
+            </div>
+          )}
           {info.error && (
             <p className="text-xs text-red-400 mt-2">Erreur : {info.error}</p>
           )}
@@ -736,19 +764,48 @@ function TokenDebugPanel({ info }: { info: TokenDebugInfo }) {
         )}
       </div>
 
-      {info.missingPermissions.length > 0 && (
+      {(info.missingPermissions.length > 0 || tokenExpiredOrSoon) && (
         <div className="mt-4 pt-4 border-t border-amber-800/30 space-y-2">
           <p className="text-xs font-semibold text-amber-300">Action requise</p>
           <ol className="space-y-1 text-xs text-gray-300">
             <li>1. Retourne dans Graph API Explorer et regénère un User Access Token.</li>
-            <li>2. Ajoute les scopes manquants : <code className="font-mono text-amber-200">{info.missingPermissions.join(', ')}</code>.</li>
-            <li>3. Reconnecte ce client pour stocker un nouveau Page Access Token.</li>
+            <li>2. Vérifie les scopes requis{info.missingPermissions.length > 0 && <> : <code className="font-mono text-amber-200">{info.missingPermissions.join(', ')}</code></>}.</li>
+            <li>3. Reconnecte ce client maintenant que META_APP_ID et META_APP_SECRET sont actifs.</li>
             <li>4. Relance le diagnostic avant de publier.</li>
           </ol>
         </div>
       )}
     </div>
   )
+}
+
+function getTokenExpiryStatus(expiresAt?: number | null): null | {
+  severity: 'expired' | 'soon' | 'ok'
+  label: string
+  action: string
+} {
+  if (!expiresAt || expiresAt <= 0) return null
+  const now = Date.now()
+  const days = Math.ceil((expiresAt - now) / 86_400_000)
+  if (expiresAt <= now) {
+    return {
+      severity: 'expired',
+      label: 'Token expiré',
+      action: 'Reconnecte Meta avec un nouveau User Access Token. Le prochain Page Token sera recréé avec les clés Meta longue durée.',
+    }
+  }
+  if (days <= 7) {
+    return {
+      severity: 'soon',
+      label: `Token expire dans ${days} jour${days > 1 ? 's' : ''}`,
+      action: 'Reconnecte ce client avant la prochaine publication automatique pour éviter un échec Meta.',
+    }
+  }
+  return {
+    severity: 'ok',
+    label: `Token valide encore ${days} jours`,
+    action: 'Aucune action immédiate. Relance un diagnostic si Meta refuse une publication.',
+  }
 }
 
 function SuccessBanner({ message }: { message: string }) {

@@ -60,6 +60,7 @@ export default async function ClientConnectionsPage({ params }: { params: Promis
             handle: a.handle,
             accountId: a.accountId,
             connectedAt: a.connectedAt,
+            expiresAt: a.expiresAt,
           }))}
         />
       </section>
