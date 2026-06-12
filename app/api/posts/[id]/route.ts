@@ -6,6 +6,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params
     const post = await getPost(id)
     if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
+    if (post.status === 'published') return NextResponse.json({ error: 'Post déjà publié — modification impossible' }, { status: 409 })
 
     const body = await req.json()
     const hashtags = Array.isArray(body.hashtags)

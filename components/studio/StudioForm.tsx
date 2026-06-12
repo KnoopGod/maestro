@@ -125,6 +125,7 @@ export function StudioForm({
     initialPost ? createLoadedPostResult(initialPost) : null
   )
   const [error, setError] = useState<string | null>(null)
+  const [regenInstruction, setRegenInstruction] = useState('')
   const [isPending, startTransition] = useTransition()
 
   const [imageMode, setImageMode] = useState<'generate' | 'library'>(initialContentType === 'reel' ? 'library' : 'generate')
@@ -235,7 +236,12 @@ export function StudioForm({
     setError(null)
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/posts/${result.post.id}/regenerate-caption`, { method: 'POST' })
+        const res = await fetch(`/api/posts/${result.post.id}/regenerate-caption`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ instruction: regenInstruction.trim() || undefined }),
+        })
+        setRegenInstruction('')
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Erreur régénération texte')
         setResult(prev => prev ? {
@@ -859,24 +865,34 @@ export function StudioForm({
 
               <PostActions post={result.post} refresh={false} />
 
-              <div className="flex items-center justify-end pt-2 border-t border-gray-800">
-                <button
-                  onClick={regenerateTextOnly}
-                  disabled={isPending}
-                  title="Régénérer uniquement la caption, les hooks, CTA et hashtags sans toucher à l'image ou à la vidéo"
-                  className="mr-auto flex items-center gap-1 text-blue-300 hover:underline text-xs disabled:opacity-40"
-                >
-                  {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                  Régénérer le texte uniquement
-                </button>
-                <button
-                  onClick={handleGenerate}
-                  disabled={isPending}
-                  title="Relancer la génération avec le même brief pour obtenir une nouvelle proposition"
-                  className="flex items-center gap-1 text-purple-400 hover:underline text-xs"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" /> Régénérer le post
-                </button>
+              <div className="space-y-2 pt-2 border-t border-gray-800">
+                <input
+                  type="text"
+                  value={regenInstruction}
+                  onChange={e => setRegenInstruction(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !isPending) regenerateTextOnly() }}
+                  placeholder="Précise ta demande (optionnel) — ex : plus court, sans emoji, mentionner la terrasse…"
+                  className="w-full px-3 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-xs text-gray-300 placeholder:text-gray-600 focus:border-blue-700 focus:outline-none"
+                />
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    onClick={regenerateTextOnly}
+                    disabled={isPending}
+                    title="Régénérer uniquement la caption, les hooks, CTA et hashtags sans toucher à l'image ou à la vidéo"
+                    className="flex items-center gap-1 text-blue-300 hover:underline text-xs disabled:opacity-40"
+                  >
+                    {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                    Régénérer le texte uniquement
+                  </button>
+                  <button
+                    onClick={handleGenerate}
+                    disabled={isPending}
+                    title="Relancer la génération complète (texte + image) avec le même brief"
+                    className="flex items-center gap-1 text-purple-400 hover:underline text-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Tout régénérer
+                  </button>
+                </div>
               </div>
             </div>
           </div>

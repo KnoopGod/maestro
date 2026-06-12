@@ -5,11 +5,12 @@ import { generateCaption, type Platform } from '@/lib/agents/social-expert'
 
 const ALLOWED_PLATFORMS = new Set<Platform>(['instagram', 'facebook', 'tiktok', 'linkedin'])
 
-export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const post = await getPost(id)
     if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
+    if (post.status === 'published') return NextResponse.json({ error: 'Post déjà publié — modification impossible' }, { status: 409 })
 
     const client = await getClient(post.clientId)
     if (!client) return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
@@ -19,9 +20,15 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Aucune plateforme compatible pour régénérer le texte' }, { status: 400 })
     }
 
+    const body = await req.json().catch(() => ({}))
+    const instruction = typeof body.instruction === 'string' && body.instruction.trim()
+      ? body.instruction.trim()
+      : null
+    const brief = instruction ? `${post.brief}\n\nConsigne de révision : ${instruction}` : post.brief
+
     const result = await generateCaption({
       client,
-      brief: post.brief,
+      brief,
       platforms,
       contentType: post.contentType,
     })
