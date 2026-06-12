@@ -61,8 +61,11 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
     let done = 0
     let failed = 0
 
-    await Promise.all(
-      ideas.map(async idea => {
+    const queue = [...ideas]
+    const workers = Array.from({ length: Math.min(2, queue.length) }, async () => {
+      while (queue.length > 0 && !bulkCancelledRef.current) {
+        const idea = queue.shift()
+        if (!idea) return
         try {
           const res = await fetch('/api/studio/generate-post', {
             method: 'POST',
@@ -80,8 +83,10 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
           failed++
         }
         if (!bulkCancelledRef.current) setBulkProgress(prev => prev + 1)
-      })
-    )
+      }
+    })
+
+    await Promise.all(workers)
 
     if (!bulkCancelledRef.current) {
       setBulkLoading(false)

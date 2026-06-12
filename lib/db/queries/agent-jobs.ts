@@ -37,6 +37,24 @@ export interface AgentEvent {
   durationMs?: number
 }
 
+export interface AgentProductionStats {
+  jobs: {
+    running: number
+    completed: number
+    failed: number
+    awaitingValidation: number
+  }
+  events: {
+    running: number
+    pending: number
+    failed: number
+  }
+  performance: {
+    avgDurationMs: number
+    avgCost: number
+  }
+}
+
 function mapJob(row: Record<string, unknown>): AgentJob {
   const startedAt = row.started_at as number
   const completedAt = row.completed_at as number | null
@@ -120,6 +138,65 @@ export async function listRecentJobs(limit = 30): Promise<AgentJob[]> {
     args: [limit],
   })
   return result.rows.map(r => mapJob(r as Record<string, unknown>))
+}
+
+export async function listRecentJobsWithEvents(limit = 30): Promise<Array<AgentJob & { events: AgentEvent[] }>> {
+  const jobs = await listRecentJobs(limit)
+  if (jobs.length === 0) return []
+
+  const placeholders = jobs.map(() => '?').join(',')
+  const eventsResult = await db.execute({
+    sql: `SELECT * FROM agent_events WHERE job_id IN (${placeholders}) ORDER BY job_id, sequence ASC`,
+    args: jobs.map(job => job.id),
+  })
+  const eventsByJob = new Map<string, AgentEvent[]>()
+  for (const row of eventsResult.rows) {
+    const event = mapEvent(row as Record<string, unknown>)
+    if (!eventsByJob.has(event.jobId)) eventsByJob.set(event.jobId, [])
+    eventsByJob.get(event.jobId)!.push(event)
+  }
+  return jobs.map(job => ({ ...job, events: eventsByJob.get(job.id) ?? [] }))
+}
+
+export async function getAgentProductionStats(): Promise<AgentProductionStats> {
+  const [jobRows, eventRows, perfRow] = await Promise.all([
+    db.execute(`SELECT status, COUNT(*) AS count FROM agent_jobs GROUP BY status`),
+    db.execute(`SELECT status, COUNT(*) AS count FROM agent_events WHERE status IN ('running', 'pending', 'failed') GROUP BY status`),
+    db.execute(`
+      SELECT
+        AVG(CASE WHEN completed_at IS NOT NULL THEN completed_at - started_at ELSE NULL END) AS avg_duration_ms,
+        AVG(CASE WHEN total_cost > 0 THEN total_cost ELSE NULL END) AS avg_cost
+      FROM agent_jobs
+      WHERE status IN ('completed', 'awaiting_validation')
+    `),
+  ])
+
+  const jobs = { running: 0, completed: 0, failed: 0, awaitingValidation: 0 }
+  for (const row of jobRows.rows as Array<Record<string, unknown>>) {
+    const count = Number(row.count ?? 0)
+    if (row.status === 'running') jobs.running = count
+    if (row.status === 'completed') jobs.completed = count
+    if (row.status === 'failed') jobs.failed = count
+    if (row.status === 'awaiting_validation') jobs.awaitingValidation = count
+  }
+
+  const events = { running: 0, pending: 0, failed: 0 }
+  for (const row of eventRows.rows as Array<Record<string, unknown>>) {
+    const count = Number(row.count ?? 0)
+    if (row.status === 'running') events.running = count
+    if (row.status === 'pending') events.pending = count
+    if (row.status === 'failed') events.failed = count
+  }
+
+  const perf = perfRow.rows[0] as Record<string, unknown> | undefined
+  return {
+    jobs,
+    events,
+    performance: {
+      avgDurationMs: Math.round(Number(perf?.avg_duration_ms ?? 0)),
+      avgCost: Number(Number(perf?.avg_cost ?? 0).toFixed(6)),
+    },
+  }
 }
 
 export async function listJobsByClient(clientId: string, limit = 20): Promise<AgentJob[]> {

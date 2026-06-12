@@ -103,12 +103,14 @@ export async function listClientsWithStats(): Promise<ClientWithStats[]> {
       [monthTs]
     ),
     query<{ client_id: string; brief: string; caption: string; hook: string | null }>(
-      `SELECT client_id, brief, caption, hook FROM posts
-       WHERE id IN (
-         SELECT id FROM posts p2
-         WHERE p2.client_id = posts.client_id
-         ORDER BY created_at DESC LIMIT 5
-       )`
+      `SELECT client_id, brief, caption, hook
+       FROM (
+         SELECT
+           client_id, brief, caption, hook,
+           ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY created_at DESC) AS rn
+         FROM posts
+       )
+       WHERE rn <= 5`
     ),
   ])
 

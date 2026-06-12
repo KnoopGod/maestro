@@ -4,6 +4,7 @@ import { listClients } from '@/lib/db/queries/clients'
 import { CalendarDays, ExternalLink, AlertCircle, Sparkles } from 'lucide-react'
 import type { Post, PostStatus } from '@/types/post'
 import type { Client } from '@/types/client'
+import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
 
 export const dynamic = 'force-dynamic'
 
@@ -161,6 +162,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
 
 function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
   const statusCfg = STATUS_INFO[post.status]
+  const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
@@ -253,10 +255,21 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
           )}
 
           {/* Meta */}
-          <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-600">
-            <span>{formatTime(post.createdAt)}</span>
-            {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
-            {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
+          <div className="mt-3 rounded-lg border border-gray-800 bg-gray-950/40 p-2">
+            <div className="flex items-center justify-between gap-3 text-[10px] text-gray-500 mb-1.5">
+              <span>{progress.currentStep}</span>
+              <span>{progress.percent}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
+              <div className={`h-full ${progressBarClass(progress.tone)}`} style={{ width: `${progress.percent}%` }} />
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-gray-600">
+              <span>Prochaine étape : {progress.nextStep}</span>
+              <span>ETA : {progress.eta}</span>
+              <span>{formatTime(post.createdAt)}</span>
+              {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
+              {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
+            </div>
           </div>
         </div>
       </div>
