@@ -155,4 +155,6 @@ export async function initSchema() {
   await migrateAgentJobs()
   const { migrateClientFinance } = await import('./migrations/006-add-client-finance')
   await migrateClientFinance()
+  const { migrateCTAFields } = await import('./migrations/007-add-cta-fields')
+  await migrateCTAFields()
 }

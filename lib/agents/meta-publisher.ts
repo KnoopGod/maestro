@@ -251,43 +251,108 @@ function getDebugAccessToken(fallbackToken: string) {
 
 // ─── Publish to Facebook Page ────────────────────────────────────────────────
 
+// CTA button types supported for organic page posts
+export const META_CTA_TYPES = [
+  { value: 'BOOK_TRAVEL',  label: 'Réserver',          emoji: '📅' },
+  { value: 'LEARN_MORE',   label: 'En savoir plus',     emoji: '👉' },
+  { value: 'CONTACT_US',   label: 'Nous contacter',     emoji: '📞' },
+  { value: 'SHOP_NOW',     label: 'Commander',          emoji: '🛒' },
+  { value: 'GET_OFFER',    label: 'Voir l\'offre',      emoji: '🎁' },
+  { value: 'SIGN_UP',      label: 'S\'inscrire',        emoji: '✍️' },
+  { value: 'CALL_NOW',     label: 'Appeler maintenant', emoji: '📱' },
+] as const
+
+export type MetaCtaType = typeof META_CTA_TYPES[number]['value']
+
 export interface PublishOptions {
   pageId: string
   pageToken: string
   message: string
   imageUrl?: string
   link?: string
+  cta?: { type: string; url: string }
 }
 
 export async function publishToFacebook(opts: PublishOptions): Promise<{ postId: string; url: string }> {
-  const endpoint = opts.imageUrl
-    ? `${GRAPH_API}/${opts.pageId}/photos`
-    : `${GRAPH_API}/${opts.pageId}/feed`
+  // Image + CTA → two-step: upload photo unpublished, then feed post with attached media + CTA
+  if (opts.imageUrl && opts.cta) {
+    return publishWithImageAndCta(opts as PublishOptions & { imageUrl: string; cta: NonNullable<PublishOptions['cta']> })
+  }
 
+  // Image only (no CTA) → /photos endpoint
+  if (opts.imageUrl) {
+    const body: Record<string, string> = {
+      access_token: opts.pageToken,
+      message: opts.message,
+      url: opts.imageUrl,
+    }
+    if (opts.link) body.link = opts.link
+    const res = await fetch(`${GRAPH_API}/${opts.pageId}/photos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(body),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error?.message || 'Échec publication Facebook')
+    const postId = data.post_id || data.id
+    return { postId, url: `https://www.facebook.com/${postId}` }
+  }
+
+  // Text only (+ optional link + CTA)
   const body: Record<string, string> = {
     access_token: opts.pageToken,
     message: opts.message,
   }
-
-  if (opts.imageUrl) body.url = opts.imageUrl
   if (opts.link) body.link = opts.link
-
-  const res = await fetch(endpoint, {
+  if (opts.cta) {
+    body.call_to_action = JSON.stringify({ type: opts.cta.type, value: { link: opts.cta.url } })
+  }
+  const res = await fetch(`${GRAPH_API}/${opts.pageId}/feed`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams(body),
   })
-
   const data = await res.json()
-  if (!res.ok) {
-    throw new Error(data.error?.message || 'Échec publication Facebook')
+  if (!res.ok) throw new Error(data.error?.message || 'Échec publication Facebook')
+  const postId = data.post_id || data.id
+  return { postId, url: `https://www.facebook.com/${postId}` }
+}
+
+async function publishWithImageAndCta(opts: PublishOptions & {
+  imageUrl: string
+  cta: NonNullable<PublishOptions['cta']>
+}): Promise<{ postId: string; url: string }> {
+  // Step 1: Upload image as unpublished photo to get a media ID
+  const photoRes = await fetch(`${GRAPH_API}/${opts.pageId}/photos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      url: opts.imageUrl,
+      published: 'false',
+      access_token: opts.pageToken,
+    }),
+  })
+  const photoData = await photoRes.json()
+  if (!photoRes.ok) throw new Error(photoData.error?.message || 'Échec upload photo pour CTA')
+
+  // Step 2: Post to feed with attached photo + CTA button
+  const feedBody: Record<string, string> = {
+    access_token: opts.pageToken,
+    message: opts.message,
+    attached_media: JSON.stringify([{ media_fbid: photoData.id }]),
+    call_to_action: JSON.stringify({ type: opts.cta.type, value: { link: opts.cta.url } }),
   }
 
-  const postId = data.post_id || data.id
-  return {
-    postId,
-    url: `https://www.facebook.com/${postId}`,
-  }
+  const feedRes = await fetch(`${GRAPH_API}/${opts.pageId}/feed`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(feedBody),
+  })
+  const feedData = await feedRes.json()
+  if (!feedRes.ok) throw new Error(feedData.error?.message || 'Échec publication feed avec CTA')
+
+  const postId = feedData.id
+  return { postId, url: `https://www.facebook.com/${postId}` }
 }
 
 // ─── Publish to Instagram ────────────────────────────────────────────────────

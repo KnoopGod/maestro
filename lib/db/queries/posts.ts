@@ -14,6 +14,8 @@ interface PostRow {
   hashtags: string | null
   hook: string | null
   cta: string | null
+  cta_type: string | null
+  cta_url: string | null
   image_asset_id: string | null
   image_url: string | null
   image_prompt: string | null
@@ -44,6 +46,8 @@ function mapRow(row: PostRow): Post {
     hashtags: row.hashtags ? JSON.parse(row.hashtags) : [],
     hook: row.hook,
     cta: row.cta,
+    ctaType: row.cta_type ?? null,
+    ctaUrl: row.cta_url ?? null,
     imageAssetId: row.image_asset_id,
     imageUrl: row.image_url,
     imagePrompt: row.image_prompt,
@@ -65,7 +69,7 @@ function mapRow(row: PostRow): Post {
 function postSelect(includeInsights: boolean) {
   return `
     id, client_id, status, platforms, content_type, brief, reasoning,
-    caption, hashtags, hook, cta, image_asset_id, image_url, image_prompt,
+    caption, hashtags, hook, cta, cta_type, cta_url, image_asset_id, image_url, image_prompt,
     impact_score, impact_analysis, supervisor_review, meta_post_ids,
     ${includeInsights ? 'meta_insights' : 'NULL AS meta_insights'},
     scheduled_at, published_at, error, cost, tokens_used, created_at, updated_at
@@ -127,6 +131,8 @@ export async function createPost(input: {
   hashtags?: string[]
   hook?: string
   cta?: string
+  ctaType?: string
+  ctaUrl?: string
   imageAssetId?: string
   imageUrl?: string
   imagePrompt?: string
@@ -141,9 +147,9 @@ export async function createPost(input: {
   await db.execute({
     sql: `INSERT INTO posts (
       id, client_id, status, platforms, content_type, brief, reasoning,
-      caption, hashtags, hook, cta, image_asset_id, image_url, image_prompt,
+      caption, hashtags, hook, cta, cta_type, cta_url, image_asset_id, image_url, image_prompt,
       impact_score, impact_analysis, cost, tokens_used, created_at, updated_at
-    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       input.clientId,
@@ -155,6 +161,8 @@ export async function createPost(input: {
       JSON.stringify(input.hashtags ?? []),
       input.hook ?? null,
       input.cta ?? null,
+      input.ctaType ?? null,
+      input.ctaUrl ?? null,
       input.imageAssetId ?? null,
       input.imageUrl ?? null,
       input.imagePrompt ?? null,

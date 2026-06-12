@@ -38,10 +38,12 @@ export async function runPostPipeline(input: {
   contentType?: PostContentType
   skipImage?: boolean
   existingAsset?: { id: string; url: string }
+  ctaType?: string
+  ctaUrl?: string
   /** ID du job de tracking (optionnel — pas de tracking si absent). */
   jobId?: string
 }): Promise<PipelineResult> {
-  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, jobId } = input
+  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, jobId } = input
 
   // Helper : wrap avec tracking si jobId fourni, sinon appel direct
   function track<T>(
@@ -138,6 +140,8 @@ export async function runPostPipeline(input: {
     hashtags: primaryCaption.hashtags,
     hook: primaryCaption.hook,
     cta: primaryCaption.cta,
+    ctaType: ctaType ?? undefined,
+    ctaUrl: ctaUrl ?? undefined,
     imageAssetId: image.assetId,
     imageUrl: image.url,
     imagePrompt: image.prompt,

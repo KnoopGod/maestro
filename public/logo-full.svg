@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" fill="none">
+  <defs>
+    <radialGradient id="hexBgF" cx="45%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#2a228e"/>
+      <stop offset="100%" stop-color="#13104f"/>
+    </radialGradient>
+    <filter id="nodeGlowF" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="mGlowF" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+      <feFlood flood-color="#818cf8" flood-opacity="0.5" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- === ICON (centered at x=180, y=170, scale ~0.58) === -->
+  <g transform="translate(180,170) scale(0.58)">
+    <!-- Hex fill -->
+    <polygon points="0,-210 181.8,-105 181.8,105 0,210 -181.8,105 -181.8,-105" fill="url(#hexBgF)"/>
+    <!-- Hex border -->
+    <polygon points="0,-210 181.8,-105 181.8,105 0,210 -181.8,105 -181.8,-105" stroke="#5b5de8" stroke-width="5" fill="none"/>
+    <!-- Inner accent -->
+    <polygon points="0,-173 149.6,-86.5 149.6,86.5 0,173 -149.6,86.5 -149.6,-86.5" stroke="#33339a" stroke-width="2" fill="none" opacity="0.8"/>
+    <!-- Circuit lines left -->
+    <line x1="-181.8" y1="0" x2="-260" y2="0" stroke="#33339a" stroke-width="2" opacity="0.8"/>
+    <line x1="-260" y1="0" x2="-260" y2="-40" stroke="#33339a" stroke-width="2" opacity="0.8"/>
+    <line x1="-260" y1="0" x2="-260" y2="40" stroke="#33339a" stroke-width="2" opacity="0.8"/>
+    <circle cx="-260" cy="0"  r="5" fill="#5b5de8" filter="url(#nodeGlowF)"/>
+    <circle cx="-260" cy="-40" r="4" fill="#5b5de8" filter="url(#nodeGlowF)"/>
+    <circle cx="-260" cy="40"  r="4" fill="#5b5de8" filter="url(#nodeGlowF)"/>
+    <!-- Circuit lines right -->
+    <line x1="181.8" y1="0" x2="260" y2="0" stroke="#33339a" stroke-width="2" opacity="0.8"/>
+    <line x1="260" y1="0" x2="260" y2="-40" stroke="#33339a" stroke-width="2" opacity="0.8"/>
+    <line x1="260" y1="0" x2="260" y2="40" stroke="#33339a" stroke-width="2" opacity="0.8"/>
+    <circle cx="260" cy="0"   r="5" fill="#5b5de8" filter="url(#nodeGlowF)"/>
+    <circle cx="260" cy="-40" r="4" fill="#5b5de8" filter="url(#nodeGlowF)"/>
+    <circle cx="260" cy="40"  r="4" fill="#5b5de8" filter="url(#nodeGlowF)"/>
+    <!-- Vertex nodes -->
+    <circle cx="0"     cy="-210" r="9" fill="#7c7ef2" filter="url(#nodeGlowF)"/>
+    <circle cx="181.8" cy="-105" r="9" fill="#7c7ef2" filter="url(#nodeGlowF)"/>
+    <circle cx="181.8" cy="105"  r="9" fill="#7c7ef2" filter="url(#nodeGlowF)"/>
+    <circle cx="0"     cy="210"  r="9" fill="#7c7ef2" filter="url(#nodeGlowF)"/>
+    <circle cx="-181.8" cy="105" r="9" fill="#7c7ef2" filter="url(#nodeGlowF)"/>
+    <circle cx="-181.8" cy="-105" r="9" fill="#7c7ef2" filter="url(#nodeGlowF)"/>
+    <!-- M letter -->
+    <path d="M -98,196 L -98,-96 L 0,22 L 98,-96 L 98,196"
+      fill="none" stroke="#dde3ff" stroke-width="34"
+      stroke-linecap="round" stroke-linejoin="round"
+      filter="url(#mGlowF)"/>
+    <path d="M -98,196 L -98,-96 L 0,22 L 98,-96 L 98,196"
+      fill="none" stroke="#4f52d4" stroke-width="16"
+      stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 0,22 L 98,-96" fill="none" stroke="#a5b0ff" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
+  </g>
+
+  <!-- === WORDMARK === -->
+  <text x="430" y="178"
+    font-family="'Trebuchet MS', 'Arial Black', Arial, sans-serif"
+    font-size="82" font-weight="900" letter-spacing="12"
+    fill="#1e1b6e" text-anchor="middle">MAESTRO</text>
+
+  <!-- Separator line -->
+  <line x1="290" y1="200" x2="570" y2="200" stroke="#5b5de8" stroke-width="1.5"/>
+
+  <!-- Tagline -->
+  <text x="430" y="228"
+    font-family="'Trebuchet MS', Arial, sans-serif"
+    font-size="18" font-weight="400" letter-spacing="6"
+    fill="#5b5de8" text-anchor="middle">ORCHESTRATE YOUR WORK</text>
+</svg>

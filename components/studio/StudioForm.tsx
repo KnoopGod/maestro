@@ -120,6 +120,9 @@ export function StudioForm({
   const [aiLoading, setAiLoading] = useState(false)
   const [templateCategory, setTemplateCategory] = useState<string | null>(null)
 
+  const [ctaType, setCtaType] = useState<string>('')
+  const [ctaUrl, setCtaUrl] = useState<string>('')
+
   const selectedClient = clients.find(c => c.id === clientId)
 
   useEffect(() => {
@@ -182,6 +185,8 @@ export function StudioForm({
             contentType,
             imageAssetId: imageMode === 'library' && selectedAsset ? selectedAsset.id : undefined,
             imageAssetUrl: imageMode === 'library' && selectedAsset ? selectedAsset.url : undefined,
+            ctaType: ctaType || undefined,
+            ctaUrl: ctaUrl || undefined,
           }),
         })
         const data = await res.json()
@@ -460,6 +465,50 @@ export function StudioForm({
             </div>
           )}
         </div>
+
+        {/* CTA Button (Facebook) */}
+        {platforms.includes('facebook') && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] text-indigo-600/60 font-mono tracking-[0.2em] uppercase">// CTA FACEBOOK</span>
+              <span className="text-[8px] text-gray-600 font-mono">— bouton d&apos;action sur la publication</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={ctaType}
+                onChange={e => setCtaType(e.target.value)}
+                className="col-span-2 sm:col-span-1 bg-gray-900/60 border border-gray-800 text-xs text-gray-300 px-2 py-2 font-mono focus:outline-none focus:border-indigo-600"
+              >
+                <option value="">Aucun bouton CTA</option>
+                <option value="BOOK_TRAVEL">📅 Réserver</option>
+                <option value="LEARN_MORE">👉 En savoir plus</option>
+                <option value="CONTACT_US">📞 Nous contacter</option>
+                <option value="SHOP_NOW">🛒 Commander</option>
+                <option value="GET_OFFER">🎁 Voir l&apos;offre</option>
+                <option value="SIGN_UP">✍️ S&apos;inscrire</option>
+                <option value="CALL_NOW">📱 Appeler</option>
+              </select>
+              {ctaType && (
+                <input
+                  type="url"
+                  value={ctaUrl}
+                  onChange={e => setCtaUrl(e.target.value)}
+                  placeholder="https://votre-site.com/reserver"
+                  className="col-span-2 bg-gray-900/60 border border-gray-800 text-xs text-gray-300 px-2 py-2 font-mono placeholder:text-gray-700 focus:outline-none focus:border-indigo-600"
+                />
+              )}
+            </div>
+            {ctaType && !ctaUrl && (
+              <p className="text-[9px] text-amber-500/70 font-mono">⚠ Entrez l&apos;URL de destination pour activer le bouton</p>
+            )}
+            {ctaType && ctaUrl && (
+              <p className="text-[9px] text-emerald-500/60 font-mono">✓ Bouton &ldquo;{
+                { BOOK_TRAVEL:'Réserver', LEARN_MORE:'En savoir plus', CONTACT_US:'Nous contacter',
+                  SHOP_NOW:'Commander', GET_OFFER:"Voir l'offre", SIGN_UP:"S'inscrire", CALL_NOW:'Appeler' }[ctaType]
+              }&rdquo; activé → {ctaUrl.length > 40 ? ctaUrl.substring(0, 40) + '…' : ctaUrl}</p>
+            )}
+          </div>
+        )}
 
         {/* Generate button */}
         <button

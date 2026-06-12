@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <radialGradient id="hexBg" cx="45%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#2a228e"/>
+      <stop offset="100%" stop-color="#13104f"/>
+    </radialGradient>
+    <filter id="nodeGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="mGlow" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+      <feFlood flood-color="#818cf8" flood-opacity="0.5" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Hexagon fill -->
+  <polygon points="256,46 438,151 438,361 256,466 74,361 74,151" fill="url(#hexBg)"/>
+
+  <!-- Hexagon outer border -->
+  <polygon points="256,46 438,151 438,361 256,466 74,361 74,151" stroke="#5b5de8" stroke-width="4" fill="none"/>
+
+  <!-- Hexagon inner accent -->
+  <polygon points="256,84 406,170 406,342 256,428 106,342 106,170" stroke="#33339a" stroke-width="1.5" fill="none" opacity="0.8"/>
+
+  <!-- Circuit nodes at vertices (with glow) -->
+  <circle cx="256" cy="46"  r="10" fill="#7c7ef2" filter="url(#nodeGlow)"/>
+  <circle cx="438" cy="151" r="10" fill="#7c7ef2" filter="url(#nodeGlow)"/>
+  <circle cx="438" cy="361" r="10" fill="#7c7ef2" filter="url(#nodeGlow)"/>
+  <circle cx="256" cy="466" r="10" fill="#7c7ef2" filter="url(#nodeGlow)"/>
+  <circle cx="74"  cy="361" r="10" fill="#7c7ef2" filter="url(#nodeGlow)"/>
+  <circle cx="74"  cy="151" r="10" fill="#7c7ef2" filter="url(#nodeGlow)"/>
+
+  <!-- M letter — neon tube effect: outer white stroke + inner blue core -->
+  <path d="M 158,358 L 158,162 L 256,278 L 354,162 L 354,358"
+    fill="none" stroke="#dde3ff" stroke-width="34"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#mGlow)"/>
+  <path d="M 158,358 L 158,162 L 256,278 L 354,162 L 354,358"
+    fill="none" stroke="#4f52d4" stroke-width="16"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- M highlight (top-right leg lighter for 3D effect) -->
+  <path d="M 256,278 L 354,162"
+    fill="none" stroke="#a5b0ff" stroke-width="8"
+    stroke-linecap="round" opacity="0.6"/>
+</svg>

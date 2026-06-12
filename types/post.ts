@@ -14,6 +14,8 @@ export interface Post {
   hashtags: string[]
   hook: string | null
   cta: string | null
+  ctaType: string | null
+  ctaUrl: string | null
   imageAssetId: string | null
   imageUrl: string | null
   imagePrompt: string | null
