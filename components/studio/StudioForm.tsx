@@ -67,6 +67,24 @@ const PLATFORM_INFO: Record<Platform, { label: string; emoji: string; color: str
   linkedin:  { label: 'LinkedIn',  emoji: '💼', color: 'bg-sky-600/20 border-sky-600/40 text-sky-300' },
 }
 
+const CONTENT_TYPE_INFO: Record<ContentType, { label: string; title: string; note: string }> = {
+  photo: {
+    label: '📸 Publication',
+    title: 'Publier dans le feed Instagram et/ou Facebook avec image + caption',
+    note: 'Format standard : feed Instagram + post Facebook.',
+  },
+  story: {
+    label: '📖 Story',
+    title: 'Publier en Story Instagram avec une image publique',
+    note: 'Sur Instagram, la Story publie le visuel. La caption reste dans CODEXRS pour validation.',
+  },
+  reel: {
+    label: '🎬 Reel',
+    title: 'Préparer un Reel vidéo. La publication automatique nécessite une vidéo publique liée au post.',
+    note: 'Préparation seulement pour l’instant : la publication Reel sera activée avec le tunnel vidéo.',
+  },
+}
+
 export function StudioForm({
   clients,
   initialClientId,
@@ -325,32 +343,28 @@ export function StudioForm({
 
         {/* Content type */}
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <label className="text-sm font-semibold text-white mb-3 block">📦 Type de contenu</label>
+          <label className="text-sm font-semibold text-white mb-3 block">📦 Format Instagram</label>
           <div className="grid grid-cols-3 gap-2">
-            {(['photo', 'reel', 'story'] as ContentType[]).map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setContentType(t)}
-                title={
-                  t === 'photo'
-                    ? 'Créer un post image classique pour le feed'
-                    : t === 'reel'
-                      ? 'Préparer un contenu vidéo court au format Reel'
-                      : 'Préparer un contenu court au format Story'
-                }
-                className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                  contentType === t
-                    ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
-                    : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                {t === 'photo' && '📸 Photo'}
-                {t === 'reel' && '🎬 Reel'}
-                {t === 'story' && '📖 Story'}
-              </button>
-            ))}
+            {(['photo', 'story', 'reel'] as ContentType[]).map(t => {
+              const info = CONTENT_TYPE_INFO[t]
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setContentType(t)}
+                  title={info.title}
+                  className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                    contentType === t
+                      ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
+                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  {info.label}
+                </button>
+              )
+            })}
           </div>
+          <p className="mt-2 text-[11px] text-gray-500">{CONTENT_TYPE_INFO[contentType].note}</p>
         </div>
 
         {/* Image mode */}

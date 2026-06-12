@@ -297,20 +297,29 @@ export interface InstagramPublishOptions {
   pageToken: string
   imageUrl: string  // must be a public URL
   caption: string
+  placement?: 'feed' | 'story'
 }
 
 export async function publishToInstagram(opts: InstagramPublishOptions): Promise<{ postId: string }> {
+  const placement = opts.placement ?? 'feed'
+  const body: Record<string, string> = {
+    image_url: opts.imageUrl,
+    access_token: opts.pageToken,
+  }
+
+  if (placement === 'story') {
+    body.media_type = 'STORIES'
+  } else {
+    body.caption = opts.caption
+  }
+
   // 1. Create media container
   const containerRes = await fetch(
     `${GRAPH_API}/${opts.igAccountId}/media`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        image_url: opts.imageUrl,
-        caption: opts.caption,
-        access_token: opts.pageToken,
-      }),
+      body: new URLSearchParams(body),
     }
   )
 

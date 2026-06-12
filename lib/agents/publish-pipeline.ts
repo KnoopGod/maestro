@@ -98,6 +98,13 @@ export async function publishPost(
     if (!ig?.accountId || !ig.accessToken) {
       throw new Error('Instagram non connecté pour ce client')
     }
+    if (postWithReview.contentType === 'reel') {
+      throw new Error(
+        'Instagram Reel non publié : le Publisher actuel accepte les publications et stories image. ' +
+        'Pour publier un Reel, il faut d’abord associer une vraie vidéo publique au post.'
+      )
+    }
+
     if (!publicImageUrl) {
       warnings.push(
         "Instagram non publié : l'API Instagram exige une image publiquement accessible. Configure CODEXRS_PUBLIC_URL ou déploie l'app."
@@ -109,8 +116,12 @@ export async function publishPost(
           pageToken: ig.accessToken,
           imageUrl: publicImageUrl,
           caption: message,
+          placement: postWithReview.contentType === 'story' ? 'story' : 'feed',
         })
         published.instagram = result.postId
+        if (postWithReview.contentType === 'story') {
+          warnings.push("Instagram publié en Story : le texte du post reste dans CODEXRS, mais Instagram n'affiche pas la caption sur une Story image.")
+        }
       } catch (err) {
         throw decorateMetaError(err, 'Instagram')
       }
