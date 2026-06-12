@@ -31,7 +31,7 @@ export default async function LibraryPage({ params }: { params: Promise<{ id: st
   return (
     <div className="space-y-6 max-w-7xl">
       {/* Breadcrumb */}
-      <Link href={`/clients/${client.id}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+      <Link href={`/clients/${client.id}`} title={`Retourner à la fiche de ${client.name}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Retour à {client.name}
       </Link>
@@ -133,7 +133,7 @@ export default async function LibraryPage({ params }: { params: Promise<{ id: st
           {/* Filter pills */}
           <div className="flex gap-2 items-center">
             {stats.starred > 0 && (
-              <button className="text-xs px-3 py-1.5 rounded-lg bg-yellow-900/40 border border-yellow-700/30 text-yellow-400 flex items-center gap-1.5">
+              <button title="Afficher les ressources marquées comme références importantes de la DA" className="text-xs px-3 py-1.5 rounded-lg bg-yellow-900/40 border border-yellow-700/30 text-yellow-400 flex items-center gap-1.5">
                 <Star className="w-3 h-3 fill-yellow-400" /> Favoris ({stats.starred})
               </button>
             )}

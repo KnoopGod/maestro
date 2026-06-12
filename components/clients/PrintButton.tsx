@@ -6,6 +6,7 @@ export function PrintButton() {
     <button
       type="button"
       onClick={() => window.print()}
+      title="Imprimer ce rapport ou l'enregistrer en PDF"
       className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
     >
       <Printer className="w-4 h-4" />

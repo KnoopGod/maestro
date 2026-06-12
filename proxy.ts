@@ -6,6 +6,8 @@ const PUBLIC_PATHS = [
   '/api/auth/login',
   '/api/auth/logout',
   '/api/cron/publish-due',
+  '/privacy',
+  '/data-deletion',
 ]
 
 export async function proxy(req: NextRequest) {

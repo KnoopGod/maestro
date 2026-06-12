@@ -41,6 +41,7 @@ export function BottomNav() {
               <button
                 onClick={() => setShowMore(false)}
                 aria-label="Fermer le menu de navigation"
+                title="Fermer le menu de navigation mobile"
                 className="p-1.5 min-w-[44px] min-h-[44px] rounded-lg hover:bg-gray-800/60 flex items-center justify-center"
               >
                 <X aria-hidden="true" className="w-4 h-4 text-gray-400" />
@@ -55,6 +56,7 @@ export function BottomNav() {
                       key={item.href}
                       href={item.href}
                       aria-current={active ? 'page' : undefined}
+                      title={`${item.label} — ouvrir cette section`}
                       onClick={() => setShowMore(false)}
                       className={`flex flex-col items-center gap-1.5 p-3 min-h-[64px] rounded-xl transition-all ${
                         active ? 'bg-indigo-950/60 text-indigo-300' : 'text-gray-400 hover:bg-indigo-950/40'
@@ -70,6 +72,7 @@ export function BottomNav() {
             <form action="/api/auth/logout" method="post" className="mt-4">
               <button
                 type="submit"
+                title="Fermer la session et revenir à la page de connexion"
                 className="w-full min-h-[44px] rounded-xl border border-red-900/40 bg-red-950/20 text-red-300 text-xs flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
@@ -90,6 +93,7 @@ export function BottomNav() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
+                title={`${item.label} — ouvrir cette section`}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all ${
                   active ? 'text-indigo-400' : 'text-gray-500'
                 }`}
@@ -113,6 +117,7 @@ export function BottomNav() {
             onClick={() => setShowMore(true)}
             aria-label="Afficher plus de navigation"
             aria-expanded={showMore}
+            title="Afficher les autres sections de l'application"
             className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-500"
           >
             <MoreHorizontal aria-hidden="true" className="w-5 h-5" />

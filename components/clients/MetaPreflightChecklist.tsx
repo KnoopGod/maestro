@@ -133,6 +133,7 @@ export function MetaPreflightChecklist() {
           )}
           <button
             onClick={() => setDismissed(true)}
+            title="Masquer ce guide pour libérer l'écran"
             className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
           >
             Masquer
@@ -159,6 +160,7 @@ export function MetaPreflightChecklist() {
               <button
                 type="button"
                 onClick={() => setOpenPhase(phaseOpen ? null : phase.id)}
+                title={`${phaseOpen ? 'Replier' : 'Déplier'} la phase : ${phase.title}`}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left"
               >
                 {phaseDone
@@ -191,6 +193,7 @@ export function MetaPreflightChecklist() {
                             onClick={() => toggle(step.id)}
                             className="flex-shrink-0"
                             aria-label={done ? `Décocher ${step.label}` : `Cocher ${step.label}`}
+                            title={done ? `Marquer comme non terminé : ${step.label}` : `Marquer comme terminé : ${step.label}`}
                           >
                             {done
                               ? <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -203,6 +206,7 @@ export function MetaPreflightChecklist() {
                           <button
                             type="button"
                             onClick={() => setOpenStep(open ? null : step.id)}
+                            title={`${open ? 'Masquer' : 'Voir'} les instructions pour : ${step.label}`}
                             className="p-1 text-gray-600 hover:text-gray-400 transition-colors"
                           >
                             {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -227,6 +231,7 @@ export function MetaPreflightChecklist() {
                                 href={step.link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                title={`Ouvrir la documentation : ${step.link.label}`}
                                 className="inline-flex items-center gap-1.5 text-[11px] text-purple-400 hover:text-purple-300 transition-colors"
                               >
                                 <ExternalLink className="w-3 h-3" />

@@ -75,7 +75,7 @@ export default function ConnectionsPage() {
             const category = CATEGORY_INFO[connection.category]
             const isOk = connection.isConfigured?.()
             return (
-              <div key={connection.id} className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
+              <div key={connection.id} title={`${connection.name} — ${connection.purpose}`} className="rounded-xl border border-gray-800 bg-gray-950/40 p-4">
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">{connection.emoji}</div>
                   <div className="flex-1 min-w-0">
@@ -170,7 +170,7 @@ export default function ConnectionsPage() {
         <h2 className="text-sm font-semibold text-white mb-3">📋 Ordre recommandé</h2>
         <div className="grid grid-cols-1 md:grid-cols-6 gap-2 text-xs">
           {CONNECTIONS.map((c, i) => (
-            <div key={c.id} className="bg-gray-950/40 border border-gray-800 rounded-lg p-2.5">
+            <div key={c.id} title={`Étape ${i + 1} : ${c.name} — ${c.unlocks}`} className="bg-gray-950/40 border border-gray-800 rounded-lg p-2.5">
               <div className="text-[10px] text-purple-400 mb-1">ÉTAPE {i + 1}</div>
               <div className="text-sm font-medium text-white flex items-center gap-1.5">
                 <span>{c.emoji}</span>
@@ -268,6 +268,7 @@ export default function ConnectionsPage() {
                   href={connection.providerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title={`Ouvrir le fournisseur pour configurer ${connection.name}`}
                   className="mt-4 inline-flex items-center gap-1.5 text-xs text-purple-300 hover:text-purple-200"
                 >
                   Ouvrir le fournisseur
@@ -290,6 +291,7 @@ export default function ConnectionsPage() {
         </p>
         <Link
           href="/clients"
+          title="Choisir un client pour connecter sa Page Facebook et son Instagram Business"
           className="text-xs text-purple-300 hover:underline inline-flex items-center gap-1"
         >
           Voir tous les clients →

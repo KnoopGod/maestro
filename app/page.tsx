@@ -77,7 +77,7 @@ export default async function HomePage() {
       {clients.length > 0 && (
         <section aria-labelledby="priorities-heading">
           <h2 id="priorities-heading" className={`text-[8px] font-mono tracking-[0.3em] uppercase mb-3 ${urgentClients.length > 0 ? 'text-amber-500/70' : 'text-emerald-500/70'}`}>
-            // PRIORITÉS DU JOUR
+            {'// PRIORITÉS DU JOUR'}
           </h2>
           {urgentClients.length === 0 ? (
             <div className="flex items-center gap-2.5 p-3 bg-emerald-950/20 border border-emerald-900/30">
@@ -90,6 +90,7 @@ export default async function HomePage() {
                 <Link
                   key={c.id}
                   href={`/clients/${c.id}`}
+                  title={`Ouvrir ${c.name} : client prioritaire à relancer`}
                   className="flex items-center gap-3 p-3 bg-amber-950/20 border border-amber-900/30 hover:border-amber-600/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.08)] transition-all group"
                 >
                   <div className={`w-8 h-8 bg-gradient-to-br ${c.color} flex items-center justify-center text-sm flex-shrink-0`}>
@@ -115,6 +116,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             href="/studio"
+            title="Ouvrir le Studio pour créer un post complet avec texte, visuel et score d'impact"
             className="hud-corners group bg-gray-900/60 border border-gray-800 hover:border-indigo-600/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] transition-all duration-200 p-6"
           >
             <div className="flex items-start justify-between mb-5">
@@ -132,6 +134,7 @@ export default async function HomePage() {
 
           <Link
             href="/clients"
+            title="Ouvrir la liste des clients, leurs stratégies, connexions et bibliothèques"
             className="hud-corners group bg-gray-900/60 border border-gray-800 hover:border-indigo-600/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)] transition-all duration-200 p-6"
           >
             <div className="flex items-start justify-between mb-5">
@@ -154,7 +157,7 @@ export default async function HomePage() {
         <div className="border border-gray-800 bg-gray-900/40 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 id="clients-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase">{'// CLIENTS ENREGISTRÉS'}</h2>
-            <Link href="/clients" className="text-[9px] text-indigo-500 hover:text-indigo-300 font-mono tracking-wider transition-colors">
+            <Link href="/clients" title="Afficher tous les clients enregistrés" className="text-[9px] text-indigo-500 hover:text-indigo-300 font-mono tracking-wider transition-colors">
               VOIR TOUT ({clients.length}) →
             </Link>
           </div>
@@ -168,6 +171,7 @@ export default async function HomePage() {
                   <Link
                     key={c.id}
                     href={`/clients/${c.id}`}
+                    title={`Ouvrir la fiche de ${c.name}`}
                     className="flex items-center gap-3 p-3 border border-gray-800 hover:border-indigo-700/50 transition-all group"
                   >
                     <div className="relative flex-shrink-0">
@@ -213,5 +217,5 @@ function StatCard({
       <div className={`text-[8px] font-mono tracking-[0.15em] mt-1.5 ${urgent ? 'text-amber-600/70' : 'text-gray-600'}`}>{sub}</div>
     </div>
   )
-  return href ? <Link href={href}>{inner}</Link> : inner
+  return href ? <Link href={href} title="Ouvrir la file de validation des posts à relire">{inner}</Link> : inner
 }

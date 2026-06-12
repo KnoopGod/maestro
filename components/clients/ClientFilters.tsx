@@ -35,6 +35,7 @@ export function ClientGridWithFilters({
         </div>
         <Link
           href="/clients/new"
+          title="Créer le premier profil client HORECA"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -49,6 +50,7 @@ export function ClientGridWithFilters({
       <div className="flex gap-2 flex-wrap mb-6">
         <Link
           href="/clients"
+          title="Afficher tous les clients sans filtre"
           className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all ${
             filter === 'all'
               ? 'bg-purple-600 text-white'
@@ -64,6 +66,7 @@ export function ClientGridWithFilters({
             <Link
               key={t}
               href={`/clients?type=${t}`}
+              title={`Afficher uniquement les clients de type ${cfg.label}`}
               className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 active
                   ? 'bg-purple-600 text-white'

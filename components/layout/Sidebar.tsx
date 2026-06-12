@@ -43,6 +43,7 @@ function NavItem({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
+      title={`${label} — ouvrir la section ${label}`}
       className={`flex items-center gap-2.5 px-3 py-2 min-h-[40px] text-xs font-mono tracking-wider uppercase transition-all duration-150 group
         ${active
           ? 'border-l-2 border-indigo-400 bg-indigo-950/50 text-indigo-200 pl-2.5'
@@ -99,7 +100,7 @@ export function Sidebar({ validationCount = 0 }: { validationCount?: number }) {
 
       {/* Status / Profile — hardcoded placeholder */}
       <div className="border-t border-indigo-950/60 px-4 py-3 space-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" title="Session administrateur active sur cette version test">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           <span className="text-[9px] text-indigo-500/60 font-mono tracking-widest">SESSION :: ACTIVE</span>
         </div>
@@ -120,6 +121,7 @@ export function Sidebar({ validationCount = 0 }: { validationCount?: number }) {
         <form action="/api/auth/logout" method="post">
           <button
             type="submit"
+            title="Fermer la session et revenir à la page de connexion"
             className="w-full flex items-center gap-2 px-2 py-1.5 text-[9px] text-gray-600 hover:text-red-300 hover:bg-red-950/20 border border-transparent hover:border-red-900/40 font-mono tracking-widest transition-colors"
           >
             <LogOut className="w-3 h-3" />

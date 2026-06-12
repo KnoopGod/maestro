@@ -26,7 +26,7 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
   return (
     <div className="hud-corners bg-gray-900/60 border border-gray-800 hover:border-indigo-700/60 hover:shadow-[0_0_24px_rgba(99,102,241,0.12)] transition-all duration-200 group p-5">
       <div className="flex items-start justify-between gap-3 mb-4">
-        <Link href={`/clients/${client.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+        <Link href={`/clients/${client.id}`} title={`Ouvrir la fiche client de ${client.name}`} className="flex min-w-0 flex-1 items-center gap-3">
           <div className="relative flex-shrink-0">
             <div className={`w-10 h-10 bg-gradient-to-br ${client.color} flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200`}>
               {client.emoji}
@@ -56,22 +56,23 @@ export function ClientCard({ client }: { client: ClientWithStats }) {
 
       <Link
         href={`/studio?client=${client.id}${client.nextPillar ? `&pillar=${encodeURIComponent(client.nextPillar)}` : ''}`}
+        title={`Créer un post optimisé pour ${client.name}${client.nextPillar ? ` autour du pilier ${client.nextPillar}` : ''}`}
         className="w-full mb-3 flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-mono tracking-[0.15em] text-purple-400/70 border border-purple-800/30 hover:border-purple-500/60 hover:text-purple-300 hover:bg-purple-950/20 transition-all uppercase"
       >
         <Sparkles className="w-3 h-3" />
         Créer un post
       </Link>
 
-      <Link href={`/clients/${client.id}`} className="grid grid-cols-3 border-t border-gray-800 pt-3 divide-x divide-gray-800">
-        <div className="px-2 text-center">
+      <Link href={`/clients/${client.id}`} title={`Voir le détail des performances et du tunnel de ${client.name}`} className="grid grid-cols-3 border-t border-gray-800 pt-3 divide-x divide-gray-800">
+        <div className="px-2 text-center" title="Nombre de posts créés ou publiés ce mois-ci">
           <div className="text-sm font-bold text-[#E0E3FF] font-mono">{client.postsThisMonth}</div>
           <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase mt-0.5">POSTS</div>
         </div>
-        <div className="px-2 text-center">
+        <div className="px-2 text-center" title="Taux d'engagement estimé ou récupéré depuis les statistiques disponibles">
           <div className="text-sm font-bold text-emerald-400 font-mono">{client.engagement}%</div>
           <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase mt-0.5">ENGAGE</div>
         </div>
-        <div className="px-2 text-center">
+        <div className="px-2 text-center" title="Dernière activité de publication connue pour ce client">
           <div className={`text-sm font-bold font-mono ${client.daysSincePost === null ? 'text-gray-600' : client.daysSincePost > 7 ? 'text-red-400' : client.daysSincePost > 3 ? 'text-amber-400' : 'text-emerald-400'}`}>
             {lastPostLabel}
           </div>

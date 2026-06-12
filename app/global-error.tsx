@@ -18,7 +18,7 @@ export default function GlobalError({
       <body className="min-h-screen bg-[#07081A] text-[#E0E3FF] flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           <div className="text-[9px] text-red-500/60 font-mono tracking-[0.3em] uppercase mb-4">
-            // ERREUR CRITIQUE
+            {'// ERREUR CRITIQUE'}
           </div>
           <h1 className="text-xl font-bold mb-4 font-mono">MAESTRO — ERREUR</h1>
           <p className="text-sm text-gray-400 mb-6 font-mono leading-relaxed">

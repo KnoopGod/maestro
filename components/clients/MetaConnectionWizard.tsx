@@ -30,6 +30,12 @@ interface DiscoverResult {
   userName: string
   pages: DiscoveredPage[]
   pagesWithInstagram: number
+  tokenExchange?: {
+    appCredentialsConfigured: boolean
+    mode: 'long_lived' | 'short_lived'
+    exchanged: boolean
+    warning: string | null
+  }
 }
 
 interface ConnectedAccount {
@@ -37,6 +43,13 @@ interface ConnectedAccount {
   handle: string | null
   accountId: string | null
   connectedAt: number | null
+}
+
+interface MetaConfigStatus {
+  appIdConfigured: boolean
+  appSecretConfigured: boolean
+  longLivedReady: boolean
+  publicMediaReady: boolean
 }
 
 interface TokenDebugInfo {
@@ -59,10 +72,12 @@ export function MetaConnectionWizard({
   clientId,
   clientName,
   existingAccounts,
+  metaConfig,
 }: {
   clientId: string
   clientName: string
   existingAccounts: ConnectedAccount[]
+  metaConfig?: MetaConfigStatus
 }) {
   const router = useRouter()
   const [step, setStep] = useState<'token' | 'select' | 'connected'>(
@@ -261,6 +276,7 @@ export function MetaConnectionWizard({
             <button
               onClick={() => handleDisconnect('facebook')}
               disabled={isPending}
+              title="Déconnecter la Page Facebook de ce client"
               className="text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:border-red-700/50 hover:text-red-400"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -285,6 +301,7 @@ export function MetaConnectionWizard({
               <button
                 onClick={() => handleDisconnect('instagram')}
                 disabled={isPending}
+                title="Déconnecter le compte Instagram de ce client"
                 className="text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:border-red-700/50 hover:text-red-400"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -314,6 +331,7 @@ export function MetaConnectionWizard({
               <button
                 onClick={handleSyncInstagram}
                 disabled={isPending}
+                title="Chercher le compte Instagram professionnel lié à cette Page Facebook et l'ajouter au client"
                 className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
               >
                 {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Instagram className="w-3.5 h-3.5" />}
@@ -338,6 +356,7 @@ export function MetaConnectionWizard({
             <button
               onClick={handleDebugToken}
               disabled={isPending}
+              title="Contrôler le Page Access Token déjà enregistré pour détecter les permissions manquantes"
               className="flex-1 px-4 py-2 rounded-lg border border-blue-700/40 text-blue-300 hover:bg-blue-900/30 text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Stethoscope className="w-4 h-4" />}
@@ -346,6 +365,7 @@ export function MetaConnectionWizard({
             <button
               onClick={handleTestPost}
               disabled={isPending}
+              title="Publier un vrai post de test sur la Page Facebook connectée"
               className="flex-1 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -363,6 +383,7 @@ export function MetaConnectionWizard({
         <div className="text-center pt-2">
           <button
             onClick={() => { setStep('token'); setUserToken(''); setDiscovered(null) }}
+            title="Reprendre le tunnel de connexion avec un autre User Access Token"
             className="text-xs text-gray-500 hover:text-gray-300"
           >
             Reconnecter avec un autre compte
@@ -377,6 +398,8 @@ export function MetaConnectionWizard({
     return (
       <div className="space-y-4">
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 space-y-4">
+          {metaConfig && <MetaConfigNotice config={metaConfig} />}
+
           <div>
             <h3 className="font-semibold text-white">Étape 1 — Récupère ton User Access Token</h3>
             <p className="text-sm text-gray-400 mt-1">
@@ -391,6 +414,7 @@ export function MetaConnectionWizard({
             href="https://developers.facebook.com/tools/explorer"
             target="_blank"
             rel="noopener noreferrer"
+            title="Ouvrir l'outil officiel Meta pour générer un User Access Token"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600/20 border border-blue-600/40 text-blue-300 hover:bg-blue-600/30 text-sm font-medium"
           >
             <ExternalLink className="w-4 h-4" />
@@ -435,10 +459,12 @@ export function MetaConnectionWizard({
                 value={userToken}
                 onChange={e => setUserToken(e.target.value)}
                 placeholder="EAA..."
+                title="Coller ici le User Access Token généré dans Graph API Explorer"
                 className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 pr-10 text-sm text-white font-mono placeholder:text-gray-700 focus:outline-none focus:border-purple-500"
               />
               <button
                 onClick={() => setShowToken(s => !s)}
+                title={showToken ? 'Masquer le token collé' : 'Afficher temporairement le token pour vérification'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
               >
                 {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -453,6 +479,7 @@ export function MetaConnectionWizard({
             <button
               onClick={handleDebugRawToken}
               disabled={!userToken.trim() || isPending}
+              title="Vérifier ce User Token avant de l'utiliser pour découvrir les Pages"
               className="py-3 rounded-xl border border-blue-700/40 text-blue-300 hover:bg-blue-900/30 font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
             >
               {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Stethoscope className="w-5 h-5" />}
@@ -461,6 +488,7 @@ export function MetaConnectionWizard({
             <button
               onClick={handleDiscover}
               disabled={!userToken.trim() || isPending}
+              title="Lister les Pages Facebook accessibles avec ce token et détecter les comptes Instagram liés"
               className="py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
             >
               {isPending ? (
@@ -488,6 +516,17 @@ export function MetaConnectionWizard({
         <p className="text-xs text-purple-300 mt-1">
           {discovered?.pages.length} pages trouvées · {discovered?.pagesWithInstagram} avec Instagram lié
         </p>
+        {discovered?.tokenExchange && (
+          <div className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+            discovered.tokenExchange.exchanged
+              ? 'border-emerald-700/40 bg-emerald-950/20 text-emerald-300'
+              : 'border-amber-700/40 bg-amber-950/20 text-amber-300'
+          }`}>
+            {discovered.tokenExchange.exchanged
+              ? 'Token converti en longue durée : connexion plus fiable pour la publication.'
+              : discovered.tokenExchange.warning || 'Token conservé en courte durée : reconnecte le client si le diagnostic expire.'}
+          </div>
+        )}
       </div>
 
       <div>
@@ -499,6 +538,7 @@ export function MetaConnectionWizard({
           {discovered?.pages.map(page => (
             <label
               key={page.id}
+              title={`Sélectionner la Page Facebook ${page.name} pour ${clientName}`}
               className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                 selectedPageId === page.id
                   ? 'bg-purple-950/40 border-purple-500'
@@ -544,6 +584,7 @@ export function MetaConnectionWizard({
             type="checkbox"
             checked={connectInstagram}
             onChange={e => setConnectInstagram(e.target.checked)}
+            title="Connecter aussi le compte Instagram professionnel détecté avec cette Page Facebook"
             className="text-pink-500"
           />
           <span className="text-sm text-gray-300">
@@ -564,6 +605,7 @@ export function MetaConnectionWizard({
       <div className="flex gap-2">
         <button
           onClick={() => setStep('token')}
+          title="Revenir à l'étape du token sans connecter cette Page"
           className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm"
         >
           ← Retour
@@ -571,6 +613,7 @@ export function MetaConnectionWizard({
         <button
           onClick={handleConnect}
           disabled={!selectedPageId || isPending}
+          title={`Enregistrer cette Page Facebook${connectInstagram ? ' et Instagram' : ''} comme connexions Meta du client ${clientName}`}
           className="flex-1 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-2"
         >
           {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
@@ -579,6 +622,46 @@ export function MetaConnectionWizard({
       </div>
 
       {error && <ErrorBanner message={error} />}
+    </div>
+  )
+}
+
+function MetaConfigNotice({ config }: { config: MetaConfigStatus }) {
+  const items = [
+    { label: 'META_APP_ID', ok: config.appIdConfigured },
+    { label: 'META_APP_SECRET', ok: config.appSecretConfigured },
+    { label: 'Images publiques', ok: config.publicMediaReady },
+  ]
+
+  return (
+    <div className={`rounded-xl border p-3 ${
+      config.longLivedReady && config.publicMediaReady
+        ? 'border-emerald-800/40 bg-emerald-950/20'
+        : 'border-amber-800/40 bg-amber-950/20'
+    }`}>
+      <div className="text-xs font-semibold text-white mb-2">Pré-check automatique avant connexion</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {items.map(item => (
+          <div key={item.label} className="flex items-center gap-1.5 text-[11px]">
+            {item.ok ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span className={item.ok ? 'text-emerald-300' : 'text-amber-300'}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+      {!config.longLivedReady && (
+        <p className="text-[11px] text-amber-200/80 mt-2">
+          Sans App ID + App Secret, CODEXRS peut découvrir les Pages mais ne peut pas fiabiliser le token en longue durée.
+        </p>
+      )}
+      {!config.publicMediaReady && (
+        <p className="text-[11px] text-amber-200/80 mt-1">
+          Sans Vercel Blob ou URL publique, Instagram ne pourra pas récupérer les images générées.
+        </p>
+      )}
     </div>
   )
 }

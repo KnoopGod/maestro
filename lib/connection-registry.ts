@@ -95,7 +95,7 @@ export const CONNECTIONS: ConnectionStep[] = [
       'CODEXRS stocke le Page Access Token retourné par Meta, puis le diagnostic vérifie les scopes avant test.',
     ],
     test: 'Publier un post validé sur Facebook + Instagram avec une image accessible publiquement.',
-    isConfigured: () => Boolean(process.env.META_APP_ID),
+    isConfigured: () => Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET),
   },
   {
     id: 'storage',

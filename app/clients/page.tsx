@@ -29,6 +29,7 @@ export default async function ClientsPage({
 
         <Link
           href="/clients/new"
+          title="Créer un nouveau profil client avec sa stratégie, sa DA et ses connexions"
           className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />

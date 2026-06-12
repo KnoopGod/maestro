@@ -130,6 +130,7 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
         <div
           className="aspect-square relative cursor-pointer"
           onClick={() => setShowPreview(true)}
+          title={`Prévisualiser ${asset.originalName}`}
         >
           {asset.type === 'image' || asset.type === 'logo' ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -155,10 +156,10 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
 
           {/* Top right actions */}
           <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={e => { e.stopPropagation(); toggleStar() }} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-black/80">
+            <button onClick={e => { e.stopPropagation(); toggleStar() }} title={asset.starred ? 'Retirer cette ressource des favoris DA' : 'Marquer cette ressource comme référence importante de la DA'} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-black/80">
               <Star className={`w-3.5 h-3.5 ${asset.starred ? 'text-yellow-400 fill-yellow-400' : 'text-white'}`} />
             </button>
-            <button onClick={e => { e.stopPropagation(); handleDelete() }} disabled={isPending} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-red-600">
+            <button onClick={e => { e.stopPropagation(); handleDelete() }} disabled={isPending} title={`Supprimer ${asset.originalName} de la Library`} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-red-600">
               {isPending ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Trash2 className="w-3.5 h-3.5 text-white" />}
             </button>
           </div>
@@ -202,6 +203,7 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
             <button
               onClick={handleAnimate}
               disabled={isAnimating}
+              title="Créer un Reel court à partir de cette image avec l'IA vidéo"
               className={`w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
                 animateStatus === 'error'
                   ? 'bg-red-900/30 border border-red-700/40 text-red-300 hover:bg-red-900/50'
@@ -232,7 +234,7 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
       {/* Preview modal */}
       {showPreview && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-8" onClick={() => setShowPreview(false)}>
-          <button onClick={() => setShowPreview(false)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-2xl">×</button>
+          <button onClick={() => setShowPreview(false)} title="Fermer la prévisualisation" className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-2xl">×</button>
           <div className="max-w-4xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
             {asset.type === 'image' || asset.type === 'logo' ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -255,7 +257,7 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
                     {asset.extractedText.length > 3000 && <div className="text-xs text-gray-600 mt-2">... ({asset.extractedText.length - 3000} de plus)</div>}
                   </div>
                 )}
-                <a href={asset.url} target="_blank" rel="noopener noreferrer" className="inline-block mt-4 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm">
+                <a href={asset.url} target="_blank" rel="noopener noreferrer" title="Ouvrir ce document dans un nouvel onglet" className="inline-block mt-4 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm">
                   Ouvrir le document
                 </a>
               </div>

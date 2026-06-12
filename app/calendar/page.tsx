@@ -151,7 +151,7 @@ export default async function CalendarPage() {
                               <span title="Brouillon" className="inline-block w-3 h-3 rounded-full bg-amber-400/60 mx-auto" />
                             )}
                             {!status && (
-                              <span className="inline-block w-2 h-px bg-gray-800 mx-auto" />
+                              <span title="Aucun post prévu pour ce client ce jour-là" className="inline-block w-2 h-px bg-gray-800 mx-auto" />
                             )}
                           </td>
                         )
@@ -160,7 +160,7 @@ export default async function CalendarPage() {
                         <Link
                           href={`/studio?client=${c.id}`}
                           className="text-gray-700 hover:text-indigo-400 transition-colors"
-                          title="Créer un post"
+                          title={`Créer un post pour ${c.name}`}
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </Link>
@@ -198,7 +198,7 @@ export default async function CalendarPage() {
 
 function StatBox({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+    <div title={`${label} : ${value}`} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
     </div>
@@ -231,6 +231,7 @@ function TimelineRow({ post, client, now }: { post: Post; client: ClientWithStat
   return (
     <Link
       href={`/validation#${post.id}`}
+      title="Ouvrir ce post dans la file de validation pour le relire, planifier ou publier"
       className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
     >
       <Icon className={`w-4 h-4 ${cfg.color.split(' ')[0]} flex-shrink-0`} />

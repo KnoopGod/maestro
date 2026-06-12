@@ -21,7 +21,7 @@ export default function Error({
           <AlertTriangle className="w-10 h-10 text-red-400" />
         </div>
         <div className="text-[9px] text-red-500/60 font-mono tracking-[0.3em] uppercase mb-2">
-          // ERREUR SYSTÈME
+          {'// ERREUR SYSTÈME'}
         </div>
         <h2 className="text-base font-bold text-[#E0E3FF] font-mono uppercase mb-3">
           Une erreur est survenue
