@@ -113,6 +113,7 @@ Réponds en français, en JSON strict, sans markdown.`)
 **Type :** ${client.type}
 **Ville :** ${client.city || 'non renseignée'}
 **Description :** ${client.description || 'non renseignée'}
+**Résumé compris par l'outil :** ${client.clientSummary || 'non renseigné'}
 
 # VOIX DE MARQUE
 

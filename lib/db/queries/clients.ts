@@ -14,6 +14,7 @@ interface ClientRow {
   emoji: string
   color: string
   description: string | null
+  client_summary: string | null
   brand_voice_tone: string | null
   brand_voice_keywords: string | null
   brand_voice_avoid: string | null
@@ -49,6 +50,7 @@ function mapRow(row: ClientRow): Client {
     emoji: row.emoji,
     color: row.color,
     description: row.description,
+    clientSummary: row.client_summary,
     brandVoiceTone: row.brand_voice_tone,
     brandVoiceKeywords: row.brand_voice_keywords,
     brandVoiceAvoid: row.brand_voice_avoid,
@@ -155,6 +157,7 @@ export async function createClient(input: {
   emoji?: string
   color?: string
   description?: string
+  clientSummary?: string
   brandVoiceTone?: string
   brandVoiceKeywords?: string
   brandVoiceAvoid?: string
@@ -175,9 +178,9 @@ export async function createClient(input: {
   await db.execute({
     sql: `INSERT OR IGNORE INTO clients (
       id, name, type, city, status, emoji, color, description,
-      brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
+      client_summary, brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
       languages, strategy, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       input.name,
@@ -186,6 +189,7 @@ export async function createClient(input: {
       input.emoji ?? '🏢',
       input.color ?? 'from-purple-600 to-purple-900',
       input.description ?? null,
+      input.clientSummary ?? null,
       input.brandVoiceTone ?? null,
       input.brandVoiceKeywords ?? null,
       input.brandVoiceAvoid ?? null,
@@ -217,6 +221,7 @@ export async function updateClient(
     emoji: 'emoji',
     color: 'color',
     description: 'description',
+    clientSummary: 'client_summary',
     brandVoiceTone: 'brand_voice_tone',
     brandVoiceKeywords: 'brand_voice_keywords',
     brandVoiceAvoid: 'brand_voice_avoid',

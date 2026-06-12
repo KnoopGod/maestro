@@ -19,6 +19,7 @@ export async function initSchema() {
       emoji TEXT DEFAULT '🏢',
       color TEXT DEFAULT 'from-purple-600 to-purple-900',
       description TEXT,
+      client_summary TEXT,
       brand_voice_tone TEXT,
       brand_voice_keywords TEXT,
       brand_voice_avoid TEXT,
@@ -161,4 +162,6 @@ export async function initSchema() {
   await migrateLaunchTunnel()
   const { migratePortalToken } = await import('./migrations/009-add-portal-token')
   await migratePortalToken()
+  const { migrateClientSummary } = await import('./migrations/010-add-client-summary')
+  await migrateClientSummary()
 }

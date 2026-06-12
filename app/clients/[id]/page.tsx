@@ -8,7 +8,7 @@ import { listPosts } from '@/lib/db/queries/posts'
 import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
-import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
+import { CLIENT_TYPES, CLIENT_STATUS, type Client } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
 import { PortalLinkCard } from '@/components/clients/PortalLinkCard'
@@ -34,6 +34,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
   const publishedPosts = clientPosts.filter(p => p.status === 'published')
   const contentPillars = client.strategy?.contentPillars ?? []
+  const understoodSummary = client.clientSummary || buildClientUnderstanding(client, Boolean(identity?.stylePrompt))
   const setupComplete = Boolean(client.description && client.brandVoiceTone && contentPillars.length > 0)
   const facebookConnected = socialAccounts.some(a => a.platform === 'facebook')
   const instagramConnected = socialAccounts.some(a => a.platform === 'instagram')
@@ -174,6 +175,28 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <PortalLinkCard clientId={client.id} />
+
+      <div className="bg-gradient-to-br from-slate-950/60 to-gray-900/40 border border-gray-800 rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <FileText className="w-4 h-4 text-purple-400" />
+              Ce que l&apos;outil comprend du client
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Ce résumé est injecté dans les décisions des agents pour garder le bon contexte.
+            </p>
+          </div>
+          <Link
+            href={`/clients/${client.id}/edit#clientSummary`}
+            title="Modifier le résumé opérationnel utilisé par les agents"
+            className="text-xs text-purple-300 hover:underline flex-shrink-0"
+          >
+            Modifier →
+          </Link>
+        </div>
+        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{understoodSummary}</p>
+      </div>
 
       {/* V1 startup checklist */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
@@ -420,6 +443,18 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
     </div>
   )
+}
+
+function buildClientUnderstanding(client: Client, hasDa: boolean): string {
+  const parts = [
+    `${client.name} est un ${CLIENT_TYPES[client.type].label.toLowerCase()}${client.city ? ` situé à ${client.city}` : ''}.`,
+    client.description ? `Positionnement perçu : ${client.description}.` : null,
+    client.brandVoiceTone ? `Ton de marque : ${client.brandVoiceTone}.` : null,
+    client.strategy?.objective ? `Objectif : ${client.strategy.objective}.` : null,
+    client.strategy?.contentPillars?.length ? `Piliers à travailler : ${client.strategy.contentPillars.join(', ')}.` : null,
+    hasDa ? 'Direction artistique analysée : les visuels doivent rester cohérents avec la Library.' : 'Direction artistique non analysée : ajouter photos, vidéos, logo et documents de DA pour améliorer les générations.',
+  ].filter(Boolean)
+  return parts.join('\n')
 }
 
 const POST_STATUS_CFG: Record<string, { label: string; icon: React.ElementType; color: string }> = {

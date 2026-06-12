@@ -105,6 +105,24 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
               className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 resize-none"
             />
           </div>
+
+          <div id="clientSummary">
+            <label htmlFor="clientSummary" className="block text-xs text-gray-400 mb-1.5">
+              Résumé compris par l&apos;outil
+            </label>
+            <textarea
+              id="clientSummary"
+              name="clientSummary"
+              defaultValue={client.clientSummary ?? ''}
+              rows={5}
+              placeholder="Ex: Guesthouse premium à Koh Samui, atmosphère tropicale calme, clientèle couple/famille, objectif de réservations directes via Facebook et Instagram..."
+              title="Résumé opérationnel relu par les agents avant de proposer une stratégie, un texte ou une image"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-y"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">
+              Ce champ sert de mémoire courte éditable : ce que les agents doivent comprendre du client avant de créer.
+            </p>
+          </div>
         </fieldset>
 
         {/* Brand voice */}

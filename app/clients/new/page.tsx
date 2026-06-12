@@ -85,6 +85,20 @@ export default function NewClientPage() {
               className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-none"
             />
           </div>
+
+          <div>
+            <label htmlFor="clientSummary" className="block text-xs text-gray-400 mb-1.5">
+              Résumé compris par l&apos;outil
+            </label>
+            <textarea
+              id="clientSummary"
+              name="clientSummary"
+              rows={4}
+              placeholder="Ex: Guesthouse premium à Koh Samui, nouvelle DA fraîche et tropicale, objectif de réservations via Facebook et Instagram, contenu orienté expérience, plage, calme, accueil."
+              title="Mémoire courte éditable que les agents utiliseront pour comprendre le client"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-y"
+            />
+          </div>
         </fieldset>
 
         {/* Brand voice */}

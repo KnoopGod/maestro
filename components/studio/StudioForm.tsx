@@ -58,6 +58,7 @@ interface GenerationResult {
   model: string
   review?: SupervisorReview
   directive?: AccountDirective
+  imageError?: string
 }
 
 const PLATFORM_INFO: Record<Platform, { label: string; emoji: string; color: string }> = {
@@ -100,6 +101,7 @@ export function StudioForm({
   const [brief, setBrief] = useState(
     initialPost?.brief || (initialPillar ? `Créer un post autour du pilier : ${initialPillar}` : '')
   )
+  const [visualPrompt, setVisualPrompt] = useState(initialPost?.imagePrompt || '')
   const [platforms, setPlatforms] = useState<Platform[]>(
     initialPost?.platforms.filter((p): p is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)) ?? ['instagram']
   )
@@ -193,6 +195,7 @@ export function StudioForm({
             brief,
             platforms,
             contentType,
+            visualPrompt: visualPrompt || undefined,
             imageAssetId: imageMode === 'library' && selectedAsset ? selectedAsset.id : undefined,
             imageAssetUrl: imageMode === 'library' && selectedAsset ? selectedAsset.url : undefined,
             ctaType: ctaType || undefined,
@@ -253,7 +256,7 @@ export function StudioForm({
         {/* Brief */}
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-white">✍️ Brief du post</label>
+            <label className="text-sm font-semibold text-white">✍️ Ordre pour le post</label>
             <button
               type="button"
               onClick={handleSuggestBrief}
@@ -283,8 +286,8 @@ export function StudioForm({
             value={brief}
             onChange={e => setBrief(e.target.value)}
             rows={4}
-            placeholder="Décrivez ce que vous voulez communiquer…&#10;&#10;Ex: Pizza signature de retour ce weekend, ingrédients premium, présentation soignée"
-            title="Décrire l'objectif du post : offre, ambiance, événement, produit, angle marketing ou consigne précise"
+            placeholder="Décrivez exactement ce que vous voulez obtenir…&#10;&#10;Ex: Faire venir les voyageurs à Koh Samui ce week-end, angle calme tropical + réservation directe, ton premium mais humain."
+            title="Ordre donné aux agents texte/stratégie : objectif commercial, angle marketing, offre, ambiance, événement ou consigne précise"
             className="w-full bg-gray-950/60 border border-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-none"
           />
 
@@ -422,6 +425,26 @@ export function StudioForm({
             </button>
           </div>
 
+          {imageMode === 'generate' && (
+            <div className="mb-4">
+              <label htmlFor="visualPrompt" className="block text-xs text-gray-400 mb-1.5">
+                Prompt image / vidéo
+              </label>
+              <textarea
+                id="visualPrompt"
+                value={visualPrompt}
+                onChange={e => setVisualPrompt(e.target.value)}
+                rows={3}
+                placeholder="Ex: Photo réaliste verticale, piscine turquoise, terrasse tropicale, lumière golden hour, clients en arrière-plan flou, ambiance guesthouse premium à Koh Samui."
+                title="Consigne précise donnée au Visual Director pour guider l'image IA ou la direction vidéo"
+                className="w-full bg-gray-950/60 border border-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-y"
+              />
+              <p className="text-[11px] text-gray-500 mt-1">
+                Ce champ guide uniquement le visuel. Le texte reste piloté par l&apos;ordre du post et la stratégie client.
+              </p>
+            </div>
+          )}
+
           {imageMode === 'library' && (
             <div>
               {assetsLoading && (
@@ -551,6 +574,17 @@ export function StudioForm({
         <div className="text-center text-[11px] text-gray-500">
           Powered by <span className="text-purple-400">Social Expert</span> · Claude Sonnet 4.6
         </div>
+
+        <AgentWorkPlan
+          selectedClient={selectedClient}
+          brief={brief}
+          visualPrompt={visualPrompt}
+          platforms={platforms}
+          contentType={contentType}
+          imageMode={imageMode}
+          selectedAsset={selectedAsset}
+          result={result}
+        />
       </div>
 
       {/* RIGHT: Result */}
@@ -634,6 +668,18 @@ export function StudioForm({
                 </div>
               )}
 
+              {!result.post.imageUrl && (
+                <div className="bg-amber-950/20 border-t border-amber-800/40 p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-sm font-semibold text-amber-200">Visuel non généré</div>
+                    <p className="text-xs text-amber-100/80 mt-1">
+                      {result.imageError || 'Le post a été créé, mais aucun visuel exploitable n’a été retourné.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="p-4 border-t border-gray-800 text-sm text-gray-300">
                 <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-1">Analyse impact</div>
                 {result.post.impactAnalysis}
@@ -669,6 +715,13 @@ export function StudioForm({
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {result.post.imagePrompt && (
+              <div className="bg-blue-950/20 border border-blue-700/30 rounded-2xl p-4">
+                <div className="text-[11px] uppercase tracking-wider text-blue-300 mb-1">Visual Director — prompt utilisé</div>
+                <p className="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">{result.post.imagePrompt}</p>
               </div>
             )}
 
@@ -738,6 +791,98 @@ function createLoadedPostResult(post: Post): GenerationResult {
     model: 'draft-existant',
     review: post.supervisorReview ?? undefined,
   }
+}
+
+function AgentWorkPlan({
+  selectedClient,
+  brief,
+  visualPrompt,
+  platforms,
+  contentType,
+  imageMode,
+  selectedAsset,
+  result,
+}: {
+  selectedClient?: Client
+  brief: string
+  visualPrompt: string
+  platforms: Platform[]
+  contentType: ContentType
+  imageMode: 'generate' | 'library'
+  selectedAsset: ClientAsset | null
+  result: GenerationResult | null
+}) {
+  const clientLabel = selectedClient ? `${selectedClient.name}${selectedClient.city ? ` · ${selectedClient.city}` : ''}` : 'Client non sélectionné'
+  const platformLabel = platforms.length ? platforms.map(p => PLATFORM_INFO[p].label).join(' + ') : 'Aucune plateforme'
+  const visualTask = imageMode === 'library'
+    ? selectedAsset ? `Utiliser la ressource Library : ${selectedAsset.originalName}` : 'Attendre une ressource Library'
+    : visualPrompt.trim()
+      ? `Créer un visuel avec cette direction : ${visualPrompt.trim()}`
+      : 'Créer un visuel cohérent avec la DA et le brief'
+
+  const steps = [
+    {
+      agent: 'Account Director',
+      before: `Identifier ${clientLabel}, relire stratégie, historique et résumé client.`,
+      after: result?.directive ? `${result.directive.priorityPillar} — ${result.directive.rationale}` : null,
+    },
+    {
+      agent: 'Social Director',
+      before: `Transformer l'ordre en texte ${platformLabel}. Brief : ${brief.trim() || 'à compléter'}`,
+      after: result?.captions?.length ? `${result.captions.length} caption(s), hook principal : ${result.captions[0]?.hook || '—'}` : null,
+    },
+    {
+      agent: 'Visual Director',
+      before: `${visualTask}. Format demandé : ${CONTENT_TYPE_INFO[contentType].label}.`,
+      after: result?.post.imageUrl
+        ? 'Visuel prêt et attaché au draft.'
+        : result?.imageError
+          ? `Échec visuel : ${result.imageError}`
+          : null,
+    },
+    {
+      agent: 'Impact Reviewer',
+      before: 'Contrôler hook, CTA, cohérence DA, score impact et risques avant validation.',
+      after: result ? `Score ${result.post.impactScore}/100${result.review ? ` · verdict ${result.review.verdict}` : ''}` : null,
+    },
+    {
+      agent: 'Publisher',
+      before: 'Laisser en validation avant publication automatique Facebook/Instagram.',
+      after: result ? `Draft ${result.post.status} créé : #${result.post.id}` : null,
+    },
+  ]
+
+  return (
+    <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold text-white">🧠 Préparation des agents</h3>
+        <p className="text-xs text-gray-500 mt-1">
+          Ce panneau montre ce que chaque agent s&apos;apprête à faire, puis son résultat après génération.
+        </p>
+      </div>
+      <div className="space-y-2">
+        {steps.map((step, index) => (
+          <div key={step.agent} className="rounded-xl border border-gray-800 bg-gray-950/40 p-3">
+            <div className="flex items-center justify-between gap-3 mb-1.5">
+              <div className="text-xs font-semibold text-purple-200">
+                {index + 1}. {step.agent}
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                step.after
+                  ? step.after.startsWith('Échec')
+                    ? 'border-amber-700/50 text-amber-300 bg-amber-950/20'
+                    : 'border-emerald-700/50 text-emerald-300 bg-emerald-950/20'
+                  : 'border-gray-700 text-gray-500 bg-gray-900/50'
+              }`}>
+                {step.after ? 'Résultat' : 'Prévu'}
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed">{step.after || step.before}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 // ─── Caption Result Component ─────────────────────────────────────────────────

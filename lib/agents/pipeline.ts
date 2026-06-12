@@ -29,6 +29,7 @@ export interface PipelineResult {
   totalCost: number
   totalTokens: number
   models: string[]
+  imageError?: string
 }
 
 export async function runPostPipeline(input: {
@@ -40,10 +41,11 @@ export async function runPostPipeline(input: {
   existingAsset?: { id: string; url: string }
   ctaType?: string
   ctaUrl?: string
+  visualPrompt?: string
   /** ID du job de tracking (optionnel — pas de tracking si absent). */
   jobId?: string
 }): Promise<PipelineResult> {
-  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, jobId } = input
+  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, visualPrompt, jobId } = input
 
   // Helper : wrap avec tracking si jobId fourni, sinon appel direct
   function track<T>(
@@ -97,6 +99,7 @@ export async function runPostPipeline(input: {
 
   const identity = await getVisualIdentity(client.id)
   let image: { assetId?: string; url?: string; prompt?: string; cost: number } = { cost: 0 }
+  let imageError: string | undefined
 
   // ── Étape 3 : Visual Director ──────────────────────────────────────────────
   if (existingAsset) {
@@ -104,7 +107,7 @@ export async function runPostPipeline(input: {
     if (jobId) await skipTracking(jobId, 'visual-director', 3, 'Génération du visuel', 'Asset sélectionné depuis la bibliothèque')
   } else if (!skipImage) {
     const imageResult = await track(
-      () => generateAndStoreImage({ client, brief: effectiveBrief, caption: primaryCaption.caption, visualIdentity: identity }),
+      () => generateAndStoreImage({ client, brief: effectiveBrief, caption: primaryCaption.caption, visualIdentity: identity, visualPrompt, contentType }),
       { agent: 'visual-director', sequence: 3, taskLabel: 'Génération du visuel avec la DA du client' },
       {
         onComplete: r => ({
@@ -116,6 +119,7 @@ export async function runPostPipeline(input: {
       }
     ).catch(err => {
       console.error('Erreur génération image non bloquante:', err)
+      imageError = err instanceof Error ? err.message : 'Erreur génération image inconnue'
       return { cost: 0 as number, assetId: undefined, url: undefined, prompt: undefined }
     })
     image = imageResult
@@ -197,6 +201,7 @@ export async function runPostPipeline(input: {
     reasoning: text.reasoning,
     totalCost: parseFloat((account.cost + text.cost + image.cost + supervisorCost).toFixed(6)),
     totalTokens: account.tokensUsed + text.tokensUsed + supervisorTokens,
-    models: [account.model, text.model, image.prompt ? 'gpt-image-1' : 'image-skipped', supervisorModel].filter(Boolean) as string[],
+    models: [account.model, text.model, image.prompt ? (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1') : 'image-skipped', supervisorModel].filter(Boolean) as string[],
+    imageError,
   }
 }

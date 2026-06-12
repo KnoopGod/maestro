@@ -17,6 +17,7 @@ export async function createClientAction(formData: FormData) {
   const type = String(formData.get('type') ?? '') as ClientType
   const city = String(formData.get('city') ?? '').trim() || undefined
   const description = String(formData.get('description') ?? '').trim() || undefined
+  const clientSummary = String(formData.get('clientSummary') ?? '').trim() || undefined
   const brandVoiceTone = String(formData.get('brandVoiceTone') ?? '').trim() || undefined
   const brandVoiceKeywords = String(formData.get('brandVoiceKeywords') ?? '').trim() || undefined
 
@@ -31,6 +32,7 @@ export async function createClientAction(formData: FormData) {
     type,
     city,
     description,
+    clientSummary,
     brandVoiceTone,
     brandVoiceKeywords,
     emoji: typeConfig.emoji,
@@ -54,7 +56,7 @@ export async function updateClientAction(id: string, formData: FormData) {
   }
 
   // Optional fields — null if empty
-  const optionalFields = ['city', 'description', 'brandVoiceTone', 'brandVoiceKeywords', 'brandVoiceAvoid']
+  const optionalFields = ['city', 'description', 'clientSummary', 'brandVoiceTone', 'brandVoiceKeywords', 'brandVoiceAvoid']
   for (const field of optionalFields) {
     const val = formData.get(field)
     if (val !== null) {

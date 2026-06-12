@@ -10,7 +10,7 @@ const ALLOWED_CONTENT_TYPES = new Set<PostContentType>(['photo', 'reel', 'story'
 export async function POST(req: Request) {
   let jobId: string | undefined
   try {
-    const { clientId, brief, platforms, contentType = 'photo', skipImage, imageAssetId, imageAssetUrl, ctaType, ctaUrl } = await req.json()
+    const { clientId, brief, platforms, contentType = 'photo', skipImage, imageAssetId, imageAssetUrl, ctaType, ctaUrl, visualPrompt } = await req.json()
     const validPlatforms = Array.isArray(platforms)
       ? platforms.filter((platform): platform is PostPlatform => ALLOWED_PLATFORMS.has(platform))
       : []
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       existingAsset,
       ctaType: typeof ctaType === 'string' && ctaType ? ctaType : undefined,
       ctaUrl: typeof ctaUrl === 'string' && ctaUrl ? ctaUrl : undefined,
+      visualPrompt: typeof visualPrompt === 'string' && visualPrompt.trim() ? visualPrompt.trim() : undefined,
       jobId,
     })
 
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
       model: result.models[result.models.length - 1] ?? 'fallback',
       directive: result.directive,
       jobId,
+      imageError: result.imageError,
     })
   } catch (err) {
     if (jobId) {
