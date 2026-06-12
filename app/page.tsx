@@ -77,7 +77,7 @@ export default async function HomePage() {
       {clients.length > 0 && (
         <section aria-labelledby="priorities-heading">
           <h2 id="priorities-heading" className={`text-[8px] font-mono tracking-[0.3em] uppercase mb-3 ${urgentClients.length > 0 ? 'text-amber-500/70' : 'text-emerald-500/70'}`}>
-            // PRIORITÉS DU JOUR
+            {'// PRIORITÉS DU JOUR'}
           </h2>
           {urgentClients.length === 0 ? (
             <div className="flex items-center gap-2.5 p-3 bg-emerald-950/20 border border-emerald-900/30">
