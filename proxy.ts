@@ -29,6 +29,8 @@ export async function proxy(req: NextRequest) {
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.includes(pathname)) return true
+  // Portail client : accès par jeton de capacité (vérifié dans la page), hors auth admin.
+  if (pathname.startsWith('/portal/')) return true
   if (pathname.startsWith('/_next/')) return true
   if (pathname === '/favicon.ico') return true
   if (pathname === '/robots.txt') return true

@@ -11,6 +11,7 @@ import type { AgentJob } from '@/lib/db/queries/agent-jobs'
 import { CLIENT_TYPES, CLIENT_STATUS } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
+import { PortalLinkCard } from '@/components/clients/PortalLinkCard'
 import type { StrategyAdvice } from '@/lib/agents/strategy-advisor'
 import type { Post } from '@/types/post'
 
@@ -171,6 +172,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
       </div>
+
+      <PortalLinkCard clientId={client.id} />
 
       {/* V1 startup checklist */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">

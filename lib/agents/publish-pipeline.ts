@@ -57,7 +57,7 @@ export async function publishPost(
   // Persist the latest review on the post.
   const postWithReview = await setSupervisorReview(post.id, review)
 
-  // ─── Resolve public image URL ───────────────────────────────────────────
+  // ─── Resolve public media URL ───────────────────────────────────────────
   const publicMediaUrl = options.forceTextOnly ? null : toPublicUrl(postWithReview.imageUrl)
   const mediaIsVideo = isVideoUrl(publicMediaUrl)
   const message = buildMessage(postWithReview.caption, postWithReview.hashtags)
@@ -100,7 +100,7 @@ export async function publishPost(
     }
   }
 
-  // ─── Instagram (requires public image) ──────────────────────────────────
+  // ─── Instagram (requires public media) ──────────────────────────────────
   if (postWithReview.platforms.includes('instagram')) {
     const ig = await getSocialAccount(postWithReview.clientId, 'instagram')
     if (!ig?.accountId || !ig.accessToken) {
@@ -114,7 +114,7 @@ export async function publishPost(
 
     if (!publicMediaUrl) {
       warnings.push(
-        "Instagram non publié : l'API Instagram exige une image publiquement accessible. Configure CODEXRS_PUBLIC_URL ou déploie l'app."
+        "Instagram non publié : l'API Instagram exige un média publiquement accessible. Configure CODEXRS_PUBLIC_URL ou déploie l'app."
       )
     } else {
       try {

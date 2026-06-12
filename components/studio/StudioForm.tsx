@@ -81,7 +81,7 @@ const CONTENT_TYPE_INFO: Record<ContentType, { label: string; title: string; not
   reel: {
     label: '🎬 Reel',
     title: 'Préparer un Reel vidéo. La publication automatique nécessite une vidéo publique liée au post.',
-    note: 'Préparation seulement pour l’instant : la publication Reel sera activée avec le tunnel vidéo.',
+    note: 'Publie un Reel Instagram à partir d’une vidéo publique sélectionnée dans la Library.',
   },
 }
 
@@ -103,7 +103,8 @@ export function StudioForm({
   const [platforms, setPlatforms] = useState<Platform[]>(
     initialPost?.platforms.filter((p): p is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)) ?? ['instagram']
   )
-  const [contentType, setContentType] = useState<ContentType>(initialPost?.contentType ?? 'photo')
+  const initialContentType = initialPost?.contentType ?? 'photo'
+  const [contentType, setContentType] = useState<ContentType>(initialContentType)
 
   const [result, setResult] = useState<GenerationResult | null>(
     initialPost ? createLoadedPostResult(initialPost) : null
@@ -111,7 +112,7 @@ export function StudioForm({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const [imageMode, setImageMode] = useState<'generate' | 'library'>('generate')
+  const [imageMode, setImageMode] = useState<'generate' | 'library'>(initialContentType === 'reel' ? 'library' : 'generate')
   const [selectedAsset, setSelectedAsset] = useState<ClientAsset | null>(null)
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
