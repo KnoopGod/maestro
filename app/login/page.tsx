@@ -18,7 +18,7 @@ export default async function LoginPage({
           <Image src="/logo.svg" alt="Maestro" width={72} height={72} priority />
           <div className="text-center">
             <h1 className="text-xl font-bold text-[#E0E3FF] tracking-[0.2em] font-mono uppercase">MAESTRO</h1>
-            <p className="text-[9px] text-indigo-500/60 font-mono tracking-[0.3em] mt-1">// AI CONDUCTOR</p>
+            <p className="text-[9px] text-indigo-500/60 font-mono tracking-[0.3em] mt-1">{'// AI CONDUCTOR'}</p>
           </div>
         </div>
 
