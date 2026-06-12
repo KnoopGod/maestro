@@ -58,7 +58,8 @@ export async function publishPost(
   const postWithReview = await setSupervisorReview(post.id, review)
 
   // ─── Resolve public image URL ───────────────────────────────────────────
-  const publicImageUrl = options.forceTextOnly ? null : toPublicUrl(postWithReview.imageUrl)
+  const publicMediaUrl = options.forceTextOnly ? null : toPublicUrl(postWithReview.imageUrl)
+  const mediaIsVideo = isVideoUrl(publicMediaUrl)
   const message = buildMessage(postWithReview.caption, postWithReview.hashtags)
   const published: Record<string, string> = {}
   const warnings: string[] = []
@@ -78,14 +79,18 @@ export async function publishPost(
         pageId: fb.accountId,
         pageToken: fb.accessToken,
         message,
-        imageUrl: publicImageUrl ?? undefined,
+        imageUrl: publicMediaUrl && !mediaIsVideo ? publicMediaUrl : undefined,
         cta: postWithReview.ctaType && postWithReview.ctaUrl
           ? { type: postWithReview.ctaType, url: postWithReview.ctaUrl }
           : undefined,
       })
       published.facebook = result.postId
 
-      if (!publicImageUrl && postWithReview.imageUrl) {
+      if (mediaIsVideo) {
+        warnings.push(
+          "Facebook publié sans média : le visuel associé est une vidéo Instagram/Reel, et le Publisher Facebook actuel accepte seulement image ou texte."
+        )
+      } else if (!publicMediaUrl && postWithReview.imageUrl) {
         warnings.push(
           "Facebook posté SANS image (l'image est sur localhost, Meta ne peut pas la fetcher). Configure CODEXRS_PUBLIC_URL pour publier les visuels."
         )
@@ -101,14 +106,13 @@ export async function publishPost(
     if (!ig?.accountId || !ig.accessToken) {
       throw new Error('Instagram non connecté pour ce client')
     }
-    if (postWithReview.contentType === 'reel') {
+    if (postWithReview.contentType === 'reel' && !mediaIsVideo) {
       throw new Error(
-        'Instagram Reel non publié : le Publisher actuel accepte les publications et stories image. ' +
-        'Pour publier un Reel, il faut d’abord associer une vraie vidéo publique au post.'
+        'Instagram Reel non publié : il faut associer une vraie vidéo publique au post depuis la Library.'
       )
     }
 
-    if (!publicImageUrl) {
+    if (!publicMediaUrl) {
       warnings.push(
         "Instagram non publié : l'API Instagram exige une image publiquement accessible. Configure CODEXRS_PUBLIC_URL ou déploie l'app."
       )
@@ -117,9 +121,9 @@ export async function publishPost(
         const result = await publishToInstagram({
           igAccountId: ig.accountId,
           pageToken: ig.accessToken,
-          imageUrl: publicImageUrl,
+          mediaUrl: publicMediaUrl,
           caption: message,
-          placement: postWithReview.contentType === 'story' ? 'story' : 'feed',
+          placement: instagramPlacement(postWithReview.contentType),
         })
         published.instagram = result.postId
         if (postWithReview.contentType === 'story') {
@@ -167,6 +171,17 @@ export function toPublicUrl(imageUrl: string | null) {
   if (!base) return null
   if (/localhost|127\.0\.0\.1/.test(base)) return null
   return `${base.replace(/\/$/, '')}${imageUrl}`
+}
+
+function instagramPlacement(contentType: Post['contentType']): 'feed' | 'story' | 'reel' {
+  if (contentType === 'story') return 'story'
+  if (contentType === 'reel') return 'reel'
+  return 'feed'
+}
+
+function isVideoUrl(url: string | null) {
+  if (!url) return false
+  return /\.(mp4|mov|webm)(?:\?|#|$)/i.test(url)
 }
 
 /** Wrap Meta errors with actionable hints based on the error code. */

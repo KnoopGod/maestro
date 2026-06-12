@@ -360,21 +360,26 @@ async function publishWithImageAndCta(opts: PublishOptions & {
 export interface InstagramPublishOptions {
   igAccountId: string
   pageToken: string
-  imageUrl: string  // must be a public URL
+  mediaUrl: string  // must be a public URL
   caption: string
-  placement?: 'feed' | 'story'
+  placement?: 'feed' | 'story' | 'reel'
 }
 
 export async function publishToInstagram(opts: InstagramPublishOptions): Promise<{ postId: string }> {
   const placement = opts.placement ?? 'feed'
   const body: Record<string, string> = {
-    image_url: opts.imageUrl,
     access_token: opts.pageToken,
   }
 
-  if (placement === 'story') {
+  if (placement === 'reel') {
+    body.media_type = 'REELS'
+    body.video_url = opts.mediaUrl
+    body.caption = opts.caption
+  } else if (placement === 'story') {
     body.media_type = 'STORIES'
+    body.image_url = opts.mediaUrl
   } else {
+    body.image_url = opts.mediaUrl
     body.caption = opts.caption
   }
 

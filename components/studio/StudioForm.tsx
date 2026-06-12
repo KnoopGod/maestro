@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useTransition } from 'react'
-import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2, BrainCircuit, ChevronDown } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2, BrainCircuit, ChevronDown, Film } from 'lucide-react'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
@@ -133,12 +133,12 @@ export function StudioForm({
       .then(d => {
         if (cancelled) return
         const assets = Array.isArray(d.assets) ? d.assets as ClientAsset[] : []
-        setClientAssets(assets.filter(a => a.type === 'image' || a.type === 'logo'))
+        setClientAssets(assets.filter(a => contentType === 'reel' ? a.type === 'video' : a.type === 'image' || a.type === 'logo'))
       })
       .catch(() => { if (!cancelled) setClientAssets([]) })
       .finally(() => { if (!cancelled) setAssetsLoading(false) })
     return () => { cancelled = true }
-  }, [clientId, imageMode])
+  }, [clientId, imageMode, contentType])
 
   function applyIdea(idea: PostIdea) {
     setBrief(idea.brief)
@@ -167,6 +167,15 @@ export function StudioForm({
 
   const togglePlatform = (p: Platform) => {
     setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])
+  }
+
+  const selectContentType = (type: ContentType) => {
+    setContentType(type)
+    setSelectedAsset(null)
+    if (type === 'reel') {
+      setImageMode('library')
+      if (clientId) setAssetsLoading(true)
+    }
   }
 
   const handleGenerate = () => {
@@ -356,7 +365,7 @@ export function StudioForm({
                 <button
                   key={t}
                   type="button"
-                  onClick={() => setContentType(t)}
+                  onClick={() => selectContentType(t)}
                   title={info.title}
                   className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                     contentType === t
@@ -378,16 +387,17 @@ export function StudioForm({
           <div className="grid grid-cols-2 gap-2 mb-4">
             <button
               type="button"
+              disabled={contentType === 'reel'}
               onClick={() => {
                 setImageMode('generate')
                 setSelectedAsset(null)
               }}
-              title="Créer un nouveau visuel avec l'IA à partir de la stratégie et de la direction artistique du client"
+              title={contentType === 'reel' ? 'Un Reel Instagram nécessite une vidéo depuis la Library' : "Créer un nouveau visuel avec l'IA à partir de la stratégie et de la direction artistique du client"}
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'generate'
                   ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
-              }`}
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               <Wand2 className="w-4 h-4" />
               Générer une image
@@ -399,7 +409,7 @@ export function StudioForm({
                 setSelectedAsset(null)
                 setAssetsLoading(true)
               }}
-              title="Utiliser une photo, un logo ou une ressource réelle déjà ajoutée dans la Library du client"
+              title={contentType === 'reel' ? 'Utiliser une vidéo réelle ou générée depuis la Library du client' : 'Utiliser une photo, un logo ou une ressource réelle déjà ajoutée dans la Library du client'}
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'library'
                   ? 'bg-blue-600/20 border-blue-600/40 text-blue-300'
@@ -420,7 +430,7 @@ export function StudioForm({
               )}
               {!assetsLoading && clientAssets.length === 0 && (
                 <p className="text-xs text-gray-500 text-center py-4">
-                  Aucune image dans la bibliothèque de ce client.{' '}
+                  {contentType === 'reel' ? 'Aucune vidéo dans la bibliothèque de ce client.' : 'Aucune image dans la bibliothèque de ce client.'}{' '}
                   <a href={clientId ? `/clients/${clientId}/library` : '#'} className="text-purple-400 hover:underline">
                     Uploader des assets →
                   </a>
@@ -433,21 +443,28 @@ export function StudioForm({
                       key={asset.id}
                       type="button"
                       onClick={() => setSelectedAsset(prev => prev?.id === asset.id ? null : asset)}
-                      title={`Sélectionner ${asset.originalName} comme base visuelle du post`}
+                      title={`Sélectionner ${asset.originalName} comme ${asset.type === 'video' ? 'vidéo Instagram Reel' : 'base visuelle du post'}`}
                       className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
                         selectedAsset?.id === asset.id
                           ? 'border-blue-500 ring-2 ring-blue-500/30'
                           : 'border-transparent hover:border-gray-600'
                       }`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={asset.thumbnailUrl ?? asset.url}
-                        alt={asset.originalName}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover"
-                      />
+                      {asset.type === 'video' ? (
+                        <div className="relative h-full w-full bg-black">
+                          <video src={asset.url} preload="metadata" className="h-full w-full object-cover opacity-80" />
+                          <Film className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-white drop-shadow" />
+                        </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={asset.thumbnailUrl ?? asset.url}
+                          alt={asset.originalName}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                       {selectedAsset?.id === asset.id && (
                         <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                           <Check className="w-5 h-5 text-white drop-shadow" />
@@ -470,7 +487,7 @@ export function StudioForm({
         {platforms.includes('facebook') && (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-indigo-600/60 font-mono tracking-[0.2em] uppercase">// CTA FACEBOOK</span>
+              <span className="text-[9px] text-indigo-600/60 font-mono tracking-[0.2em] uppercase">{'// CTA FACEBOOK'}</span>
               <span className="text-[8px] text-gray-600 font-mono">— bouton d&apos;action sur la publication</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -513,7 +530,7 @@ export function StudioForm({
         {/* Generate button */}
         <button
           onClick={handleGenerate}
-          disabled={!clientId || platforms.length === 0 || isPending || (imageMode === 'library' && !selectedAsset)}
+          disabled={!clientId || platforms.length === 0 || isPending || (imageMode === 'library' && !selectedAsset) || (contentType === 'reel' && selectedAsset?.type !== 'video')}
           title="Lancer la chaîne d'agents : analyse client, stratégie, rédaction, visuel, scoring puis draft prêt à valider"
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
@@ -597,14 +614,22 @@ export function StudioForm({
 
               {result.post.imageUrl && (
                 <div className="bg-black">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={result.post.imageUrl}
-                    alt="Visuel généré"
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full max-h-[520px] object-contain"
-                  />
+                  {result.post.contentType === 'reel' ? (
+                    <video
+                      src={result.post.imageUrl}
+                      controls
+                      className="w-full max-h-[520px] object-contain"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={result.post.imageUrl}
+                      alt="Visuel généré"
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full max-h-[520px] object-contain"
+                    />
+                  )}
                 </div>
               )}
 
