@@ -79,6 +79,9 @@ export async function publishPost(
         pageToken: fb.accessToken,
         message,
         imageUrl: publicImageUrl ?? undefined,
+        cta: postWithReview.ctaType && postWithReview.ctaUrl
+          ? { type: postWithReview.ctaType, url: postWithReview.ctaUrl }
+          : undefined,
       })
       published.facebook = result.postId
 
