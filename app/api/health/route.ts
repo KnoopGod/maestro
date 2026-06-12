@@ -24,6 +24,19 @@ export async function GET() {
       label: 'BLOB_READ_WRITE_TOKEN',
       hint: 'Requis en production pour stocker les fichiers (Vercel Blob). Sans ça les images générées crashent.',
     },
+    meta: {
+      ok: !!(process.env.META_APP_ID && process.env.META_APP_SECRET),
+      label: 'META_APP_ID + META_APP_SECRET',
+      hint: 'Requis pour convertir les User Tokens Meta en tokens longue durée fiables.',
+    },
+    publicMedia: {
+      ok: !!(
+        process.env.BLOB_READ_WRITE_TOKEN ||
+        (process.env.CODEXRS_PUBLIC_URL && !/localhost|127\.0\.0\.1/.test(process.env.CODEXRS_PUBLIC_URL))
+      ),
+      label: 'Médias publics HTTPS',
+      hint: 'Requis pour publier des images sur Instagram. Utiliser Vercel Blob ou CODEXRS_PUBLIC_URL public.',
+    },
     database: {
       ok: true,
       label: 'Base de données',

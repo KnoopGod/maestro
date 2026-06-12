@@ -30,6 +30,12 @@ interface DiscoverResult {
   userName: string
   pages: DiscoveredPage[]
   pagesWithInstagram: number
+  tokenExchange?: {
+    appCredentialsConfigured: boolean
+    mode: 'long_lived' | 'short_lived'
+    exchanged: boolean
+    warning: string | null
+  }
 }
 
 interface ConnectedAccount {
@@ -37,6 +43,13 @@ interface ConnectedAccount {
   handle: string | null
   accountId: string | null
   connectedAt: number | null
+}
+
+interface MetaConfigStatus {
+  appIdConfigured: boolean
+  appSecretConfigured: boolean
+  longLivedReady: boolean
+  publicMediaReady: boolean
 }
 
 interface TokenDebugInfo {
@@ -59,10 +72,12 @@ export function MetaConnectionWizard({
   clientId,
   clientName,
   existingAccounts,
+  metaConfig,
 }: {
   clientId: string
   clientName: string
   existingAccounts: ConnectedAccount[]
+  metaConfig?: MetaConfigStatus
 }) {
   const router = useRouter()
   const [step, setStep] = useState<'token' | 'select' | 'connected'>(
@@ -383,6 +398,8 @@ export function MetaConnectionWizard({
     return (
       <div className="space-y-4">
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6 space-y-4">
+          {metaConfig && <MetaConfigNotice config={metaConfig} />}
+
           <div>
             <h3 className="font-semibold text-white">Étape 1 — Récupère ton User Access Token</h3>
             <p className="text-sm text-gray-400 mt-1">
@@ -499,6 +516,17 @@ export function MetaConnectionWizard({
         <p className="text-xs text-purple-300 mt-1">
           {discovered?.pages.length} pages trouvées · {discovered?.pagesWithInstagram} avec Instagram lié
         </p>
+        {discovered?.tokenExchange && (
+          <div className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+            discovered.tokenExchange.exchanged
+              ? 'border-emerald-700/40 bg-emerald-950/20 text-emerald-300'
+              : 'border-amber-700/40 bg-amber-950/20 text-amber-300'
+          }`}>
+            {discovered.tokenExchange.exchanged
+              ? 'Token converti en longue durée : connexion plus fiable pour la publication.'
+              : discovered.tokenExchange.warning || 'Token conservé en courte durée : reconnecte le client si le diagnostic expire.'}
+          </div>
+        )}
       </div>
 
       <div>
@@ -594,6 +622,46 @@ export function MetaConnectionWizard({
       </div>
 
       {error && <ErrorBanner message={error} />}
+    </div>
+  )
+}
+
+function MetaConfigNotice({ config }: { config: MetaConfigStatus }) {
+  const items = [
+    { label: 'META_APP_ID', ok: config.appIdConfigured },
+    { label: 'META_APP_SECRET', ok: config.appSecretConfigured },
+    { label: 'Images publiques', ok: config.publicMediaReady },
+  ]
+
+  return (
+    <div className={`rounded-xl border p-3 ${
+      config.longLivedReady && config.publicMediaReady
+        ? 'border-emerald-800/40 bg-emerald-950/20'
+        : 'border-amber-800/40 bg-amber-950/20'
+    }`}>
+      <div className="text-xs font-semibold text-white mb-2">Pré-check automatique avant connexion</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {items.map(item => (
+          <div key={item.label} className="flex items-center gap-1.5 text-[11px]">
+            {item.ok ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span className={item.ok ? 'text-emerald-300' : 'text-amber-300'}>{item.label}</span>
+          </div>
+        ))}
+      </div>
+      {!config.longLivedReady && (
+        <p className="text-[11px] text-amber-200/80 mt-2">
+          Sans App ID + App Secret, CODEXRS peut découvrir les Pages mais ne peut pas fiabiliser le token en longue durée.
+        </p>
+      )}
+      {!config.publicMediaReady && (
+        <p className="text-[11px] text-amber-200/80 mt-1">
+          Sans Vercel Blob ou URL publique, Instagram ne pourra pas récupérer les images générées.
+        </p>
+      )}
     </div>
   )
 }
