@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Home, Users, Sparkles, Bot, CalendarDays, BarChart3,
@@ -77,12 +78,8 @@ export function Sidebar({ validationCount = 0 }: { validationCount?: number }) {
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-[#07081A] border-r border-indigo-950/60 flex-col z-40">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-indigo-950/60">
-        <div className="w-8 h-8 border border-indigo-600/50 flex items-center justify-center flex-shrink-0">
-          <div className="w-5 h-5 border border-indigo-500/80 flex items-center justify-center">
-            <div className="w-2 h-2 bg-indigo-400 rounded-full" />
-          </div>
-        </div>
+      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-indigo-950/60">
+        <Image src="/logo.svg" alt="Maestro" width={36} height={36} className="flex-shrink-0" priority />
         <div>
           <div className="text-xs font-bold text-[#E0E3FF] tracking-[0.15em] font-mono uppercase">MAESTRO</div>
           <div className="text-[9px] text-indigo-500/70 tracking-[0.25em] font-mono">{'// AI CONDUCTOR'}</div>

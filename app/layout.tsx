@@ -12,6 +12,10 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 export const metadata: Metadata = {
   title: 'Maestro — AI Social Media Conductor',
   description: 'Plateforme unifiée de gestion sociale pour HORECA avec agents IA spécialisés',
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Maestro' },
 }
 
