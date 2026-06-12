@@ -180,6 +180,48 @@ export async function createPost(input: {
   return post
 }
 
+export async function updatePostContent(id: string, input: {
+  caption?: string
+  hashtags?: string[]
+  hook?: string | null
+  cta?: string | null
+  reasoning?: string | null
+  cost?: number
+  tokensUsed?: number
+}): Promise<Post> {
+  const existing = await getPost(id)
+  if (!existing) throw new Error('Post introuvable')
+
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET
+      caption = ?,
+      hashtags = ?,
+      hook = ?,
+      cta = ?,
+      reasoning = ?,
+      cost = ?,
+      tokens_used = ?,
+      updated_at = ?
+    WHERE id = ?`,
+    args: [
+      input.caption ?? existing.caption,
+      JSON.stringify(input.hashtags ?? existing.hashtags),
+      input.hook === undefined ? existing.hook : input.hook,
+      input.cta === undefined ? existing.cta : input.cta,
+      input.reasoning === undefined ? existing.reasoning : input.reasoning,
+      input.cost ?? existing.cost,
+      input.tokensUsed ?? existing.tokensUsed,
+      now,
+      id,
+    ],
+  })
+
+  const post = await getPost(id)
+  if (!post) throw new Error('Failed to update post')
+  return post
+}
+
 export async function markPostPublished(id: string, metaPostIds: Record<string, string>): Promise<Post> {
   const now = Date.now()
   await db.execute({

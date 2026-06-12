@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { listClients } from '@/lib/db/queries/clients'
 import { getPost } from '@/lib/db/queries/posts'
+import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { StudioForm } from '@/components/studio/StudioForm'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,14 @@ export default async function StudioPage({
     listClients(),
     postId ? getPost(postId) : Promise.resolve(null),
   ])
+  const identities = await Promise.all(clients.map(async client => [client.id, await getVisualIdentity(client.id)] as const))
+  const clientDaStatus = Object.fromEntries(identities.map(([id, identity]) => [
+    id,
+    {
+      active: Boolean(identity?.stylePrompt || identity?.visualSummary),
+      summary: identity?.visualSummary ?? undefined,
+    },
+  ]))
 
   if (clients.length === 0) {
     return (
@@ -72,6 +81,7 @@ export default async function StudioPage({
         initialClientId={initialPost?.clientId ?? initialClientId}
         initialPost={initialPost ?? undefined}
         initialPillar={pillar}
+        clientDaStatus={clientDaStatus}
       />
     </div>
   )

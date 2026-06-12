@@ -5,6 +5,7 @@ import { CalendarDays, ExternalLink, AlertCircle, Sparkles } from 'lucide-react'
 import type { Post, PostStatus } from '@/types/post'
 import type { Client } from '@/types/client'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
+import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,10 +222,13 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
 
           {/* Error if failed */}
           {post.status === 'failed' && post.error && (
-            <div className="mt-2 p-2 rounded-lg bg-red-950/30 border border-red-700/30 text-xs text-red-300 flex items-start gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-              <span>{post.error}</span>
-            </div>
+            <>
+              <div className="mt-2 p-2 rounded-lg bg-red-950/30 border border-red-700/30 text-xs text-red-300 flex items-start gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <span>{post.error}</span>
+              </div>
+              <PublishErrorHint error={post.error} clientId={post.clientId} />
+            </>
           )}
 
           {/* Published links */}

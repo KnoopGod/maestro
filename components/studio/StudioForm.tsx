@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useTransition } from 'react'
-import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2, BrainCircuit, ChevronDown, Film } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2, BrainCircuit, ChevronDown, Film, Plus, X } from 'lucide-react'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
@@ -8,6 +8,7 @@ import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
 import type { PostIdea } from '@/lib/agents/planner'
 import type { AccountDirective } from '@/lib/agents/account-director'
+import { META_CTA_TYPES, getMetaCtaLabel } from '@/lib/meta-cta-types'
 
 // ─── Brief templates ──────────────────────────────────────────────────────────
 
@@ -61,6 +62,18 @@ interface GenerationResult {
   imageError?: string
 }
 
+interface BriefFields {
+  subject: string
+  objective: string
+  tone: string
+  includes: string
+}
+
+interface ClientDaStatus {
+  active: boolean
+  summary?: string
+}
+
 const PLATFORM_INFO: Record<Platform, { label: string; emoji: string; color: string }> = {
   instagram: { label: 'Instagram', emoji: '📷', color: 'bg-pink-600/20 border-pink-600/40 text-pink-300' },
   facebook:  { label: 'Facebook',  emoji: '👍', color: 'bg-blue-600/20 border-blue-600/40 text-blue-300' },
@@ -91,16 +104,16 @@ export function StudioForm({
   initialClientId,
   initialPost,
   initialPillar,
+  clientDaStatus,
 }: {
   clients: Client[]
   initialClientId?: string
   initialPost?: Post
   initialPillar?: string
+  clientDaStatus?: Record<string, ClientDaStatus>
 }) {
   const [clientId, setClientId] = useState(initialClientId || clients[0]?.id || '')
-  const [brief, setBrief] = useState(
-    initialPost?.brief || (initialPillar ? `Créer un post autour du pilier : ${initialPillar}` : '')
-  )
+  const [briefFields, setBriefFields] = useState<BriefFields>(() => createInitialBriefFields(initialPost?.brief, initialPillar))
   const [visualPrompt, setVisualPrompt] = useState(initialPost?.imagePrompt || '')
   const [platforms, setPlatforms] = useState<Platform[]>(
     initialPost?.platforms.filter((p): p is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)) ?? ['instagram']
@@ -127,6 +140,12 @@ export function StudioForm({
   const [ctaUrl, setCtaUrl] = useState<string>('')
 
   const selectedClient = clients.find(c => c.id === clientId)
+  const selectedDa = clientDaStatus?.[clientId]
+  const brief = composeStructuredBrief(briefFields)
+
+  function updateBriefField(key: keyof BriefFields, value: string) {
+    setBriefFields(prev => ({ ...prev, [key]: value }))
+  }
 
   useEffect(() => {
     if (!clientId || imageMode !== 'library') return
@@ -144,7 +163,7 @@ export function StudioForm({
   }, [clientId, imageMode, contentType])
 
   function applyIdea(idea: PostIdea) {
-    setBrief(idea.brief)
+    setBriefFields(prev => ({ ...prev, subject: idea.brief }))
     const valid: Platform[] = idea.platforms.filter((p): p is Platform =>
       ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)
     )
@@ -160,7 +179,7 @@ export function StudioForm({
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setAiDirective(data.directive)
-      setBrief(data.directive.enrichedBrief)
+      setBriefFields(prev => ({ ...prev, subject: data.directive.enrichedBrief }))
     } catch (err) {
       console.error('suggest-brief error:', err)
     } finally {
@@ -211,6 +230,44 @@ export function StudioForm({
     })
   }
 
+  async function regenerateTextOnly() {
+    if (!result?.post.id) return
+    setError(null)
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/posts/${result.post.id}/regenerate-caption`, { method: 'POST' })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Erreur régénération texte')
+        setResult(prev => prev ? {
+          ...prev,
+          post: data.post,
+          captions: data.captions,
+          reasoning: data.reasoning,
+          cost: data.cost,
+          tokensUsed: data.tokensUsed,
+          model: data.model,
+        } : prev)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur régénération texte')
+      }
+    })
+  }
+
+  function mergeUpdatedPost(post: Post) {
+    setResult(prev => prev ? {
+      ...prev,
+      post,
+      captions: prev.captions.map(caption => ({
+        ...caption,
+        caption: post.caption,
+        hashtags: post.hashtags,
+        hook: post.hook ?? caption.hook,
+        cta: post.cta ?? caption.cta,
+        characterCount: post.caption.length,
+      })),
+    } : prev)
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* LEFT: Inputs */}
@@ -236,9 +293,30 @@ export function StudioForm({
           </select>
 
           {selectedClient && (
-            <div className="mt-3 p-3 rounded-lg bg-purple-950/30 border border-purple-700/30 text-xs">
-              <div className="text-purple-300 font-medium mb-1">Voix de marque chargée :</div>
-              <div className="text-gray-300">{selectedClient.brandVoiceTone || 'Non définie'}</div>
+            <div className="mt-3 space-y-2">
+              <div className="p-3 rounded-lg bg-purple-950/30 border border-purple-700/30 text-xs">
+                <div className="text-purple-300 font-medium mb-1">Voix de marque chargée :</div>
+                <div className="text-gray-300">{selectedClient.brandVoiceTone || 'Non définie'}</div>
+              </div>
+              <div className={`p-3 rounded-lg border text-xs ${
+                selectedDa?.active
+                  ? 'bg-emerald-950/30 border-emerald-700/30'
+                  : 'bg-amber-950/30 border-amber-700/30'
+              }`}>
+                <div className={selectedDa?.active ? 'text-emerald-300 font-medium mb-1' : 'text-amber-300 font-medium mb-1'}>
+                  {selectedDa?.active ? 'DA active' : 'Aucune DA'}
+                </div>
+                <div className={selectedDa?.active ? 'text-emerald-100/80' : 'text-amber-100/80'}>
+                  {selectedDa?.active
+                    ? selectedDa.summary || 'Identité visuelle analysée et disponible pour les agents.'
+                    : 'Ajoute ou analyse les médias du client pour guider les visuels IA.'}
+                </div>
+                {!selectedDa?.active && (
+                  <a href={`/clients/${selectedClient.id}/library`} className="mt-2 inline-block text-amber-200 hover:underline">
+                    Ouvrir la Library →
+                  </a>
+                )}
+              </div>
             </div>
           )}
 
@@ -282,14 +360,37 @@ export function StudioForm({
             </div>
           )}
 
-          <textarea
-            value={brief}
-            onChange={e => setBrief(e.target.value)}
-            rows={4}
-            placeholder="Décrivez exactement ce que vous voulez obtenir…&#10;&#10;Ex: Faire venir les voyageurs à Koh Samui ce week-end, angle calme tropical + réservation directe, ton premium mais humain."
-            title="Ordre donné aux agents texte/stratégie : objectif commercial, angle marketing, offre, ambiance, événement ou consigne précise"
-            className="w-full bg-gray-950/60 border border-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-none"
-          />
+          <div className="grid grid-cols-1 gap-3">
+            <GuidedBriefField
+              label="Sujet"
+              value={briefFields.subject}
+              onChange={value => updateBriefField('subject', value)}
+              placeholder="Ex: présenter la guesthouse Pink House et son ambiance tropicale"
+            />
+            <GuidedBriefField
+              label="Objectif"
+              value={briefFields.objective}
+              onChange={value => updateBriefField('objective', value)}
+              placeholder="Ex: obtenir des demandes de réservation pour le week-end"
+            />
+            <GuidedBriefField
+              label="Ton"
+              value={briefFields.tone}
+              onChange={value => updateBriefField('tone', value)}
+              placeholder="Ex: premium, chaleureux, local, calme"
+            />
+            <GuidedBriefField
+              label="À inclure"
+              value={briefFields.includes}
+              onChange={value => updateBriefField('includes', value)}
+              placeholder="Ex: plage proche, piscine, CTA réservation, éviter ton trop touristique"
+            />
+          </div>
+
+          <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-3">
+            <div className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-1">Brief envoyé aux agents</div>
+            <p className="text-xs text-gray-400 whitespace-pre-wrap">{brief || 'Complète au moins le sujet pour guider les agents.'}</p>
+          </div>
 
           {/* Template categories */}
           <div className="space-y-2">
@@ -319,7 +420,7 @@ export function StudioForm({
                   <button
                     key={tpl.label}
                     type="button"
-                    onClick={() => { setBrief(tpl.text); setTemplateCategory(null) }}
+                    onClick={() => { setBriefFields(prev => ({ ...prev, subject: tpl.text })); setTemplateCategory(null) }}
                     title={`Utiliser ce modèle de brief : ${tpl.label}`}
                     className="text-left text-xs px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-700 text-gray-300 hover:border-purple-600/50 hover:bg-purple-950/20 hover:text-purple-200 transition-all"
                   >
@@ -521,13 +622,9 @@ export function StudioForm({
                 className="col-span-2 sm:col-span-1 bg-gray-900/60 border border-gray-800 text-xs text-gray-300 px-2 py-2 font-mono focus:outline-none focus:border-indigo-600"
               >
                 <option value="">Aucun bouton CTA</option>
-                <option value="BOOK_TRAVEL">📅 Réserver</option>
-                <option value="LEARN_MORE">👉 En savoir plus</option>
-                <option value="CONTACT_US">📞 Nous contacter</option>
-                <option value="SHOP_NOW">🛒 Commander</option>
-                <option value="GET_OFFER">🎁 Voir l&apos;offre</option>
-                <option value="SIGN_UP">✍️ S&apos;inscrire</option>
-                <option value="CALL_NOW">📱 Appeler</option>
+                {META_CTA_TYPES.map(cta => (
+                  <option key={cta.value} value={cta.value}>{cta.emoji} {cta.label}</option>
+                ))}
               </select>
               {ctaType && (
                 <input
@@ -543,10 +640,7 @@ export function StudioForm({
               <p className="text-[9px] text-amber-500/70 font-mono">⚠ Entrez l&apos;URL de destination pour activer le bouton</p>
             )}
             {ctaType && ctaUrl && (
-              <p className="text-[9px] text-emerald-500/60 font-mono">✓ Bouton &ldquo;{
-                { BOOK_TRAVEL:'Réserver', LEARN_MORE:'En savoir plus', CONTACT_US:'Nous contacter',
-                  SHOP_NOW:'Commander', GET_OFFER:"Voir l'offre", SIGN_UP:"S'inscrire", CALL_NOW:'Appeler' }[ctaType]
-              }&rdquo; activé → {ctaUrl.length > 40 ? ctaUrl.substring(0, 40) + '…' : ctaUrl}</p>
+              <p className="text-[9px] text-emerald-500/60 font-mono">✓ Bouton &ldquo;{getMetaCtaLabel(ctaType)}&rdquo; activé → {ctaUrl.length > 40 ? ctaUrl.substring(0, 40) + '…' : ctaUrl}</p>
             )}
           </div>
         )}
@@ -726,8 +820,19 @@ export function StudioForm({
             )}
 
             {/* Captions per platform */}
-            {result.captions.map((c, i) => (
-              <CaptionResult key={i} caption={c} clientEmoji={selectedClient?.emoji || '🏢'} clientName={selectedClient?.name || ''} />
+            {result.captions.map(c => (
+              <CaptionResult
+                key={`${result.post.id}-${c.platform}`}
+                postId={result.post.id}
+                caption={c}
+                clientEmoji={selectedClient?.emoji || '🏢'}
+                clientName={selectedClient?.name || ''}
+                imageUrl={result.post.imageUrl}
+                contentType={result.post.contentType}
+                ctaType={result.post.ctaType || ctaType}
+                ctaUrl={result.post.ctaUrl || ctaUrl}
+                onPostUpdated={mergeUpdatedPost}
+              />
             ))}
 
             {/* Cost footer */}
@@ -755,6 +860,15 @@ export function StudioForm({
               <PostActions post={result.post} refresh={false} />
 
               <div className="flex items-center justify-end pt-2 border-t border-gray-800">
+                <button
+                  onClick={regenerateTextOnly}
+                  disabled={isPending}
+                  title="Régénérer uniquement la caption, les hooks, CTA et hashtags sans toucher à l'image ou à la vidéo"
+                  className="mr-auto flex items-center gap-1 text-blue-300 hover:underline text-xs disabled:opacity-40"
+                >
+                  {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Régénérer le texte uniquement
+                </button>
                 <button
                   onClick={handleGenerate}
                   disabled={isPending}
@@ -791,6 +905,50 @@ function createLoadedPostResult(post: Post): GenerationResult {
     model: 'draft-existant',
     review: post.supervisorReview ?? undefined,
   }
+}
+
+function createInitialBriefFields(initialBrief?: string, initialPillar?: string): BriefFields {
+  return {
+    subject: initialBrief || (initialPillar ? `Créer un post autour du pilier : ${initialPillar}` : ''),
+    objective: '',
+    tone: '',
+    includes: '',
+  }
+}
+
+function composeStructuredBrief(fields: BriefFields): string {
+  return [
+    fields.subject.trim() ? `Sujet : ${fields.subject.trim()}` : '',
+    fields.objective.trim() ? `Objectif : ${fields.objective.trim()}` : '',
+    fields.tone.trim() ? `Ton : ${fields.tone.trim()}` : '',
+    fields.includes.trim() ? `À inclure : ${fields.includes.trim()}` : '',
+  ].filter(Boolean).join('\n')
+}
+
+function GuidedBriefField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-mono uppercase tracking-wider text-gray-500">{label}</span>
+      <textarea
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        rows={2}
+        placeholder={placeholder}
+        title={`Champ guidé du brief : ${label}`}
+        className="w-full resize-y rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:border-purple-500 focus:outline-none"
+      />
+    </label>
+  )
 }
 
 function AgentWorkPlan({
@@ -887,9 +1045,30 @@ function AgentWorkPlan({
 
 // ─── Caption Result Component ─────────────────────────────────────────────────
 
-function CaptionResult({ caption, clientEmoji, clientName }: { caption: GeneratedCaption; clientEmoji: string; clientName: string }) {
+function CaptionResult({
+  postId,
+  caption,
+  clientEmoji,
+  clientName,
+  imageUrl,
+  contentType,
+  ctaType,
+  ctaUrl,
+  onPostUpdated,
+}: {
+  postId: string
+  caption: GeneratedCaption
+  clientEmoji: string
+  clientName: string
+  imageUrl?: string | null
+  contentType: ContentType
+  ctaType?: string | null
+  ctaUrl?: string | null
+  onPostUpdated: (post: Post) => void
+}) {
   const [copied, setCopied] = useState(false)
   const cfg = PLATFORM_INFO[caption.platform]
+  const pageSlug = clientName.toLowerCase().replace(/\s+/g, '') || 'client'
 
   const handleCopy = () => {
     const fullText = caption.caption + '\n\n' + caption.hashtags.map(h => `#${h.replace(/^#/, '')}`).join(' ')
@@ -925,13 +1104,10 @@ function CaptionResult({ caption, clientEmoji, clientName }: { caption: Generate
               {clientEmoji}
             </div>
             <div className="flex-1">
-              <div className="text-sm font-semibold text-gray-900">{clientName.toLowerCase().replace(/\s+/g, '')}</div>
+              <div className="text-sm font-semibold text-gray-900">{pageSlug}</div>
             </div>
           </div>
-          {/* Placeholder image */}
-          <div className="aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-amber-100 flex items-center justify-center text-6xl">
-            {clientEmoji}
-          </div>
+          <MediaPreview imageUrl={imageUrl} contentType={contentType} fallbackEmoji={clientEmoji} className="aspect-square" />
           {/* Actions */}
           <div className="p-3 text-gray-900">
             <div className="flex items-center gap-4 mb-2">
@@ -941,7 +1117,7 @@ function CaptionResult({ caption, clientEmoji, clientName }: { caption: Generate
               <Bookmark className="w-6 h-6 ml-auto" />
             </div>
             <div className="text-sm">
-              <span className="font-semibold mr-1.5">{clientName.toLowerCase().replace(/\s+/g, '')}</span>
+              <span className="font-semibold mr-1.5">{pageSlug}</span>
               {caption.caption}
               <div className="text-blue-700 mt-2">
                 {caption.hashtags.map((h, i) => (
@@ -951,18 +1127,50 @@ function CaptionResult({ caption, clientEmoji, clientName }: { caption: Generate
             </div>
           </div>
         </div>
+      ) : caption.platform === 'facebook' ? (
+        <div className="bg-white text-gray-950">
+          <div className="flex items-center gap-3 p-3">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-base">
+              {clientEmoji}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold leading-tight">{clientName || 'Page Facebook'}</div>
+              <div className="text-xs text-gray-500">Maintenant · 🌐</div>
+            </div>
+          </div>
+          <div className="px-3 pb-3 text-sm leading-relaxed">
+            <p className="line-clamp-4">{caption.caption}</p>
+            {caption.caption.length > 180 && <span className="text-gray-500">Voir plus</span>}
+          </div>
+          <MediaPreview imageUrl={imageUrl} contentType={contentType} fallbackEmoji={clientEmoji} className="aspect-[1.91/1]" />
+          {ctaType && ctaUrl && (
+            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-100 px-3 py-2">
+              <div className="min-w-0">
+                <div className="truncate text-[11px] uppercase tracking-wide text-gray-500">{formatHostname(ctaUrl)}</div>
+                <div className="truncate text-sm font-semibold text-gray-900">{caption.cta || getMetaCtaLabel(ctaType)}</div>
+              </div>
+              <div className="ml-3 rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-800">
+                {getMetaCtaLabel(ctaType)}
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-3 border-t border-gray-200 text-center text-xs font-medium text-gray-500">
+            <div className="py-2">J’aime</div>
+            <div className="py-2">Commenter</div>
+            <div className="py-2">Partager</div>
+          </div>
+        </div>
       ) : (
         <div className="p-5 space-y-3">
           <div className="text-sm text-gray-200 whitespace-pre-wrap leading-relaxed">{caption.caption}</div>
-          {caption.hashtags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {caption.hashtags.map((h, i) => (
-                <span key={i} className="text-xs text-blue-400">#{h.replace(/^#/, '')}</span>
-              ))}
-            </div>
-          )}
         </div>
       )}
+
+      <EditableHashtagChips
+        postId={postId}
+        hashtags={caption.hashtags}
+        onPostUpdated={onPostUpdated}
+      />
 
       {/* Insights */}
       <div className="px-5 py-3 border-t border-gray-800 bg-gray-950/40 grid grid-cols-2 gap-3 text-xs">
@@ -977,4 +1185,135 @@ function CaptionResult({ caption, clientEmoji, clientName }: { caption: Generate
       </div>
     </div>
   )
+}
+
+function MediaPreview({
+  imageUrl,
+  contentType,
+  fallbackEmoji,
+  className,
+}: {
+  imageUrl?: string | null
+  contentType: ContentType
+  fallbackEmoji: string
+  className: string
+}) {
+  if (!imageUrl) {
+    return (
+      <div className={`${className} bg-gradient-to-br from-purple-100 via-pink-100 to-amber-100 flex items-center justify-center text-6xl`}>
+        {fallbackEmoji}
+      </div>
+    )
+  }
+
+  if (contentType === 'reel') {
+    return (
+      <video
+        src={imageUrl}
+        controls
+        className={`${className} w-full bg-black object-cover`}
+      />
+    )
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={imageUrl}
+      alt="Aperçu du post"
+      loading="lazy"
+      decoding="async"
+      className={`${className} w-full object-cover`}
+    />
+  )
+}
+
+function EditableHashtagChips({
+  postId,
+  hashtags,
+  onPostUpdated,
+}: {
+  postId: string
+  hashtags: string[]
+  onPostUpdated: (post: Post) => void
+}) {
+  const [draft, setDraft] = useState('')
+  const [saving, setSaving] = useState(false)
+  const normalized = hashtags.map(tag => tag.replace(/^#/, '')).filter(Boolean)
+
+  async function save(nextHashtags: string[]) {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ hashtags: nextHashtags }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur hashtags')
+      onPostUpdated(data.post)
+      setDraft('')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function addTag() {
+    const tag = draft.replace(/^#/, '').trim()
+    if (!tag || normalized.includes(tag)) return
+    void save([...normalized, tag])
+  }
+
+  return (
+    <div className="border-t border-gray-800 bg-gray-950/30 px-5 py-3">
+      <div className="mb-2 text-[10px] uppercase tracking-wider text-gray-500">Hashtags éditables</div>
+      <div className="flex flex-wrap gap-1.5">
+        {normalized.map(tag => (
+          <button
+            key={tag}
+            type="button"
+            onClick={() => save(normalized.filter(item => item !== tag))}
+            disabled={saving}
+            title={`Supprimer #${tag}`}
+            className="inline-flex items-center gap-1 rounded-full border border-blue-800/40 bg-blue-950/30 px-2 py-1 text-xs text-blue-300 hover:border-blue-500/60 disabled:opacity-40"
+          >
+            #{tag}
+            <X className="h-3 w-3" />
+          </button>
+        ))}
+        <div className="inline-flex items-center gap-1">
+          <input
+            value={draft}
+            onChange={event => setDraft(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                addTag()
+              }
+            }}
+            disabled={saving}
+            placeholder="Ajouter"
+            className="h-7 w-24 rounded-full border border-gray-800 bg-gray-900 px-2 text-xs text-gray-200 placeholder:text-gray-600 focus:border-blue-600 focus:outline-none disabled:opacity-40"
+          />
+          <button
+            type="button"
+            onClick={addTag}
+            disabled={saving || !draft.trim()}
+            title="Ajouter ce hashtag"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-700 text-gray-300 hover:bg-gray-800 disabled:opacity-40"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function formatHostname(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
 }
