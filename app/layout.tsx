@@ -4,6 +4,7 @@ import './globals.css'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { PageAgentCopilot } from '@/components/agents/PageAgentCopilot'
 import { countPostsByStatus } from '@/lib/db/queries/posts'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {children}
         </main>
+        <PageAgentCopilot />
       </body>
     </html>
   )
