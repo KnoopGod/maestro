@@ -1,10 +1,12 @@
 import type React from 'react'
 import Link from 'next/link'
-import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
+import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight, AlertTriangle, Clock } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
-import { countPostsByStatus } from '@/lib/db/queries/posts'
+import { countPostsByStatus, listPosts } from '@/lib/db/queries/posts'
 import { SetupBanner } from '@/components/SetupBanner'
+import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { CLIENT_TYPES } from '@/types/client'
+import type { Post } from '@/types/post'
 
 function healthDot(days: number | null): string {
   if (days === null) return 'bg-gray-700'
@@ -18,15 +20,24 @@ export const dynamic = 'force-dynamic'
 export default async function HomePage() {
   let clients: Awaited<ReturnType<typeof listClientsWithStats>> = []
   let toValidate = 0
+  let failedPosts: Post[] = []
+  let scheduledPosts: Post[] = []
   try {
-    ;[clients, toValidate] = await Promise.all([
+    ;[clients, toValidate, failedPosts, scheduledPosts] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
+      listPosts({ status: 'failed', limit: 5, includeInsights: false }),
+      listPosts({ status: 'scheduled', limit: 5, includeInsights: false }),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
     // Continue with empty data — the SetupBanner will indicate DB misconfiguration
   }
+  const clientsMap = new Map(clients.map(c => [c.id, c]))
+  scheduledPosts = scheduledPosts
+    .filter(p => p.scheduledAt)
+    .sort((a, b) => (a.scheduledAt ?? 0) - (b.scheduledAt ?? 0))
+    .slice(0, 4)
   const activeClients = clients.filter(c => c.status === 'active')
   const totalPosts = clients.reduce((sum, c) => sum + c.postsThisMonth, 0)
   const avgEngagement = clients.length
@@ -107,6 +118,65 @@ export default async function HomePage() {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {/* Failed posts requiring action */}
+      {failedPosts.length > 0 && (
+        <section aria-labelledby="failed-heading">
+          <h2 id="failed-heading" className="text-[8px] text-red-500/70 font-mono tracking-[0.3em] uppercase mb-3 flex items-center gap-1.5">
+            <AlertTriangle className="w-3 h-3" />
+            {'// PUBLICATIONS EN ÉCHEC'}
+          </h2>
+          <div className="space-y-2">
+            {failedPosts.map(post => {
+              const client = clientsMap.get(post.clientId)
+              return (
+                <div key={post.id} className="flex items-start gap-3 p-3 bg-red-950/15 border border-red-900/30 hover:border-red-700/40 transition-all">
+                  <div className={`w-9 h-9 bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-sm flex-shrink-0`}>
+                    {client?.emoji ?? '📝'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-mono text-[#E0E3FF] uppercase tracking-wide truncate">{client?.name ?? 'Client'}</span>
+                      <span className="text-[9px] text-gray-600 font-mono">{post.platforms.join('+').toUpperCase()}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 font-mono line-clamp-1">{post.brief}</p>
+                    <PublishErrorHint error={post.error} clientId={post.clientId} />
+                  </div>
+                  <Link href={`/studio?postId=${post.id}`} title="Corriger ce post dans le Studio" className="text-[9px] text-red-400 font-mono hover:text-red-300 flex-shrink-0 mt-0.5">CORRIGER →</Link>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Upcoming scheduled posts */}
+      {scheduledPosts.length > 0 && (
+        <section aria-labelledby="scheduled-heading">
+          <h2 id="scheduled-heading" className="text-[8px] text-blue-500/60 font-mono tracking-[0.3em] uppercase mb-3 flex items-center gap-1.5">
+            <Clock className="w-3 h-3" />
+            {'// PROCHAINES PUBLICATIONS'}
+          </h2>
+          <div className="space-y-1.5">
+            {scheduledPosts.map(post => {
+              const client = clientsMap.get(post.clientId)
+              const dt = post.scheduledAt ? new Date(post.scheduledAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+              return (
+                <div key={post.id} className="flex items-center gap-3 p-2.5 border border-gray-800 hover:border-blue-900/50 transition-colors">
+                  <div className={`w-7 h-7 bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-xs flex-shrink-0`}>
+                    {client?.emoji ?? '📝'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] text-gray-300 font-mono truncate">{post.brief}</p>
+                    <p className="text-[9px] text-gray-600 font-mono">{client?.name} · {post.platforms.join('+').toUpperCase()}</p>
+                  </div>
+                  <span className="text-[9px] text-blue-400/70 font-mono flex-shrink-0">{dt}</span>
+                </div>
+              )
+            })}
+          </div>
         </section>
       )}
 

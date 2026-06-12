@@ -1,32 +1,69 @@
 import Link from 'next/link'
-import { ShieldCheck, AlertCircle, Sparkles, Edit3 } from 'lucide-react'
+import { ShieldCheck, AlertCircle, Sparkles, Edit3, ShieldAlert, ShieldX, HelpCircle } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
+import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
 
+type SupervisorFilter = 'all' | 'blocked' | 'revise' | 'unsupervised'
+
+const SUPERVISOR_TABS: { key: SupervisorFilter; label: string; icon: React.ElementType; color: string }[] = [
+  { key: 'all',          label: 'Tous',           icon: ShieldCheck,  color: 'text-gray-400'   },
+  { key: 'blocked',      label: 'Bloqués',        icon: ShieldX,      color: 'text-red-400'    },
+  { key: 'revise',       label: 'À réviser',      icon: ShieldAlert,  color: 'text-amber-400'  },
+  { key: 'unsupervised', label: 'Non supervisés', icon: HelpCircle,   color: 'text-gray-500'   },
+]
+
 const POST_STATUS_BORDER: Record<string, string> = {
-  draft:    'border-l-amber-500/70',
-  ready:    'border-l-purple-500/70',
-  failed:   'border-l-red-500/70',
+  draft:     'border-l-amber-500/70',
+  ready:     'border-l-purple-500/70',
+  failed:    'border-l-red-500/70',
   published: 'border-l-emerald-500/70',
 }
 
-export default async function ValidationPage() {
+function matchesSupervisorFilter(post: Post, filter: SupervisorFilter): boolean {
+  if (filter === 'all') return true
+  if (filter === 'unsupervised') return !post.supervisorReview
+  return post.supervisorReview?.verdict === filter
+}
+
+export default async function ValidationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ supervisor?: string }>
+}) {
+  const { supervisor: supervisorParam } = await searchParams
+  const supervisorFilter: SupervisorFilter =
+    (['all', 'blocked', 'revise', 'unsupervised'] as SupervisorFilter[]).includes(supervisorParam as SupervisorFilter)
+      ? (supervisorParam as SupervisorFilter)
+      : 'all'
+
   const [queue, clients] = await Promise.all([
     listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false }),
     listClients(),
   ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
+  const filtered = queue.filter(p => matchesSupervisorFilter(p, supervisorFilter))
 
   const draftCount = queue.filter(p => p.status === 'draft').length
   const readyCount = queue.filter(p => p.status === 'ready').length
   const failedCount = queue.filter(p => p.status === 'failed').length
+  const blockedCount = queue.filter(p => p.supervisorReview?.verdict === 'blocked').length
+  const reviseCount = queue.filter(p => p.supervisorReview?.verdict === 'revise').length
+  const unsupervisedCount = queue.filter(p => !p.supervisorReview).length
+
+  const tabCounts: Record<SupervisorFilter, number> = {
+    all: queue.length,
+    blocked: blockedCount,
+    revise: reviseCount,
+    unsupervised: unsupervisedCount,
+  }
 
   return (
     <div className="space-y-6">
@@ -50,27 +87,62 @@ export default async function ValidationPage() {
         </Link>
       </div>
 
-      <div className="bg-purple-950/20 border border-purple-700/30 rounded-2xl p-4 text-sm text-purple-200">
-        <strong className="text-white">Règle MVP :</strong>{' '}aucun post ne part automatiquement.
-        Tu valides le texte, l&apos;image, le timing et la cohérence DA avant de planifier ou publier.
-      </div>
-
+      {/* Status counters */}
       <div className="grid grid-cols-3 gap-3">
         <StatBox label="Brouillons" value={draftCount} color="text-amber-400" border="border-amber-800/30" />
-        <StatBox label="Prêts" value={readyCount} color="text-purple-400" border="border-purple-800/30" />
-        <StatBox label="Échecs" value={failedCount} color="text-red-400" border="border-red-800/30" />
+        <StatBox label="Prêts"      value={readyCount} color="text-purple-400" border="border-purple-800/30" />
+        <StatBox label="Échecs"     value={failedCount} color="text-red-400"   border="border-red-800/30" />
       </div>
 
-      {queue.length === 0 ? (
-        <EmptyState
-          icon={ShieldCheck}
-          title="Aucun post en attente de validation"
-          description="Les posts générés dans le Studio apparaîtront ici pour relecture avant publication."
-          cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
-        />
+      {/* Supervisor filter tabs */}
+      {queue.length > 0 && (
+        <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-4">
+          <span className="text-[10px] text-gray-600 font-mono self-center mr-1">SUPERVISOR :</span>
+          {SUPERVISOR_TABS.map(tab => {
+            const active = supervisorFilter === tab.key
+            const count = tabCounts[tab.key]
+            const Icon = tab.icon
+            return (
+              <Link
+                key={tab.key}
+                href={tab.key === 'all' ? '/validation' : `/validation?supervisor=${tab.key}`}
+                title={`Filtrer par verdict supervisor : ${tab.label}`}
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium border transition-all ${
+                  active
+                    ? 'bg-purple-600 border-purple-500 text-white'
+                    : `border-gray-800 bg-gray-900 ${tab.color} hover:bg-gray-800`
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+                {count > 0 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20' : 'bg-gray-800'}`}>
+                    {count}
+                  </span>
+                )}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        queue.length === 0 ? (
+          <EmptyState
+            icon={ShieldCheck}
+            title="Aucun post en attente de validation"
+            description="Les posts générés dans le Studio apparaîtront ici pour relecture avant publication."
+            cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
+          />
+        ) : (
+          <div className="text-center py-12 text-gray-500 text-sm">
+            Aucun post avec ce filtre supervisor.
+            <Link href="/validation" className="ml-2 text-purple-400 hover:underline">Voir tous</Link>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {queue.map(post => (
+          {filtered.map(post => (
             <PostCard key={post.id} post={post} client={clientsMap.get(post.clientId)} />
           ))}
         </div>
@@ -109,6 +181,7 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
               </Link>
             )}
             <StatusPill status={post.status} />
+            {post.supervisorReview && <SupervisorPill verdict={post.supervisorReview.verdict} score={post.supervisorReview.score} />}
             <span className="text-[10px] text-gray-600 ml-auto">Impact {post.impactScore}/100</span>
           </div>
           <p className="text-sm font-medium text-white line-clamp-2">{post.brief}</p>
@@ -124,10 +197,13 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       )}
 
       {post.status === 'failed' && post.error && (
-        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2 flex gap-1.5">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-          <span>{post.error}</span>
-        </div>
+        <>
+          <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2 flex gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+            <span>{post.error}</span>
+          </div>
+          <PublishErrorHint error={post.error} clientId={post.clientId} />
+        </>
       )}
 
       <PostSupervisor post={post} />
@@ -157,5 +233,21 @@ function StatusPill({ status }: { status: string }) {
   const cfg = STATUS_PILL[status] ?? { label: status, cls: 'text-gray-400 border-gray-700 bg-gray-800/20' }
   return (
     <span title={`Statut du post : ${cfg.label}`} className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
+  )
+}
+
+const VERDICT_PILL: Record<string, { label: string; cls: string }> = {
+  ready:   { label: '✓ Approuvé',   cls: 'text-emerald-300 border-emerald-700/40 bg-emerald-950/20' },
+  revise:  { label: '⚠ À réviser',  cls: 'text-amber-300 border-amber-700/40 bg-amber-950/20' },
+  blocked: { label: '✕ Bloqué',     cls: 'text-red-300 border-red-700/40 bg-red-950/20' },
+}
+
+function SupervisorPill({ verdict, score }: { verdict: string; score: number }) {
+  const cfg = VERDICT_PILL[verdict]
+  if (!cfg) return null
+  return (
+    <span title={`Verdict supervisor : ${verdict} (${score}/100)`} className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>
+      {cfg.label} · {score}/100
+    </span>
   )
 }
