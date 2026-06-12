@@ -3,6 +3,8 @@
  * Handles token exchange, page discovery, and publishing.
  */
 
+export { META_CTA_TYPES, type MetaCtaType } from '@/lib/meta-cta-types'
+
 const GRAPH_API = 'https://graph.facebook.com/v23.0'
 
 export interface MetaPage {
@@ -250,19 +252,6 @@ function getDebugAccessToken(fallbackToken: string) {
 }
 
 // ─── Publish to Facebook Page ────────────────────────────────────────────────
-
-// CTA button types supported for organic page posts
-export const META_CTA_TYPES = [
-  { value: 'BOOK_TRAVEL',  label: 'Réserver',          emoji: '📅' },
-  { value: 'LEARN_MORE',   label: 'En savoir plus',     emoji: '👉' },
-  { value: 'CONTACT_US',   label: 'Nous contacter',     emoji: '📞' },
-  { value: 'SHOP_NOW',     label: 'Commander',          emoji: '🛒' },
-  { value: 'GET_OFFER',    label: 'Voir l\'offre',      emoji: '🎁' },
-  { value: 'SIGN_UP',      label: 'S\'inscrire',        emoji: '✍️' },
-  { value: 'CALL_NOW',     label: 'Appeler maintenant', emoji: '📱' },
-] as const
-
-export type MetaCtaType = typeof META_CTA_TYPES[number]['value']
 
 export interface PublishOptions {
   pageId: string
