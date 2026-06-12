@@ -101,7 +101,8 @@ Réponds en JSON strict sans markdown, avec cette structure exacte :
   const response = await anthropic.messages.create({
     model: 'claude-opus-4-7',
     max_tokens: 4000,
-    thinking: { type: 'enabled', budget_tokens: 2000 },
+    thinking: { type: 'adaptive' },
+    output_config: { effort: 'high' },
     messages: [{ role: 'user', content: prompt }],
   })
 
