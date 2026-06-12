@@ -42,6 +42,7 @@ export default async function ValidationPage() {
         </div>
         <Link
           href="/studio"
+          title="Créer un nouveau post à ajouter dans la file de validation"
           className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
         >
           <Sparkles className="w-4 h-4" />
@@ -80,7 +81,7 @@ export default async function ValidationPage() {
 
 function StatBox({ label, value, color, border }: { label: string; value: number; color: string; border: string }) {
   return (
-    <div className={`bg-gray-900/40 border ${border} rounded-xl p-4 hover:-translate-y-0.5 transition-transform duration-200`}>
+    <div title={`${label} dans la file de validation`} className={`bg-gray-900/40 border ${border} rounded-xl p-4 hover:-translate-y-0.5 transition-transform duration-200`}>
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
     </div>
@@ -133,6 +134,7 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       <div className="flex justify-end">
         <Link
           href={`/studio?postId=${post.id}`}
+          title="Ouvrir ce draft dans le Studio pour modifier le brief, le texte ou le visuel avant publication"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors"
         >
           <Edit3 className="w-3.5 h-3.5" />
@@ -154,6 +156,6 @@ const STATUS_PILL: Record<string, { label: string; cls: string }> = {
 function StatusPill({ status }: { status: string }) {
   const cfg = STATUS_PILL[status] ?? { label: status, cls: 'text-gray-400 border-gray-700 bg-gray-800/20' }
   return (
-    <span className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
+    <span title={`Statut du post : ${cfg.label}`} className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
   )
 }

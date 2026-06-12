@@ -26,6 +26,7 @@ export function DeleteClientButton({
       <button
         type="button"
         aria-label={`Supprimer ${clientName}`}
+        title={`Supprimer rapidement ${clientName}`}
         onClick={() => setOpen(true)}
         className={`${compact ? 'h-7 w-7 justify-center p-0' : 'px-3 py-2'} rounded-lg border border-gray-800 hover:border-red-700/50 hover:bg-red-950/30 text-gray-400 hover:text-red-400 text-sm flex items-center gap-1.5 transition-colors`}
       >
@@ -51,6 +52,7 @@ export function DeleteClientButton({
               <button
                 onClick={() => setOpen(false)}
                 disabled={isPending}
+                title="Annuler la suppression et conserver ce client"
                 className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm"
               >
                 Annuler
@@ -58,6 +60,7 @@ export function DeleteClientButton({
               <button
                 onClick={handleDelete}
                 disabled={isPending}
+                title="Supprimer définitivement le client, ses posts et son historique local"
                 className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-medium disabled:opacity-50"
               >
                 {isPending ? 'Suppression...' : 'Oui, supprimer'}

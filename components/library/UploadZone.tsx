@@ -57,6 +57,7 @@ export function UploadZone({ clientId }: { clientId: string }) {
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
+                title={`Classer les prochains fichiers dans la catégorie ${cfg.label}`}
                 className={`px-2 py-2 rounded-lg border text-xs font-medium transition-all flex flex-col items-center gap-1 ${
                   active
                     ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
@@ -84,6 +85,7 @@ export function UploadZone({ clientId }: { clientId: string }) {
           handleFiles(e.dataTransfer.files)
         }}
         onClick={() => inputRef.current?.click()}
+        title="Cliquer pour choisir des fichiers ou glisser-déposer des ressources client ici"
         className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
           dragOver
             ? 'border-purple-500 bg-purple-950/30'
@@ -112,6 +114,7 @@ export function UploadZone({ clientId }: { clientId: string }) {
             <span className="text-sm font-medium text-white">{files.length} fichier{files.length > 1 ? 's' : ''} en attente</span>
             <button
               onClick={() => setFiles([])}
+              title="Retirer tous les fichiers de la file d'attente avant upload"
               className="text-xs text-gray-500 hover:text-gray-300"
             >
               Tout vider
@@ -125,6 +128,7 @@ export function UploadZone({ clientId }: { clientId: string }) {
                 <span className="text-gray-600">{(f.size / 1024).toFixed(1)} KB</span>
                 <button
                   onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}
+                  title={`Retirer ${f.name} de la file d'attente`}
                   className="text-gray-600 hover:text-red-400"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -140,6 +144,7 @@ export function UploadZone({ clientId }: { clientId: string }) {
           <button
             onClick={upload}
             disabled={isPending}
+            title="Envoyer ces fichiers dans la Library du client pour alimenter sa DA et ses futurs posts"
             className="w-full mt-2 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-sm font-medium flex items-center justify-center gap-2"
           >
             {isPending

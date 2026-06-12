@@ -189,6 +189,7 @@ export function StudioForm({
               setSelectedAsset(null)
               if (imageMode === 'library') setAssetsLoading(true)
             }}
+            title="Choisir le client dont la stratégie, la DA et les connexions seront utilisées pour générer le post"
             className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
           >
             {clients.map(c => (
@@ -224,6 +225,7 @@ export function StudioForm({
               type="button"
               onClick={handleSuggestBrief}
               disabled={!clientId || aiLoading}
+              title="Demander à l'Account Director de proposer un brief aligné avec la stratégie du client"
               className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg bg-purple-900/40 border border-purple-700/40 text-purple-300 hover:bg-purple-800/40 hover:border-purple-500/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono tracking-wide"
             >
               {aiLoading
@@ -249,6 +251,7 @@ export function StudioForm({
             onChange={e => setBrief(e.target.value)}
             rows={4}
             placeholder="Décrivez ce que vous voulez communiquer…&#10;&#10;Ex: Pizza signature de retour ce weekend, ingrédients premium, présentation soignée"
+            title="Décrire l'objectif du post : offre, ambiance, événement, produit, angle marketing ou consigne précise"
             className="w-full bg-gray-950/60 border border-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-none"
           />
 
@@ -261,6 +264,7 @@ export function StudioForm({
                   key={cat}
                   type="button"
                   onClick={() => setTemplateCategory(templateCategory === cat ? null : cat)}
+                  title={`Afficher les modèles rapides pour ${cat}`}
                   className={`text-[10px] px-2.5 py-1 rounded-md border font-mono tracking-wide transition-all flex items-center gap-1 ${
                     templateCategory === cat
                       ? 'bg-indigo-900/50 border-indigo-600/60 text-indigo-200'
@@ -280,6 +284,7 @@ export function StudioForm({
                     key={tpl.label}
                     type="button"
                     onClick={() => { setBrief(tpl.text); setTemplateCategory(null) }}
+                    title={`Utiliser ce modèle de brief : ${tpl.label}`}
                     className="text-left text-xs px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-700 text-gray-300 hover:border-purple-600/50 hover:bg-purple-950/20 hover:text-purple-200 transition-all"
                   >
                     <span className="font-medium">{tpl.label}</span>
@@ -303,6 +308,7 @@ export function StudioForm({
                   key={p}
                   type="button"
                   onClick={() => togglePlatform(p)}
+                  title={`${active ? 'Retirer' : 'Ajouter'} ${cfg.label} comme plateforme cible du post`}
                   className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                     active
                       ? cfg.color
@@ -326,6 +332,13 @@ export function StudioForm({
                 key={t}
                 type="button"
                 onClick={() => setContentType(t)}
+                title={
+                  t === 'photo'
+                    ? 'Créer un post image classique pour le feed'
+                    : t === 'reel'
+                      ? 'Préparer un contenu vidéo court au format Reel'
+                      : 'Préparer un contenu court au format Story'
+                }
                 className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
                   contentType === t
                     ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
@@ -350,6 +363,7 @@ export function StudioForm({
                 setImageMode('generate')
                 setSelectedAsset(null)
               }}
+              title="Créer un nouveau visuel avec l'IA à partir de la stratégie et de la direction artistique du client"
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'generate'
                   ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
@@ -366,6 +380,7 @@ export function StudioForm({
                 setSelectedAsset(null)
                 setAssetsLoading(true)
               }}
+              title="Utiliser une photo, un logo ou une ressource réelle déjà ajoutée dans la Library du client"
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'library'
                   ? 'bg-blue-600/20 border-blue-600/40 text-blue-300'
@@ -399,6 +414,7 @@ export function StudioForm({
                       key={asset.id}
                       type="button"
                       onClick={() => setSelectedAsset(prev => prev?.id === asset.id ? null : asset)}
+                      title={`Sélectionner ${asset.originalName} comme base visuelle du post`}
                       className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
                         selectedAsset?.id === asset.id
                           ? 'border-blue-500 ring-2 ring-blue-500/30'
@@ -435,6 +451,7 @@ export function StudioForm({
         <button
           onClick={handleGenerate}
           disabled={!clientId || platforms.length === 0 || isPending || (imageMode === 'library' && !selectedAsset)}
+          title="Lancer la chaîne d'agents : analyse client, stratégie, rédaction, visuel, scoring puis draft prêt à valider"
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isPending ? (
@@ -583,6 +600,7 @@ export function StudioForm({
                 <div className="flex justify-end">
                   <a
                     href={`/clients/${clientId}/connections`}
+                    title="Ouvrir la page de connexion Meta pour vérifier que Facebook et Instagram peuvent publier"
                     className="text-[11px] text-blue-300 hover:underline"
                   >
                     🩺 Vérifier le token Meta du client
@@ -598,6 +616,7 @@ export function StudioForm({
                 <button
                   onClick={handleGenerate}
                   disabled={isPending}
+                  title="Relancer la génération avec le même brief pour obtenir une nouvelle proposition"
                   className="flex items-center gap-1 text-purple-400 hover:underline text-xs"
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Régénérer le post
@@ -656,6 +675,7 @@ function CaptionResult({ caption, clientEmoji, clientName }: { caption: Generate
         </div>
         <button
           onClick={handleCopy}
+          title={`Copier le texte complet et les hashtags pour ${cfg.label}`}
           className="text-xs px-2.5 py-1 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 flex items-center gap-1"
         >
           {copied ? <><Check className="w-3 h-3 text-green-400" /> Copié</> : <><Copy className="w-3 h-3" /> Copier</>}

@@ -98,6 +98,7 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
             value={scheduledAt}
             onChange={e => setScheduledAt(e.target.value)}
             disabled={isPublished}
+            title="Choisir la date et l'heure auxquelles ce post doit être publié automatiquement"
             className="w-full px-2.5 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-sm text-gray-200 focus:border-purple-600 focus:outline-none disabled:opacity-50"
           />
         </div>
@@ -105,6 +106,7 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
         <button
           onClick={schedule}
           disabled={!scheduledAt || !!busy || isPublished}
+          title={isScheduled ? 'Modifier la date de publication programmée' : 'Planifier ce post pour une publication automatique'}
           className="px-3 py-1.5 rounded-lg border border-blue-700/50 text-blue-300 hover:bg-blue-900/30 text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {busy === 'schedule' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CalendarClock className="w-3.5 h-3.5" />}
@@ -115,6 +117,7 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
           <button
             onClick={unschedule}
             disabled={!!busy}
+            title="Retirer ce post du calendrier sans le supprimer"
             className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 text-sm disabled:opacity-40"
           >
             {busy === 'unschedule' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Annuler'}
@@ -124,6 +127,7 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
         <button
           onClick={publishNow}
           disabled={!!busy || isPublished}
+          title="Publier immédiatement ce post sur les plateformes connectées du client"
           className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"
         >
           {busy === 'publish' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -191,6 +195,7 @@ export function PostSupervisor({ post }: { post: Post }) {
         <button
           onClick={supervise}
           disabled={loading}
+          title="Demander à l'agent superviseur de relire le post, détecter les risques et donner un score qualité"
           className="px-3 py-1.5 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 text-xs flex items-center gap-1.5 disabled:opacity-40"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -269,6 +274,7 @@ export function PublishDueButton() {
       <button
         onClick={publishDue}
         disabled={loading}
+        title="Lancer manuellement le cron de publication pour tester les posts dont la date est dépassée"
         className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"
       >
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

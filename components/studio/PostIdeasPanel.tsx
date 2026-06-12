@@ -99,6 +99,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
         <button
           onClick={generate}
           disabled={loading || bulkLoading || !clientId}
+          title="Demander au Strategy Director de proposer 5 angles de posts adaptés au client sélectionné"
           className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
@@ -144,6 +145,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
                 <button
                   onClick={() => onPick(idea)}
                   disabled={bulkLoading}
+                  title={`Remplir le Studio avec cette idée : ${idea.title}`}
                   className="px-2.5 py-1 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 text-[11px] flex items-center gap-1 flex-shrink-0 disabled:opacity-40"
                 >
                   <Wand2 className="w-3 h-3" />
@@ -175,7 +177,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
                     {bulkResult.failed} échec{bulkResult.failed > 1 ? 's' : ''}
                   </span>
                 )}
-                <a href="/plan" className="text-purple-400 hover:underline">
+                <a href="/plan" title="Voir les drafts générés dans l'historique et le calendrier" className="text-purple-400 hover:underline">
                   Voir les drafts →
                 </a>
               </div>
@@ -183,6 +185,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
               <button
                 onClick={generateAllDrafts}
                 disabled={bulkLoading || ideas.length === 0}
+                title="Créer automatiquement un draft complet pour chaque idée proposée"
                 className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/30 border border-emerald-600/30 text-emerald-300 hover:bg-emerald-700/50 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 {bulkLoading ? (

@@ -34,6 +34,7 @@ export function AnalyzeDAButton({ clientId, hasIdentity }: { clientId: string; h
       <button
         onClick={handleAnalyze}
         disabled={isPending}
+        title="Analyser les images, logos et ressources du client pour construire ou mettre à jour sa direction artistique"
         className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 disabled:opacity-50 text-white text-sm font-medium flex items-center gap-2 shadow-lg shadow-purple-900/30"
       >
         {isPending ? (
