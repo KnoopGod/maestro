@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getSocialAccount, saveSocialAccount } from '@/lib/db/queries/social-accounts'
-import { discoverInstagramAccountForPage, verifyPageToken } from '@/lib/agents/meta-publisher'
+import {
+  debugToken,
+  discoverInstagramAccountForPage,
+  discoverPages,
+  exchangeForLongLivedUserToken,
+  verifyPageToken,
+  type MetaPage,
+} from '@/lib/agents/meta-publisher'
+import type { SocialPlatform } from '@/types/client'
+
+const DELETABLE_META_PLATFORMS = new Set<SocialPlatform>(['facebook', 'instagram'])
 
 export async function POST(req: NextRequest) {
   try {
-    const { clientId, page, connectInstagram, syncInstagram } = await req.json()
+    const { clientId, page, pageId, userToken, connectInstagram, syncInstagram } = await req.json()
 
     if (!clientId) {
       return NextResponse.json({ error: 'clientId requis' }, { status: 400 })
@@ -43,15 +53,30 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    if (!page) {
-      return NextResponse.json({ error: 'page requise' }, { status: 400 })
-    }
+    const resolvedPage = await resolvePageForConnection({ page, pageId, userToken })
 
     // Verify the page token works
-    const check = await verifyPageToken(page.id, page.accessToken)
+    const check = await verifyPageToken(resolvedPage.id, resolvedPage.accessToken)
     if (!check.valid) {
       return NextResponse.json(
         { error: `Token de page invalide : ${check.error}` },
+        { status: 400 }
+      )
+    }
+
+    const tokenInfo = await debugToken(resolvedPage.accessToken, resolvedPage.id)
+    if (!tokenInfo.valid) {
+      return NextResponse.json(
+        { error: `Token de page non validable : ${tokenInfo.error || 'debug_token invalide'}` },
+        { status: 400 }
+      )
+    }
+    if (tokenInfo.missingPermissions.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Permissions Meta manquantes pour publier : ${tokenInfo.missingPermissions.join(', ')}`,
+          missingPermissions: tokenInfo.missingPermissions,
+        },
         { status: 400 }
       )
     }
@@ -60,21 +85,23 @@ export async function POST(req: NextRequest) {
     const fbAccount = await saveSocialAccount({
       clientId,
       platform: 'facebook',
-      handle: page.name,
-      accountId: page.id,
-      accessToken: page.accessToken,
+      handle: resolvedPage.name,
+      accountId: resolvedPage.id,
+      accessToken: resolvedPage.accessToken,
+      expiresAt: tokenInfo.expiresAt ?? undefined,
       // Page Access Tokens are long-lived (never expire if user token was long-lived)
     })
 
     // Save Instagram if requested and available
     let igAccount = null
-    if (connectInstagram && page.instagramAccount) {
+    if (connectInstagram && resolvedPage.instagramAccount) {
       igAccount = await saveSocialAccount({
         clientId,
         platform: 'instagram',
-        handle: page.instagramAccount.username,
-        accountId: page.instagramAccount.id,
-        accessToken: page.accessToken, // Same token works for IG via Graph API
+        handle: resolvedPage.instagramAccount.username,
+        accountId: resolvedPage.instagramAccount.id,
+        accessToken: resolvedPage.accessToken, // Same token works for IG via Graph API
+        expiresAt: tokenInfo.expiresAt ?? undefined,
       })
     }
 
@@ -93,9 +120,44 @@ export async function POST(req: NextRequest) {
   }
 }
 
+async function resolvePageForConnection(input: {
+  page?: MetaPage
+  pageId?: string
+  userToken?: string
+}): Promise<MetaPage> {
+  if (input.page?.id && input.page.accessToken) {
+    return input.page
+  }
+
+  if (!input.pageId || !input.userToken) {
+    throw new Error('pageId + userToken requis pour connecter Meta')
+  }
+
+  let longLivedToken = input.userToken
+  try {
+    longLivedToken = await exchangeForLongLivedUserToken(input.userToken)
+  } catch {
+    // Keep the short-lived token as a fallback; token diagnostics will expose expiry issues.
+  }
+
+  const result = await discoverPages(longLivedToken)
+  const page = result.pages.find(p => p.id === input.pageId)
+  if (!page) {
+    throw new Error('Page introuvable avec ce token utilisateur. Vérifie les accès Pages acceptés dans Meta.')
+  }
+
+  return page
+}
+
 export async function DELETE(req: NextRequest) {
   try {
     const { clientId, platform } = await req.json()
+    if (!clientId) {
+      return NextResponse.json({ error: 'clientId requis' }, { status: 400 })
+    }
+    if (!DELETABLE_META_PLATFORMS.has(platform)) {
+      return NextResponse.json({ error: 'platform invalide' }, { status: 400 })
+    }
     const { deleteSocialAccount } = await import('@/lib/db/queries/social-accounts')
     await deleteSocialAccount(clientId, platform)
     revalidatePath(`/clients/${clientId}`)

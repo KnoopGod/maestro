@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
     }
 
-    const result = await proposePostIdeas(client, count || 5)
+    const safeCount = Math.min(Math.max(Number(count) || 5, 1), 12)
+    const result = await proposePostIdeas(client, safeCount)
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erreur planner'

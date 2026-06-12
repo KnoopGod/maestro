@@ -64,7 +64,7 @@ export default async function HomePage() {
 
       {/* Stats */}
       <section aria-labelledby="stats-heading">
-        <h2 id="stats-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">// OVERVIEW</h2>
+        <h2 id="stats-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">{'// OVERVIEW'}</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
           <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
@@ -111,7 +111,7 @@ export default async function HomePage() {
 
       {/* Quick actions */}
       <section aria-labelledby="actions-heading">
-        <h2 id="actions-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">// ACTIONS RAPIDES</h2>
+        <h2 id="actions-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">{'// ACTIONS RAPIDES'}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             href="/studio"
@@ -153,7 +153,7 @@ export default async function HomePage() {
       <section aria-labelledby="clients-heading">
         <div className="border border-gray-800 bg-gray-900/40 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 id="clients-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase">// CLIENTS ENREGISTRÉS</h2>
+            <h2 id="clients-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase">{'// CLIENTS ENREGISTRÉS'}</h2>
             <Link href="/clients" className="text-[9px] text-indigo-500 hover:text-indigo-300 font-mono tracking-wider transition-colors">
               VOIR TOUT ({clients.length}) →
             </Link>

@@ -62,6 +62,16 @@ function mapRow(row: PostRow): Post {
   }
 }
 
+function postSelect(includeInsights: boolean) {
+  return `
+    id, client_id, status, platforms, content_type, brief, reasoning,
+    caption, hashtags, hook, cta, image_asset_id, image_url, image_prompt,
+    impact_score, impact_analysis, supervisor_review, meta_post_ids,
+    ${includeInsights ? 'meta_insights' : 'NULL AS meta_insights'},
+    scheduled_at, published_at, error, cost, tokens_used, created_at, updated_at
+  `
+}
+
 export async function getPost(id: string): Promise<Post | null> {
   const row = await queryOne<PostRow>(`SELECT * FROM posts WHERE id = ?`, [id])
   return row ? mapRow(row) : null
@@ -70,10 +80,13 @@ export async function getPost(id: string): Promise<Post | null> {
 export async function listPosts(options?: {
   clientId?: string
   status?: PostStatus
+  statuses?: PostStatus[]
   limit?: number
+  includeInsights?: boolean
 }): Promise<Post[]> {
   const conditions: string[] = []
   const args: unknown[] = []
+  const includeInsights = options?.includeInsights ?? true
 
   if (options?.clientId) {
     conditions.push('client_id = ?')
@@ -82,13 +95,16 @@ export async function listPosts(options?: {
   if (options?.status) {
     conditions.push('status = ?')
     args.push(options.status)
+  } else if (options?.statuses?.length) {
+    conditions.push(`status IN (${options.statuses.map(() => '?').join(',')})`)
+    args.push(...options.statuses)
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
   const limit = options?.limit ? `LIMIT ${options.limit}` : ''
 
   const rows = await query<PostRow>(
-    `SELECT * FROM posts ${where} ORDER BY created_at DESC ${limit}`,
+    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY created_at DESC ${limit}`,
     args
   )
   return rows.map(mapRow)

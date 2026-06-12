@@ -76,7 +76,7 @@
 | `/library` | Bibliothèque globale multi-clients |
 | `/usage` | Coûts IA par client / mois |
 | `/settings` | Paramètres |
-| `/login` | Auth page (MAESTRO_PASSWORD) |
+| `/login` | Auth page (`CODEXRS_PASSWORD`) |
 
 ### API routes (`app/api/`)
 
@@ -112,8 +112,9 @@ Tables actives :
 
 ### Sécurité & auth
 
-- **Middleware** (`middleware.ts`) — HMAC session cookie via Web Crypto API (Edge-compatible)
-- **Login** (`/login`) — mot de passe unique `MAESTRO_PASSWORD`
+- **Proxy** (`proxy.ts`) — HMAC session cookie via Web Crypto API (Edge-compatible)
+- **Login** (`/login`) — mot de passe unique `CODEXRS_PASSWORD` (`MAESTRO_PASSWORD` fallback legacy)
+- **Logout** (`/api/auth/logout`) — supprime les cookies `codexrs_session` et legacy
 - **Cron** — `CRON_SECRET` requis (timing-safe comparison)
 - **Upload** — whitelist MIME + limite 100 MB + path traversal fix
 
@@ -131,10 +132,10 @@ Tables actives :
 ```
 ANTHROPIC_API_KEY=sk-ant-...          # Requis — Opus 4.7
 OPENAI_API_KEY=sk-...                 # Requis — gpt-image-1
-MAESTRO_PASSWORD=...                  # Auth unique (vide = dev sans auth)
+CODEXRS_PASSWORD=...                  # Auth unique (vide = dev sans auth)
 META_APP_ID=...                       # Optionnel — exchange token long
 META_APP_SECRET=...                   # Optionnel
-MAESTRO_PUBLIC_URL=https://...        # Requis prod — Meta fetche les images
+CODEXRS_PUBLIC_URL=https://...        # Requis prod — Meta fetche les images
 CRON_SECRET=...                       # Protège /api/cron/publish-due
 DATABASE_URL=file:./maestro.db        # Dev local (ou libsql://... pour Turso)
 DATABASE_AUTH_TOKEN=...               # Requis si Turso

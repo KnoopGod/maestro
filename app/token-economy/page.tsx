@@ -9,12 +9,6 @@ const PIE_DATA = [
   { name: 'Ollama',  value: MONTHLY_STATS.tasksByAI.ollama,  color: '#F59E0B' },
 ]
 
-const COST_PIE = [
-  { name: 'Claude',  value: MONTHLY_STATS.costByAI.claude,  color: '#7C3AED' },
-  { name: 'ChatGPT', value: MONTHLY_STATS.costByAI.chatgpt, color: '#10A37F' },
-  { name: 'Ollama',  value: 0.001,                          color: '#F59E0B' },
-]
-
 export default function TokenEconomyPage() {
   const total = Object.values(MONTHLY_STATS.tasksByAI).reduce((a, b) => a + b, 0)
 

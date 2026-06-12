@@ -16,8 +16,8 @@ function elapsed(ms?: number) {
   return `${Math.floor(ms / 60000)}min ${Math.floor((ms % 60000) / 1000)}s`
 }
 
-function since(ts: number) {
-  const s = Math.floor((Date.now() - ts) / 1000)
+function since(ts: number, referenceTs: number) {
+  const s = Math.floor((referenceTs - ts) / 1000)
   if (s < 60) return `il y a ${s}s`
   if (s < 3600) return `il y a ${Math.floor(s / 60)}min`
   if (s < 86400) return `il y a ${Math.floor(s / 3600)}h`
@@ -45,11 +45,11 @@ function agentEmoji(id: string) {
 
 // ─── Job Card ─────────────────────────────────────────────────────────────────
 
-function JobCard({ job }: { job: AgentJob }) {
+function JobCard({ job, referenceTs }: { job: AgentJob; referenceTs: number }) {
   const cfg = JOB_STATUS_CFG[job.status]
   const duration = job.completedAt
     ? job.completedAt - job.startedAt
-    : Date.now() - job.startedAt
+    : referenceTs - job.startedAt
 
   return (
     <Link href={`/agents/jobs/${job.id}`} className="block group">
@@ -88,7 +88,7 @@ function JobCard({ job }: { job: AgentJob }) {
 
         {/* Bottom row */}
         <div className="flex items-center justify-between text-[10px] text-gray-600">
-          <span>{since(job.startedAt)}{job.completedAt ? ` · ${elapsed(duration)}` : ''}</span>
+          <span>{since(job.startedAt, referenceTs)}{job.completedAt ? ` · ${elapsed(duration)}` : ''}</span>
           <span className="flex items-center gap-1 text-purple-500 group-hover:text-purple-400 transition-colors">
             Voir détail <ArrowRight className="w-3 h-3" />
           </span>
@@ -127,6 +127,32 @@ function AgentCard({ agent }: { agent: MaestroAgent }) {
       <p className="text-xs text-gray-300 leading-snug border-l-2 border-purple-700/40 pl-3 mb-3">
         {agent.specialty}
       </p>
+      {agent.seniorPersona && (
+        <div className="mb-3 border-t border-gray-800 pt-3 text-[11px] leading-relaxed text-gray-400">
+          <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Expertise senior</div>
+          <p className="text-gray-300">{agent.seniorPersona}</p>
+          {(agent.feedbackLoop?.length || agent.failureModes?.length) && (
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {agent.feedbackLoop?.length ? (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Auto-contrôle</div>
+                  <ul className="space-y-1">
+                    {agent.feedbackLoop.slice(0, 2).map(item => <li key={item}>• {item}</li>)}
+                  </ul>
+                </div>
+              ) : null}
+              {agent.failureModes?.length ? (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Risques</div>
+                  <ul className="space-y-1">
+                    {agent.failureModes.slice(0, 2).map(item => <li key={item}>• {item}</li>)}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-2 text-[11px]">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Entrées</div>
@@ -149,6 +175,7 @@ function AgentCard({ agent }: { agent: MaestroAgent }) {
 
 export default async function AgentsPage() {
   const allJobs = await listRecentJobs(30)
+  const referenceTs = new Date().getTime()
 
   const runningJobs = allJobs.filter(j => j.status === 'running')
   const errorJobs = allJobs.filter(j => j.status === 'failed' || j.status === 'awaiting_validation')
@@ -199,7 +226,7 @@ export default async function AgentsPage() {
         {runningJobs.length > 0 && (
           <div className="mb-4 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">En cours</p>
-            {runningJobs.map(j => <JobCard key={j.id} job={j} />)}
+            {runningJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
           </div>
         )}
 
@@ -207,7 +234,7 @@ export default async function AgentsPage() {
         {errorJobs.length > 0 && (
           <div className="mb-4 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">Attention requise</p>
-            {errorJobs.map(j => <JobCard key={j.id} job={j} />)}
+            {errorJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
           </div>
         )}
 
@@ -216,7 +243,7 @@ export default async function AgentsPage() {
           <div className="mb-4 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">Terminé aujourd&apos;hui ({todayJobs.length})</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {todayJobs.slice(0, 6).map(j => <JobCard key={j.id} job={j} />)}
+              {todayJobs.slice(0, 6).map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
             </div>
           </div>
         )}
@@ -226,7 +253,7 @@ export default async function AgentsPage() {
           <div className="space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">Historique récent</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {recentJobs.map(j => <JobCard key={j.id} job={j} />)}
+              {recentJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
             </div>
           </div>
         )}

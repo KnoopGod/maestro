@@ -23,6 +23,7 @@ CODEXRS_PASSWORD=
 CRON_SECRET=
 LUMA_API_KEY=
 OLLAMA_HOST=
+CODEXRS_AUTO_INIT_SCHEMA=
 ```
 
 ## Anthropic
@@ -53,6 +54,8 @@ Variables:
 
 ## Meta Facebook / Instagram
 
+Guide détaillé : [META_SETUP.md](./META_SETUP.md)
+
 Purpose:
 
 - page discovery;
@@ -80,6 +83,14 @@ Minimum practical Meta permissions:
 - `pages_manage_posts`
 - `instagram_basic`
 - `instagram_content_publish`
+
+Setup summary:
+
+- `META_APP_ID` and `META_APP_SECRET` are global app credentials.
+- A User Access Token is pasted only to discover Pages.
+- The app stores the per-client Page Access Token returned by Meta.
+- Instagram must be professional and linked to the selected Facebook Page.
+- Production Instagram images must use public HTTPS URLs.
 
 ## GitHub
 
@@ -114,8 +125,15 @@ Required production variables:
 - `DATABASE_URL`
 - `DATABASE_AUTH_TOKEN`
 - `CODEXRS_PUBLIC_URL`
+- `CODEXRS_PASSWORD`
 - `CRON_SECRET`
 - `BLOB_READ_WRITE_TOKEN` if using Vercel Blob
+
+Auth:
+
+- If `CODEXRS_PASSWORD` is set, all app pages and internal API routes require login.
+- `/api/cron/publish-due` remains callable by Vercel Cron with `CRON_SECRET`.
+- `MAESTRO_PASSWORD` is supported only as a legacy fallback; prefer `CODEXRS_PASSWORD`.
 
 Cron:
 
@@ -142,6 +160,12 @@ Local fallback:
 - `DATABASE_URL=file:./codexrs.db`
 
 Do not use the local file fallback for real production client data.
+
+Schema init:
+
+- local/dev and local file DBs auto-initialize the schema;
+- production Turso skips automatic schema initialization by default to avoid slow Vercel cold starts;
+- set `CODEXRS_AUTO_INIT_SCHEMA=true` only temporarily if a production migration must be forced from the app runtime.
 
 ## Vercel Blob
 

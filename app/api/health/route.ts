@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { queryOne } from '@/lib/db'
+import { dbConfig, queryOne } from '@/lib/db'
 
 interface Check {
   ok: boolean
@@ -29,7 +29,7 @@ export async function GET() {
       label: 'Base de données',
     },
     turso: {
-      ok: !!(process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith('file:')),
+      ok: !dbConfig.isLocalDb,
       label: 'DATABASE_URL (Turso)',
       hint: 'En production, utiliser une URL Turso (libsql://...) + DATABASE_AUTH_TOKEN pour la persistance.',
     },
@@ -44,7 +44,7 @@ export async function GET() {
   try {
     await queryOne('SELECT 1')
     checks.database.ok = true
-    checks.database.label = process.env.DATABASE_URL?.startsWith('file:')
+    checks.database.label = dbConfig.isLocalDb
       ? 'Base de données (locale)'
       : 'Base de données (Turso)'
   } catch (err) {
@@ -62,6 +62,10 @@ export async function GET() {
       checks,
       env: process.env.NODE_ENV,
       isVercel: !!process.env.VERCEL,
+      db: {
+        isLocal: dbConfig.isLocalDb,
+        schemaAutoInit: dbConfig.schemaAutoInit,
+      },
     },
     { status: allOk ? 200 : 207 }
   )

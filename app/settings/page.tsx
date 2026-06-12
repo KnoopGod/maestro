@@ -49,12 +49,12 @@ export default function SettingsPage() {
       </div>
 
       <div className="border border-indigo-900/40 bg-gray-900/40 p-4">
-        <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">// BUILD INFO</div>
+        <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">{'// BUILD INFO'}</div>
         <p className="text-[11px] text-gray-400 font-mono">
           <span className="text-[#E0E3FF]">VERSION</span> :: v0.3.0 — Sprint Post-Production
         </p>
         <p className="text-[10px] text-gray-600 font-mono mt-1">
-          Les modules marqués <span className="text-amber-500">// À VENIR</span> seront livrés dans les prochains sprints.
+          Les modules marqués <span className="text-amber-500">{'// À VENIR'}</span> seront livrés dans les prochains sprints.
         </p>
       </div>
     </div>

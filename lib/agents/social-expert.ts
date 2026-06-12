@@ -3,6 +3,7 @@ import type { Client } from '@/types/client'
 import type { VisualIdentity } from '@/types/asset'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 
@@ -100,7 +101,7 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const identityBlock = buildIdentityBlock(identity)
 
   // Master prompt with full client context
-  const systemPrompt = `Tu es **Social Expert**, directeur de création contenu HORECA avec 10 ans d'expérience terrain.
+  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création contenu HORECA avec 10 ans d'expérience terrain.
 Tu as géré les comptes Instagram et Facebook de plus de 80 établissements en France : restaurants gastronomiques, bistrots, hôtels boutiques, bars à cocktails, chambres d'hôtes.
 
 ## Ce que tu sais par cœur
@@ -184,7 +185,7 @@ Toujours renseigner suggestedFormat et justifier en 1 phrase dans formatRational
 - Générer des hashtags inventés qui n'existent pas vraiment
 - Écrire en majuscules pour "crier" — c'est 2015
 
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const userPrompt = `# CONTEXTE CLIENT
 

@@ -105,10 +105,8 @@ export function StudioForm({
   const selectedClient = clients.find(c => c.id === clientId)
 
   useEffect(() => {
-    setSelectedAsset(null)
     if (!clientId || imageMode !== 'library') return
     let cancelled = false
-    setAssetsLoading(true)
     fetch(`/api/clients/${clientId}/assets`)
       .then(r => r.json())
       .then(d => {
@@ -186,7 +184,11 @@ export function StudioForm({
           <label className="text-sm font-semibold text-white mb-3 block">👤 Client</label>
           <select
             value={clientId}
-            onChange={e => setClientId(e.target.value)}
+            onChange={e => {
+              setClientId(e.target.value)
+              setSelectedAsset(null)
+              if (imageMode === 'library') setAssetsLoading(true)
+            }}
             className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
           >
             {clients.map(c => (
@@ -344,7 +346,10 @@ export function StudioForm({
           <div className="grid grid-cols-2 gap-2 mb-4">
             <button
               type="button"
-              onClick={() => setImageMode('generate')}
+              onClick={() => {
+                setImageMode('generate')
+                setSelectedAsset(null)
+              }}
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'generate'
                   ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
@@ -356,7 +361,11 @@ export function StudioForm({
             </button>
             <button
               type="button"
-              onClick={() => setImageMode('library')}
+              onClick={() => {
+                setImageMode('library')
+                setSelectedAsset(null)
+                setAssetsLoading(true)
+              }}
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'library'
                   ? 'bg-blue-600/20 border-blue-600/40 text-blue-300'
@@ -400,6 +409,8 @@ export function StudioForm({
                       <img
                         src={asset.thumbnailUrl ?? asset.url}
                         alt={asset.originalName}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                       {selectedAsset?.id === asset.id && (
@@ -510,6 +521,8 @@ export function StudioForm({
                   <img
                     src={result.post.imageUrl}
                     alt="Visuel généré"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full max-h-[520px] object-contain"
                   />
                 </div>

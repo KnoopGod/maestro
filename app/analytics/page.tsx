@@ -8,7 +8,10 @@ import { EmptyState } from '@/components/ui/EmptyState'
 export const dynamic = 'force-dynamic'
 
 export default async function AnalyticsPage() {
-  const [posts, clients] = await Promise.all([listPosts({ limit: 500 }), listClients()])
+  const [posts, clients] = await Promise.all([
+    listPosts({ statuses: ['published', 'draft', 'failed'], limit: 500, includeInsights: false }),
+    listClients(),
+  ])
   const published = posts.filter(p => p.status === 'published')
   const draft = posts.filter(p => p.status === 'draft')
   const failed = posts.filter(p => p.status === 'failed')

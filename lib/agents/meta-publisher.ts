@@ -166,12 +166,13 @@ export interface TokenDebugInfo {
   userId?: string
   pageName?: string
   pageId?: string
+  requiredPermissions: string[]
   hasRequiredPermissions: boolean
   missingPermissions: string[]
   error?: string
 }
 
-const REQUIRED_PERMISSIONS = [
+const USER_DISCOVERY_PERMISSIONS = [
   'pages_show_list',
   'pages_read_engagement',
   'pages_manage_posts',
@@ -179,25 +180,35 @@ const REQUIRED_PERMISSIONS = [
   'instagram_content_publish',
 ]
 
+const PAGE_PUBLISHING_PERMISSIONS = [
+  'pages_read_engagement',
+  'pages_manage_posts',
+  'instagram_basic',
+  'instagram_content_publish',
+]
+
 export async function debugToken(token: string, pageId?: string): Promise<TokenDebugInfo> {
+  const requiredPermissions = pageId ? PAGE_PUBLISHING_PERMISSIONS : USER_DISCOVERY_PERMISSIONS
+
   try {
-    // Use the token itself as the access token for debug (works for testing dev tokens)
-    const res = await fetch(`${GRAPH_API}/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(token)}`)
+    const debugAccessToken = getDebugAccessToken(token)
+    const res = await fetch(`${GRAPH_API}/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(debugAccessToken)}`)
     const data = await res.json()
 
     if (!res.ok || !data.data) {
       return {
         valid: false,
         scopes: [],
+        requiredPermissions,
         hasRequiredPermissions: false,
-        missingPermissions: REQUIRED_PERMISSIONS,
+        missingPermissions: requiredPermissions,
         error: data.error?.message || 'Token invalide',
       }
     }
 
     const d = data.data
     const scopes: string[] = d.scopes ?? []
-    const missing = REQUIRED_PERMISSIONS.filter(p => !scopes.includes(p))
+    const missing = requiredPermissions.filter(p => !scopes.includes(p))
 
     let pageName: string | undefined
     if (pageId) {
@@ -216,6 +227,7 @@ export async function debugToken(token: string, pageId?: string): Promise<TokenD
       userId: d.user_id,
       pageId,
       pageName,
+      requiredPermissions,
       hasRequiredPermissions: missing.length === 0,
       missingPermissions: missing,
     }
@@ -223,11 +235,18 @@ export async function debugToken(token: string, pageId?: string): Promise<TokenD
     return {
       valid: false,
       scopes: [],
+      requiredPermissions,
       hasRequiredPermissions: false,
-      missingPermissions: REQUIRED_PERMISSIONS,
+      missingPermissions: requiredPermissions,
       error: err instanceof Error ? err.message : 'Erreur inconnue',
     }
   }
+}
+
+function getDebugAccessToken(fallbackToken: string) {
+  const appId = process.env.META_APP_ID
+  const appSecret = process.env.META_APP_SECRET
+  return appId && appSecret ? `${appId}|${appSecret}` : fallbackToken
 }
 
 // ─── Publish to Facebook Page ────────────────────────────────────────────────

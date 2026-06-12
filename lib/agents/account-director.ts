@@ -3,6 +3,7 @@ import type { Client } from '@/types/client'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export interface AccountDirective {
   /** Pilier prioritaire à traiter ensuite (issu de client.strategy.contentPillars). */
@@ -47,6 +48,7 @@ export async function runAccountDirector(input: {
 }> {
   const { client, userBrief } = input
   const topPosts = input.topPosts ?? []
+  // includeInsights reste actif : le learning loop lit metaInsights des posts récents
   const recentPosts = input.recentPosts ?? await listPosts({ clientId: client.id, limit: 10 })
 
   const now = input.runAt ? new Date(input.runAt) : new Date()
@@ -65,7 +67,7 @@ export async function runAccountDirector(input: {
   }
 
   const identity = await getVisualIdentity(client.id)
-  const systemPrompt = `Tu es **Account Director**, chef de dossier senior pour une agence HORECA avec 10 ans d'expérience.
+  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Account Director**, chef de dossier senior pour une agence HORECA avec 10 ans d'expérience.
 Tu as géré des portefeuilles de 20-30 établissements simultanément. Tu connais les piliers de contenu qui fonctionnent par type d'établissement, les saisons HORECA, les erreurs de répétition qui fatiguent les abonnés.
 
 ## Ton rôle précis
@@ -103,7 +105,7 @@ Un brief enrichi en 2-4 phrases, prêt à copier-coller. Pas d'instructions mét
 Exemple de bon enrichedBrief : "Le tartare de bœuf du chef Marco, préparé devant le client avec huile de truffe noire du Périgord et câpres de Pantelleria. Mettre en avant le geste du chef et l'ingrédient d'exception. CTA : réserver pour ce soir, X couverts restants."
 Exemple de mauvais enrichedBrief : "Parler du tartare et mettre en avant la qualité."
 
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const userPrompt = `# CLIENT
 

@@ -46,6 +46,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       clientId: clientFilter,
       status: statusFilter as PostStatus | undefined,
       limit: 100,
+      includeInsights: false,
     }),
     listClients(),
   ])
@@ -164,7 +165,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
           {post.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
+            <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
             <div className={`w-full h-full bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-2xl`}>
               {client?.emoji ?? '📝'}

@@ -1,9 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
+import {
+  buildExpertSystemPrompt,
+  createAgentQualityEnvelope,
+  type AgentQualityEnvelope,
+} from '@/lib/agents/prompts'
 
-interface SupervisorResult {
+export interface SupervisorResult {
   review: SupervisorReview
+  qualityEnvelope: AgentQualityEnvelope<SupervisorReview>
   cost: number
   tokensUsed: number
   model: string
@@ -15,8 +21,10 @@ export async function supervisePost(input: {
 }): Promise<SupervisorResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
+    const review = fallbackSupervisorReview(input)
     return {
-      review: fallbackSupervisorReview(input),
+      review,
+      qualityEnvelope: buildSupervisorEnvelope(review, ['ANTHROPIC_API_KEY absente : contrôle local limité.']),
       cost: 0,
       tokensUsed: 0,
       model: 'fallback',
@@ -24,7 +32,7 @@ export async function supervisePost(input: {
   }
 
   const { client, post } = input
-  const systemPrompt = `Tu es **Supervisor**, directeur éditorial HORECA avec 10 ans de relecture de contenu social media.
+  const systemPrompt = buildExpertSystemPrompt('supervisor', `Tu es **Supervisor**, directeur éditorial HORECA avec 10 ans de relecture de contenu social media.
 Tu as relu et corrigé des milliers de posts avant publication pour des restaurants, hôtels, bars et B&Bs en France.
 Tu connais les erreurs qui coûtent des clients, les formulations qui créent des plaintes, et les occasions manquées qui font perdre de l'engagement.
 
@@ -80,7 +88,7 @@ Signaler et suggérer remplacement pour :
 - **"blocked"** : risque réel pour la marque, la conversion, ou la réputation. Expliquer précisément pourquoi.
 
 Sois exigeant mais pragmatique. "blocked" = vraiment nuisible. "revise" = meilleur possible mais publiable.
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const userPrompt = `# CONTEXTE CLIENT
 
@@ -154,15 +162,20 @@ Réponds en français, en JSON strict, sans markdown.`
     const outputTokens = message.usage.output_tokens
     const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
 
+    const review = normalizeReview(parsed, post.impactScore)
+
     return {
-      review: normalizeReview(parsed, post.impactScore),
+      review,
+      qualityEnvelope: buildSupervisorEnvelope(review),
       cost: parseFloat(cost.toFixed(6)),
       tokensUsed: inputTokens + outputTokens,
       model: 'claude-opus-4-7',
     }
   } catch {
+    const review = fallbackSupervisorReview(input)
     return {
-      review: fallbackSupervisorReview(input),
+      review,
+      qualityEnvelope: buildSupervisorEnvelope(review, ['Claude indisponible ou réponse non parsable : fallback local utilisé.']),
       cost: 0,
       tokensUsed: 0,
       model: 'fallback',
@@ -223,6 +236,21 @@ function normalizeReview(review: SupervisorReview, fallbackScore: number): Super
     improvements: Array.isArray(review.improvements) ? review.improvements.slice(0, 5) : [],
     nextAction: review.nextAction || 'Relire le post avant publication.',
   }
+}
+
+function buildSupervisorEnvelope(
+  review: SupervisorReview,
+  assumptions: string[] = []
+): AgentQualityEnvelope<SupervisorReview> {
+  return createAgentQualityEnvelope({
+    agentId: 'supervisor',
+    confidence: review.score / 100,
+    assumptions,
+    risks: review.risks,
+    recommendations: review.improvements,
+    nextAgent: review.verdict === 'ready' ? 'publisher' : 'social-expert',
+    payload: review,
+  })
 }
 
 function clampScore(score: number) {

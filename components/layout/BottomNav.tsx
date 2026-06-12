@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Users, Sparkles, CalendarDays, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
-import { ShieldCheck, BarChart3, FolderOpen, Bot, Plug, Settings, DollarSign, X } from 'lucide-react'
+import { ShieldCheck, BarChart3, FolderOpen, Bot, Plug, Settings, DollarSign, X, LogOut } from 'lucide-react'
 
 const NAV_MAIN = [
   { href: '/',          icon: Home,         label: 'Home' },
@@ -67,6 +67,15 @@ export function BottomNav() {
                 })}
               </div>
             </nav>
+            <form action="/api/auth/logout" method="post" className="mt-4">
+              <button
+                type="submit"
+                className="w-full min-h-[44px] rounded-xl border border-red-900/40 bg-red-950/20 text-red-300 text-xs flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Déconnexion
+              </button>
+            </form>
           </div>
         </div>
       )}

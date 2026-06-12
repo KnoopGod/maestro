@@ -1,7 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
 import { AIModel } from '@/types'
-import { AIStatus } from '@/types'
 import { StatusDot } from '@/components/ui/StatusDot'
 import { GaugeBar } from '@/components/ui/GaugeBar'
 import { AIBadge } from '@/components/ui/AIBadge'

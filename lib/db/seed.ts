@@ -2,7 +2,6 @@
  * Seed HORECA mock clients to populate the database on first run.
  * Idempotent: only seeds if clients table is empty.
  */
-import { db } from './index'
 import { createClient, listClients } from './queries/clients'
 import type { ClientStrategy, ClientType } from '@/types/client'
 

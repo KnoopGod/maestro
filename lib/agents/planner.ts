@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { PostPlatform } from '@/types/post'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export interface PostIdea {
   title: string
@@ -33,7 +34,7 @@ export async function proposePostIdeas(client: Client, count = 5): Promise<Plann
     }
   }
 
-  const systemPrompt = `Tu es **Strategy Director** pour CODEXRS, agence HORECA.
+  const systemPrompt = buildExpertSystemPrompt('strategy-director', `Tu es **Strategy Director** pour CODEXRS, agence HORECA.
 Tu pilotes la planification de contenu social pour chaque client.
 
 Tes principes :
@@ -42,7 +43,7 @@ Tes principes :
 3. Pas de redite : varier les angles (offre, ambiance, preuve sociale, local, coulisses, saisonnalité).
 4. Respect strict du ton et des mots à éviter.
 
-Réponds en JSON strict, sans markdown.`
+Réponds en JSON strict, sans markdown.`)
 
   const platforms = client.strategy.platforms.length ? client.strategy.platforms : ['instagram', 'facebook']
 

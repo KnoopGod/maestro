@@ -5,7 +5,6 @@ import { getAIForTask, getModeConfig } from '@/lib/mode-config'
 import { TASKS } from '@/lib/mock-data/tasks'
 import { CostBadge } from '@/components/ui/CostBadge'
 import { TaskCategory, AIProvider } from '@/types'
-import { ChevronDown } from 'lucide-react'
 
 const AI_LABEL: Record<AIProvider, { label: string; color: string; dot: string }> = {
   claude:  { label: 'Claude',       color: 'text-purple-300', dot: 'bg-purple-500' },

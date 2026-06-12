@@ -10,6 +10,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { readFile } from 'node:fs/promises'
 import { getAbsolutePath } from '@/lib/storage/extract-text'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export interface VisionAnalysis {
   description: string
@@ -34,14 +35,14 @@ export async function analyzeImage(
 
   const claude = new Anthropic({ apiKey })
 
-  const systemPrompt = `Tu es un expert en analyse visuelle pour la création de contenu HORECA (restaurants, hôtels, bars, chambres d'hôte).
+  const systemPrompt = buildExpertSystemPrompt('vision-analyzer', `Tu es un expert en analyse visuelle pour la création de contenu HORECA (restaurants, hôtels, bars, chambres d'hôte).
 
 Tu analyses une image et extrais des informations structurées qui serviront à :
 1. Construire l'identité visuelle de la marque
 2. Améliorer la cohérence des futurs contenus générés
 3. Catégoriser le contenu pour réutilisation
 
-**Format de sortie : JSON strict, sans markdown, sans backticks.**`
+**Format de sortie : JSON strict, sans markdown, sans backticks.**`)
 
   const userPrompt = `Analyse cette image et retourne EXACTEMENT ce JSON :
 

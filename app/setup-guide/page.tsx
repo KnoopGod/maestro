@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { CheckCircle, Circle, ExternalLink, Terminal, Download } from 'lucide-react'
+import { CheckCircle, Circle, Terminal } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface Step {

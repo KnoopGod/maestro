@@ -133,11 +133,11 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
         >
           {asset.type === 'image' || asset.type === 'logo' ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={asset.url} alt={asset.originalName} className="w-full h-full object-cover" />
+            <img src={asset.thumbnailUrl ?? asset.url} alt={asset.originalName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : asset.type === 'video' ? (
             <div className="w-full h-full bg-gradient-to-br from-amber-900 to-orange-950 flex items-center justify-center relative">
               <Film className="w-12 h-12 text-amber-300/60" />
-              <video src={asset.url} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+              <video src={asset.url} preload="metadata" className="absolute inset-0 w-full h-full object-cover opacity-40" />
             </div>
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-blue-900 to-indigo-950 flex flex-col items-center justify-center p-4">

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { nanoid } from 'nanoid'
 import {
   createClient as dbCreateClient,
   updateClient as dbUpdateClient,
@@ -10,6 +11,7 @@ import {
 import { CLIENT_TYPES, type ClientType } from '@/types/client'
 
 export async function createClientAction(formData: FormData) {
+  const clientId = String(formData.get('clientId') ?? '').trim() || nanoid(12)
   const name = String(formData.get('name') ?? '').trim()
   const type = String(formData.get('type') ?? '') as ClientType
   const city = String(formData.get('city') ?? '').trim() || undefined
@@ -23,6 +25,7 @@ export async function createClientAction(formData: FormData) {
   const typeConfig = CLIENT_TYPES[type]
 
   const client = await dbCreateClient({
+    id: clientId,
     name,
     type,
     city,

@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { PostInsights } from '@/types/post'
+import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 const GRAPH_API = 'https://graph.facebook.com/v23.0'
 
@@ -109,7 +110,7 @@ export async function analyzePerformance(input: {
     return { analysis: fallbackAnalysis(posts), cost: 0, tokensUsed: 0, model: 'fallback' }
   }
 
-  const systemPrompt = `Tu es **Performance Analyst**, analyste social media HORECA senior avec 10 ans d'expérience benchmarking.
+  const systemPrompt = buildExpertSystemPrompt('performance-analyst', `Tu es **Performance Analyst**, analyste social media HORECA senior avec 10 ans d'expérience benchmarking.
 Tu connais les taux d'engagement de référence par plateforme et par type d'établissement HORECA en France.
 
 ## Benchmarks que tu utilises pour contextualiser les données
@@ -139,7 +140,7 @@ Tu connais les taux d'engagement de référence par plateforme et par type d'ét
 3 recommandations concrètes, actionnables immédiatement par le Social Expert.
 Chaque recommandation doit être spécifique (pas "améliorer l'engagement" mais "publier le jeudi à 17h avec un post coulisses — tes 3 meilleurs posts sont tous ce format-là").
 
-Réponds en français, en JSON strict, sans markdown.`
+Réponds en français, en JSON strict, sans markdown.`)
 
   const postsData = posts.slice(0, 10).map((p, i) => ({
     num: i + 1,

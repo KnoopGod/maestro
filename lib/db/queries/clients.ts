@@ -23,6 +23,13 @@ interface ClientRow {
   updated_at: number
 }
 
+interface ClientWithStatsRow extends ClientRow {
+  posts_this_month: number
+  avg_impact: number | null
+  connected_platforms: number
+  last_post_at: number | null
+}
+
 function mapRow(row: ClientRow): Client {
   const strategy = JSON.parse(row.strategy ?? 'null') ?? createClientStrategy({
     type: row.type,
@@ -62,26 +69,36 @@ export async function listClients(): Promise<Client[]> {
 }
 
 export async function listClientsWithStats(): Promise<ClientWithStats[]> {
-  const clients = await listClients()
-  if (clients.length === 0) return []
-
   const startOfMonth = new Date()
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
   const monthTs = startOfMonth.getTime()
 
-  const [postStats, socialStats, recentPosts] = await Promise.all([
-    query<{ client_id: string; posts_this_month: number; avg_impact: number | null; last_post_at: number | null }>(
+  const [rows, recentPosts] = await Promise.all([
+    query<ClientWithStatsRow>(
       `SELECT
-        client_id,
-        COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
-        AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact,
-        MAX(created_at) AS last_post_at
-      FROM posts GROUP BY client_id`,
+        c.*,
+        COALESCE(p.posts_this_month, 0) AS posts_this_month,
+        p.avg_impact,
+        p.last_post_at,
+        COALESCE(s.connected_platforms, 0) AS connected_platforms
+      FROM clients c
+      LEFT JOIN (
+        SELECT
+          client_id,
+          COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
+          AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact,
+          MAX(created_at) AS last_post_at
+        FROM posts
+        GROUP BY client_id
+      ) p ON p.client_id = c.id
+      LEFT JOIN (
+        SELECT client_id, COUNT(*) AS connected_platforms
+        FROM client_social_accounts
+        GROUP BY client_id
+      ) s ON s.client_id = c.id
+      ORDER BY c.created_at DESC`,
       [monthTs]
-    ),
-    query<{ client_id: string; count: number }>(
-      `SELECT client_id, COUNT(*) as count FROM client_social_accounts GROUP BY client_id`
     ),
     query<{ client_id: string; brief: string; caption: string; hook: string | null }>(
       `SELECT client_id, brief, caption, hook FROM posts
@@ -93,8 +110,6 @@ export async function listClientsWithStats(): Promise<ClientWithStats[]> {
     ),
   ])
 
-  const postMap = new Map(postStats.map(r => [r.client_id, r]))
-  const socialMap = new Map(socialStats.map(r => [r.client_id, r.count]))
   const recentMap = new Map<string, typeof recentPosts>()
   for (const p of recentPosts) {
     if (!recentMap.has(p.client_id)) recentMap.set(p.client_id, [])
@@ -102,21 +117,21 @@ export async function listClientsWithStats(): Promise<ClientWithStats[]> {
   }
 
   const now = Date.now()
-  return clients.map(c => {
-    const ps = postMap.get(c.id)
-    const avgImpact = ps?.avg_impact
-    const lastPostAt = ps?.last_post_at ?? null
+  return rows.map(row => {
+    const client = mapRow(row)
+    const avgImpact = row.avg_impact
+    const connectedPlatforms = Number(row.connected_platforms ?? 0)
+    const lastPostAt = row.last_post_at != null ? Number(row.last_post_at) : null
     const daysSincePost = lastPostAt
       ? Math.floor((now - lastPostAt) / 86_400_000)
       : null
-    const recent = recentMap.get(c.id) ?? []
-    const nextPillar = pickNextPillar(c.strategy.contentPillars, recent)
+    const nextPillar = pickNextPillar(client.strategy.contentPillars, recentMap.get(client.id) ?? [])
     return {
-      ...c,
-      postsThisMonth: ps?.posts_this_month ?? 0,
+      ...client,
+      postsThisMonth: Number(row.posts_this_month ?? 0),
       engagement: avgImpact != null ? parseFloat((avgImpact / 20).toFixed(1)) : 0,
-      agentsCount: socialMap.get(c.id) ?? 0,
-      connectedPlatforms: socialMap.get(c.id) ?? 0,
+      agentsCount: connectedPlatforms,
+      connectedPlatforms,
       lastPostAt,
       daysSincePost,
       nextPillar,
@@ -133,6 +148,7 @@ export async function getClient(id: string): Promise<Client | null> {
 }
 
 export async function createClient(input: {
+  id?: string
   name: string
   type: ClientType
   city?: string
@@ -145,7 +161,7 @@ export async function createClient(input: {
   languages?: string[]
   strategy?: ClientStrategy
 }): Promise<Client> {
-  const id = nanoid(12)
+  const id = input.id ?? nanoid(12)
   const now = Date.now()
   const strategy = input.strategy ?? createClientStrategy({
     type: input.type,
@@ -157,7 +173,7 @@ export async function createClient(input: {
   })
 
   await db.execute({
-    sql: `INSERT INTO clients (
+    sql: `INSERT OR IGNORE INTO clients (
       id, name, type, city, status, emoji, color, description,
       brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
       languages, strategy, created_at, updated_at

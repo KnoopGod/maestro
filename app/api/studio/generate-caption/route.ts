@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/queries/clients'
 import { generateCaption, type Platform } from '@/lib/agents/social-expert'
+import type { PostContentType } from '@/types/post'
+
+const ALLOWED_PLATFORMS = new Set<Platform>(['instagram', 'facebook', 'tiktok', 'linkedin'])
+const ALLOWED_CONTENT_TYPES = new Set<PostContentType>(['photo', 'reel', 'story'])
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +12,12 @@ export async function POST(req: NextRequest) {
 
     if (!clientId) return NextResponse.json({ error: 'clientId requis' }, { status: 400 })
     if (!brief) return NextResponse.json({ error: 'brief requis' }, { status: 400 })
-    if (!Array.isArray(platforms) || platforms.length === 0) {
+    const validPlatforms = Array.isArray(platforms)
+      ? platforms.filter((platform): platform is Platform => ALLOWED_PLATFORMS.has(platform))
+      : []
+    const validContentType: PostContentType = ALLOWED_CONTENT_TYPES.has(contentType) ? contentType : 'photo'
+
+    if (validPlatforms.length === 0) {
       return NextResponse.json({ error: 'platforms requis (array non vide)' }, { status: 400 })
     }
 
@@ -18,8 +27,8 @@ export async function POST(req: NextRequest) {
     const result = await generateCaption({
       client,
       brief,
-      platforms: platforms as Platform[],
-      contentType,
+      platforms: validPlatforms,
+      contentType: validContentType,
     })
 
     return NextResponse.json({
