@@ -269,6 +269,18 @@ export async function deleteClient(id: string): Promise<void> {
   })
 }
 
+export async function deleteClients(ids: string[]): Promise<number> {
+  const uniqueIds = [...new Set(ids.map(id => id.trim()).filter(Boolean))]
+  if (uniqueIds.length === 0) return 0
+
+  const placeholders = uniqueIds.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `DELETE FROM clients WHERE id IN (${placeholders})`,
+    args: uniqueIds,
+  })
+  return result.rowsAffected
+}
+
 export async function saveAiStrategy(id: string, strategy: unknown): Promise<void> {
   await db.execute({
     sql: `UPDATE clients SET ai_strategy = ?, updated_at = ? WHERE id = ?`,

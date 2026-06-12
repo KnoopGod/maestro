@@ -7,6 +7,7 @@ import {
   createClient as dbCreateClient,
   updateClient as dbUpdateClient,
   deleteClient as dbDeleteClient,
+  deleteClients as dbDeleteClients,
 } from '@/lib/db/queries/clients'
 import { CLIENT_TYPES, type ClientType } from '@/types/client'
 
@@ -84,4 +85,9 @@ export async function deleteClientAction(id: string) {
   await dbDeleteClient(id)
   revalidatePath('/clients')
   redirect('/clients')
+}
+
+export async function deleteClientsAction(ids: string[]) {
+  await dbDeleteClients(ids)
+  revalidatePath('/clients')
 }

@@ -5,6 +5,7 @@ const PUBLIC_PATHS = [
   '/login',
   '/api/auth/login',
   '/api/auth/logout',
+  '/api/admin/migrate',
   '/api/cron/publish-due',
   '/privacy',
   '/data-deletion',

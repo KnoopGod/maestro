@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Sparkles } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { CLIENT_TYPES, CLIENT_STATUS, type ClientWithStats } from '@/types/client'
 import { DeleteClientButton } from './DeleteClientButton'
 
@@ -17,14 +17,40 @@ function healthLabel(days: number | null): string {
   return `J-${days}`
 }
 
-export function ClientCard({ client }: { client: ClientWithStats }) {
+export function ClientCard({
+  client,
+  selectionMode = false,
+  selected = false,
+  onSelectedChange,
+}: {
+  client: ClientWithStats
+  selectionMode?: boolean
+  selected?: boolean
+  onSelectedChange?: (selected: boolean) => void
+}) {
   const typeCfg = CLIENT_TYPES[client.type]
   const statusCfg = CLIENT_STATUS[client.status]
   const dotColor = healthColor(client.daysSincePost)
   const lastPostLabel = healthLabel(client.daysSincePost)
 
   return (
-    <div className="hud-corners bg-gray-900/60 border border-gray-800 hover:border-indigo-700/60 hover:shadow-[0_0_24px_rgba(99,102,241,0.12)] transition-all duration-200 group p-5">
+    <div className={`hud-corners relative bg-gray-900/60 border hover:border-indigo-700/60 hover:shadow-[0_0_24px_rgba(99,102,241,0.12)] transition-all duration-200 group p-5 ${selected ? 'border-purple-500 ring-1 ring-purple-500/30' : 'border-gray-800'}`}>
+      {selectionMode && (
+        <button
+          type="button"
+          onClick={() => onSelectedChange?.(!selected)}
+          aria-pressed={selected}
+          aria-label={`${selected ? 'Désélectionner' : 'Sélectionner'} ${client.name}`}
+          title={`${selected ? 'Désélectionner' : 'Sélectionner'} ${client.name} pour une action groupée`}
+          className={`absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center border transition-colors ${
+            selected
+              ? 'border-purple-500 bg-purple-600 text-white'
+              : 'border-gray-700 bg-gray-950 text-gray-500 hover:border-purple-500 hover:text-purple-300'
+          }`}
+        >
+          {selected && <Check className="h-4 w-4" />}
+        </button>
+      )}
       <div className="flex items-start justify-between gap-3 mb-4">
         <Link href={`/clients/${client.id}`} title={`Ouvrir la fiche client de ${client.name}`} className="flex min-w-0 flex-1 items-center gap-3">
           <div className="relative flex-shrink-0">

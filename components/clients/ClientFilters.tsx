@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { CheckSquare, Plus, Trash2, X } from 'lucide-react'
+import { useMemo, useState, useTransition } from 'react'
 import { CLIENT_TYPES, type ClientType, type ClientWithStats } from '@/types/client'
 import { ClientCard } from './ClientCard'
+import { deleteClientsAction } from '@/lib/actions/clients'
 
 type Filter = 'all' | ClientType
 
@@ -12,6 +16,11 @@ export function ClientGridWithFilters({
   clients: ClientWithStats[]
   filter?: Filter
 }) {
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
   const counts: Record<Filter, number> = {
     all: clients.length,
     restaurant: clients.filter(c => c.type === 'restaurant').length,
@@ -21,9 +30,39 @@ export function ClientGridWithFilters({
     restaurant_hotel: clients.filter(c => c.type === 'restaurant_hotel').length,
   }
 
-  const filtered = filter === 'all'
-    ? clients
-    : clients.filter(c => c.type === filter)
+  const filtered = useMemo(
+    () => filter === 'all' ? clients : clients.filter(c => c.type === filter),
+    [clients, filter]
+  )
+  const selectedClients = clients.filter(c => selectedIds.includes(c.id))
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(prev => !prev)
+    setSelectedIds([])
+    setConfirmBulkDelete(false)
+  }
+
+  const toggleClient = (id: string, selected: boolean) => {
+    setSelectedIds(prev => selected ? [...new Set([...prev, id])] : prev.filter(item => item !== id))
+  }
+
+  const selectVisible = () => {
+    setSelectedIds(prev => [...new Set([...prev, ...filtered.map(c => c.id)])])
+  }
+
+  const clearSelection = () => {
+    setSelectedIds([])
+    setConfirmBulkDelete(false)
+  }
+
+  const deleteSelected = () => {
+    startTransition(async () => {
+      await deleteClientsAction(selectedIds)
+      setSelectedIds([])
+      setConfirmBulkDelete(false)
+      setSelectionMode(false)
+    })
+  }
 
   if (clients.length === 0) {
     return (
@@ -47,37 +86,75 @@ export function ClientGridWithFilters({
 
   return (
     <>
-      <div className="flex gap-2 flex-wrap mb-6">
-        <Link
-          href="/clients"
-          title="Afficher tous les clients sans filtre"
-          className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all ${
-            filter === 'all'
-              ? 'bg-purple-600 text-white'
-              : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
-          }`}
-        >
-          Tous ({counts.all})
-        </Link>
-        {(Object.keys(CLIENT_TYPES) as ClientType[]).filter(t => counts[t] > 0).map(t => {
-          const cfg = CLIENT_TYPES[t]
-          const active = filter === t
-          return (
-            <Link
-              key={t}
-              href={`/clients?type=${t}`}
-              title={`Afficher uniquement les clients de type ${cfg.label}`}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
-                active
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
-              }`}
-            >
-              <span>{cfg.emoji}</span>
-              {cfg.label} ({counts[t]})
-            </Link>
-          )
-        })}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/clients"
+            title="Afficher tous les clients sans filtre"
+            className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all ${
+              filter === 'all'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
+            }`}
+          >
+            Tous ({counts.all})
+          </Link>
+          {(Object.keys(CLIENT_TYPES) as ClientType[]).filter(t => counts[t] > 0).map(t => {
+            const cfg = CLIENT_TYPES[t]
+            const active = filter === t
+            return (
+              <Link
+                key={t}
+                href={`/clients?type=${t}`}
+                title={`Afficher uniquement les clients de type ${cfg.label}`}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                  active
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
+                }`}
+              >
+                <span>{cfg.emoji}</span>
+                {cfg.label} ({counts[t]})
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {selectionMode && (
+            <>
+              <button
+                type="button"
+                onClick={selectVisible}
+                title="Sélectionner tous les clients actuellement visibles"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-300 hover:bg-gray-800"
+              >
+                <CheckSquare className="h-3.5 w-3.5" />
+                Tout sélectionner
+              </button>
+              {selectedIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmBulkDelete(true)}
+                  title={`Supprimer ${selectedIds.length} client${selectedIds.length > 1 ? 's' : ''} sélectionné${selectedIds.length > 1 ? 's' : ''}`}
+                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-red-800/50 bg-red-950/30 px-3 py-2 text-xs font-medium text-red-300 hover:bg-red-900/40"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Supprimer ({selectedIds.length})
+                </button>
+              )}
+            </>
+          )}
+          <button
+            type="button"
+            onClick={selectionMode ? toggleSelectionMode : () => setSelectionMode(true)}
+            title={selectionMode ? 'Quitter le mode sélection multiple' : 'Sélectionner plusieurs clients pour une action groupée'}
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-300 hover:bg-gray-800"
+          >
+            {selectionMode ? <X className="h-3.5 w-3.5" /> : <CheckSquare className="h-3.5 w-3.5" />}
+            {selectionMode ? 'Annuler' : 'Sélection multiple'}
+          </button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -86,7 +163,53 @@ export function ClientGridWithFilters({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(c => <ClientCard key={c.id} client={c} />)}
+          {filtered.map(c => (
+            <ClientCard
+              key={c.id}
+              client={c}
+              selectionMode={selectionMode}
+              selected={selectedIds.includes(c.id)}
+              onSelectedChange={selected => toggleClient(c.id, selected)}
+            />
+          ))}
+        </div>
+      )}
+
+      {confirmBulkDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Fermer la confirmation"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setConfirmBulkDelete(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl border border-red-700/30 bg-gray-900 p-6 shadow-2xl">
+            <h3 className="font-semibold text-white">Supprimer plusieurs clients ?</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              {selectedClients.length} client{selectedClients.length > 1 ? 's' : ''} seront supprimés définitivement avec leur historique local.
+            </p>
+            <div className="mt-3 max-h-32 overflow-y-auto rounded-lg border border-gray-800 bg-gray-950/50 p-2 text-xs text-gray-300">
+              {selectedClients.map(c => <div key={c.id}>{c.name}</div>)}
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={clearSelection}
+                disabled={isPending}
+                className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={deleteSelected}
+                disabled={isPending}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+              >
+                {isPending ? 'Suppression...' : 'Supprimer la sélection'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
