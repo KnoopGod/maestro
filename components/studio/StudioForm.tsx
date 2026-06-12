@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useTransition } from 'react'
-import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2 } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Copy, Check, Heart, MessageCircle, Send, Bookmark, Target, ImageIcon, Wand2, BrainCircuit, ChevronDown } from 'lucide-react'
 import type { Client } from '@/types/client'
 import type { Post, SupervisorReview } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
@@ -8,6 +8,34 @@ import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
 import type { PostIdea } from '@/lib/agents/planner'
 import type { AccountDirective } from '@/lib/agents/account-director'
+
+// ─── Brief templates ──────────────────────────────────────────────────────────
+
+const BRIEF_TEMPLATES: Record<string, { label: string; text: string }[]> = {
+  '☀️ Quotidien': [
+    { label: '🍽 Plat du jour', text: 'Mettre en avant le plat du jour — ingrédients frais de saison, provenance locale, présentation soignée. Ton appétissant et accessible, donner envie de venir déjeuner.' },
+    { label: '☕ Brunch / Petit-déj', text: 'Promouvoir notre formule petit-déjeuner ou brunch. Mettre en avant la générosité des portions, les produits artisanaux, l\'ambiance cosy du matin. CTA : réservation ou passage direct.' },
+    { label: '🌙 Ambiance soirée', text: 'Capturer l\'ambiance de la salle en soirée — lumières tamisées, conversations animées, tables dressées. Mettre en avant l\'expérience émotionnelle et l\'invitation à partager un moment.' },
+    { label: '👨‍🍳 Le geste du chef', text: 'Montrer un tour de main du chef : technique, dressage, finition d\'un plat. Texte court, vocabulaire culinaire précis, humaniser l\'équipe en cuisine.' },
+  ],
+  '🎉 Événement': [
+    { label: '📣 Soirée spéciale', text: 'Annoncer une soirée événement à venir. Créer de l\'anticipation, mettre en avant ce qui la rend unique (animation, menu spécial, partenaire). CTA fort : lien de réservation ou DM.' },
+    { label: '💌 Saint-Valentin', text: 'Menu dîner Saint-Valentin — ambiance romantique, décoration florale, menu dégustation en duo. Mettre en avant l\'intimité et le soin apporté à chaque détail. Réservations limitées.' },
+    { label: '🎄 Fêtes de fin d\'année', text: 'Offres Noël / Réveillon — repas de fête, formules groupe, privatisation possible. Ton festif et chaleureux. Mettre en avant l\'accueil des familles et l\'ambiance chaleureuse.' },
+    { label: '🍷 Soirée dégustation', text: 'Soirée dégustation vins ou cocktails signature. Décrire le format (accord mets-vins, blind tasting), les intervenants, le nombre de places limité. Créer l\'exclusivité.' },
+  ],
+  '🆕 Nouveautés': [
+    { label: '🍴 Nouveau plat carte', text: 'Présenter un nouveau plat venant d\'intégrer la carte. Inspiration du chef, ingrédients phares, technique de cuisson, accord conseillé. Inviter à venir le découvrir.' },
+    { label: '🍹 Nouveau cocktail', text: 'Lancer un nouveau cocktail ou mocktail de saison. Décrire les notes aromatiques, la couleur, le nom évocateur. Mettre en avant la créativité du bar.' },
+    { label: '🏆 Presse / Récompense', text: 'Partager une belle critique presse, guide ou récompense reçue. Ton humble et reconnaissant, mettre en avant l\'équipe. Remercier les clients qui rendent ça possible.' },
+    { label: '🔄 Retour saisonnier', text: 'Annoncer le retour d\'un plat ou produit saisonnier très attendu. Jouer sur la nostalgie et l\'anticipation. Court, percutant, émotionnel.' },
+  ],
+  '🤝 Humain': [
+    { label: '👤 Portrait équipe', text: 'Portrait d\'un membre de l\'équipe — leur parcours, leur passion, leur rôle. Humaniser la marque, montrer les visages derrière l\'expérience. Style interview ou citation.' },
+    { label: '🎂 Anniversaire / Fidélité', text: 'Célébrer un anniversaire d\'établissement ou remercier la communauté de clients fidèles. Ton chaleureux, partager une anecdote ou un chiffre marquant. Offrir quelque chose symbolique.' },
+    { label: '🌿 Engagements / Valeurs', text: 'Mettre en avant un engagement fort : circuit court, producteurs locaux, zéro gâchis, démarche éco-responsable. Concret, avec des exemples chiffrés ou des noms de partenaires.' },
+  ],
+}
 
 type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 type ContentType = 'photo' | 'reel' | 'story'
@@ -70,6 +98,10 @@ export function StudioForm({
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
 
+  const [aiDirective, setAiDirective] = useState<AccountDirective | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [templateCategory, setTemplateCategory] = useState<string | null>(null)
+
   const selectedClient = clients.find(c => c.id === clientId)
 
   useEffect(() => {
@@ -89,11 +121,27 @@ export function StudioForm({
 
   function applyIdea(idea: PostIdea) {
     setBrief(idea.brief)
-    // Map idea platforms (PostPlatform) into Studio's local Platform type
     const valid: Platform[] = idea.platforms.filter((p): p is Platform =>
       ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)
     )
     if (valid.length > 0) setPlatforms(valid)
+  }
+
+  async function handleSuggestBrief() {
+    if (!clientId) return
+    setAiLoading(true)
+    setAiDirective(null)
+    try {
+      const res = await fetch(`/api/studio/suggest-brief?clientId=${clientId}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setAiDirective(data.directive)
+      setBrief(data.directive.enrichedBrief)
+    } catch (err) {
+      console.error('suggest-brief error:', err)
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   const togglePlatform = (p: Platform) => {
@@ -169,32 +217,77 @@ export function StudioForm({
         <PostIdeasPanel clientId={clientId || null} onPick={applyIdea} />
 
         {/* Brief */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <label className="text-sm font-semibold text-white mb-3 block">✍️ Brief du post</label>
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-semibold text-white">✍️ Brief du post</label>
+            <button
+              type="button"
+              onClick={handleSuggestBrief}
+              disabled={!clientId || aiLoading}
+              className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg bg-purple-900/40 border border-purple-700/40 text-purple-300 hover:bg-purple-800/40 hover:border-purple-500/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono tracking-wide"
+            >
+              {aiLoading
+                ? <><Loader2 className="w-3 h-3 animate-spin" /> Analyse en cours...</>
+                : <><BrainCircuit className="w-3 h-3" /> Brief IA</>
+              }
+            </button>
+          </div>
+
+          {aiDirective && (
+            <div className="bg-amber-950/20 border border-amber-800/30 rounded-lg p-3 space-y-1.5 text-xs">
+              <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] tracking-wider">
+                <BrainCircuit className="w-3 h-3" />
+                Account Director — {aiDirective.priorityPillar}
+              </div>
+              <p className="text-gray-300">{aiDirective.rationale}</p>
+              <p className="text-amber-300/80">Hook : &ldquo;{aiDirective.hookSuggestion}&rdquo;</p>
+            </div>
+          )}
+
           <textarea
             value={brief}
             onChange={e => setBrief(e.target.value)}
             rows={4}
-            placeholder="Décrivez ce que vous voulez communiquer...&#10;&#10;Ex: Pizza signature de retour ce weekend, mettre en avant les ingrédients premium"
+            placeholder="Décrivez ce que vous voulez communiquer…&#10;&#10;Ex: Pizza signature de retour ce weekend, ingrédients premium, présentation soignée"
             className="w-full bg-gray-950/60 border border-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-none"
           />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {[
-              '🍝 Plat signature',
-              '🌅 Ambiance du soir',
-              '🥖 Petit-déjeuner',
-              '🎉 Événement à venir',
-              '🍷 Nouvelle carte',
-            ].map(p => (
-              <button
-                key={p}
-                onClick={() => setBrief(b => b + (b ? '\n' : '') + p)}
-                type="button"
-                className="text-xs px-2.5 py-1.5 min-h-[36px] rounded-md bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700"
-              >
-                {p}
-              </button>
-            ))}
+
+          {/* Template categories */}
+          <div className="space-y-2">
+            <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider">Templates rapides</p>
+            <div className="flex flex-wrap gap-1.5">
+              {Object.keys(BRIEF_TEMPLATES).map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setTemplateCategory(templateCategory === cat ? null : cat)}
+                  className={`text-[10px] px-2.5 py-1 rounded-md border font-mono tracking-wide transition-all flex items-center gap-1 ${
+                    templateCategory === cat
+                      ? 'bg-indigo-900/50 border-indigo-600/60 text-indigo-200'
+                      : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:bg-gray-700/60 hover:text-gray-200'
+                  }`}
+                >
+                  {cat}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${templateCategory === cat ? 'rotate-180' : ''}`} />
+                </button>
+              ))}
+            </div>
+
+            {templateCategory && (
+              <div className="grid grid-cols-1 gap-1.5 pt-1">
+                {BRIEF_TEMPLATES[templateCategory].map(tpl => (
+                  <button
+                    key={tpl.label}
+                    type="button"
+                    onClick={() => { setBrief(tpl.text); setTemplateCategory(null) }}
+                    className="text-left text-xs px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-700 text-gray-300 hover:border-purple-600/50 hover:bg-purple-950/20 hover:text-purple-200 transition-all"
+                  >
+                    <span className="font-medium">{tpl.label}</span>
+                    <span className="text-gray-500 ml-2 line-clamp-1">{tpl.text.slice(0, 60)}…</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

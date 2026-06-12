@@ -1,7 +1,7 @@
 import type React from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
@@ -149,6 +149,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <div>
             <div className="text-sm font-medium text-white">Connexions</div>
             <div className="text-[11px] text-gray-500">Meta · IG · TikTok</div>
+          </div>
+        </Link>
+
+        <Link href={`/clients/${client.id}/report`} className="bg-gradient-to-br from-emerald-950/40 to-teal-950/30 border border-emerald-700/30 rounded-xl p-4 hover:border-emerald-500/50 transition-all flex items-center gap-3 group">
+          <FileText className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-white">Bilan mensuel</div>
+            <div className="text-[11px] text-gray-500">Livrable client · PDF</div>
           </div>
         </Link>
       </div>

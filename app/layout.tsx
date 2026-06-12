@@ -4,6 +4,7 @@ import './globals.css'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { countPostsByStatus } from '@/lib/db/queries/posts'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
@@ -20,7 +21,12 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  let validationCount = 0
+  try {
+    validationCount = await countPostsByStatus(['draft', 'ready', 'failed'])
+  } catch { /* DB not ready yet */ }
+
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} dark h-full`}>
       <body className="min-h-full bg-[#07081A] text-[#E0E3FF] antialiased">
@@ -28,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main-content" className="skip-link">
           Aller au contenu principal
         </a>
-        <Sidebar />
+        <Sidebar validationCount={validationCount} />
         <TopBar />
         <BottomNav />
         <main

@@ -21,7 +21,9 @@ export default async function ClientsPage({
         <div>
           <h1 className="text-3xl font-bold text-white">Clients</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {clients.length} {clients.length > 1 ? 'clients HORECA actifs' : 'client HORECA actif'}
+            {clients.length === 0
+              ? 'Aucun client enregistré'
+              : `${clients.length} client${clients.length > 1 ? 's' : ''} HORECA`}
           </p>
         </div>
 

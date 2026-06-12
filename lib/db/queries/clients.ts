@@ -27,6 +27,7 @@ interface ClientWithStatsRow extends ClientRow {
   posts_this_month: number
   avg_impact: number | null
   connected_platforms: number
+  last_post_at: number | null
 }
 
 function mapRow(row: ClientRow): Client {
@@ -73,40 +74,67 @@ export async function listClientsWithStats(): Promise<ClientWithStats[]> {
   startOfMonth.setHours(0, 0, 0, 0)
   const monthTs = startOfMonth.getTime()
 
-  const rows = await query<ClientWithStatsRow>(
-    `SELECT
-      c.*,
-      COALESCE(p.posts_this_month, 0) AS posts_this_month,
-      p.avg_impact,
-      COALESCE(s.connected_platforms, 0) AS connected_platforms
-    FROM clients c
-    LEFT JOIN (
-      SELECT
-        client_id,
-        COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
-        AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact
-      FROM posts
-      GROUP BY client_id
-    ) p ON p.client_id = c.id
-    LEFT JOIN (
-      SELECT client_id, COUNT(*) AS connected_platforms
-      FROM client_social_accounts
-      GROUP BY client_id
-    ) s ON s.client_id = c.id
-    ORDER BY c.created_at DESC`,
-    [monthTs]
-  )
+  const [rows, recentPosts] = await Promise.all([
+    query<ClientWithStatsRow>(
+      `SELECT
+        c.*,
+        COALESCE(p.posts_this_month, 0) AS posts_this_month,
+        p.avg_impact,
+        p.last_post_at,
+        COALESCE(s.connected_platforms, 0) AS connected_platforms
+      FROM clients c
+      LEFT JOIN (
+        SELECT
+          client_id,
+          COUNT(CASE WHEN created_at >= ? THEN 1 END) AS posts_this_month,
+          AVG(CASE WHEN status = 'published' THEN CAST(impact_score AS REAL) ELSE NULL END) AS avg_impact,
+          MAX(created_at) AS last_post_at
+        FROM posts
+        GROUP BY client_id
+      ) p ON p.client_id = c.id
+      LEFT JOIN (
+        SELECT client_id, COUNT(*) AS connected_platforms
+        FROM client_social_accounts
+        GROUP BY client_id
+      ) s ON s.client_id = c.id
+      ORDER BY c.created_at DESC`,
+      [monthTs]
+    ),
+    query<{ client_id: string; brief: string; caption: string; hook: string | null }>(
+      `SELECT client_id, brief, caption, hook FROM posts
+       WHERE id IN (
+         SELECT id FROM posts p2
+         WHERE p2.client_id = posts.client_id
+         ORDER BY created_at DESC LIMIT 5
+       )`
+    ),
+  ])
 
+  const recentMap = new Map<string, typeof recentPosts>()
+  for (const p of recentPosts) {
+    if (!recentMap.has(p.client_id)) recentMap.set(p.client_id, [])
+    recentMap.get(p.client_id)!.push(p)
+  }
+
+  const now = Date.now()
   return rows.map(row => {
     const client = mapRow(row)
     const avgImpact = row.avg_impact
     const connectedPlatforms = Number(row.connected_platforms ?? 0)
+    const lastPostAt = row.last_post_at != null ? Number(row.last_post_at) : null
+    const daysSincePost = lastPostAt
+      ? Math.floor((now - lastPostAt) / 86_400_000)
+      : null
+    const nextPillar = pickNextPillar(client.strategy.contentPillars, recentMap.get(client.id) ?? [])
     return {
       ...client,
       postsThisMonth: Number(row.posts_this_month ?? 0),
       engagement: avgImpact != null ? parseFloat((avgImpact / 20).toFixed(1)) : 0,
       agentsCount: connectedPlatforms,
       connectedPlatforms,
+      lastPostAt,
+      daysSincePost,
+      nextPillar,
     }
   })
 }
@@ -254,4 +282,19 @@ export async function getAiStrategy(id: string): Promise<unknown | null> {
   )
   if (!row?.ai_strategy) return null
   try { return JSON.parse(row.ai_strategy) } catch { return null }
+}
+
+function pickNextPillar(
+  pillars: string[],
+  recentPosts: { brief: string; caption: string; hook: string | null }[]
+): string | null {
+  if (!pillars.length) return null
+  if (!recentPosts.length) return pillars[0]
+  const recentlyCovered = new Set(
+    recentPosts.map(p => {
+      const src = `${p.brief} ${p.caption} ${p.hook ?? ''}`.toLowerCase()
+      return pillars.find(pillar => src.includes(pillar.toLowerCase()))
+    }).filter(Boolean)
+  )
+  return pillars.find(p => !recentlyCovered.has(p)) ?? pillars[0]
 }

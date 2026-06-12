@@ -6,13 +6,27 @@ import { countPostsByStatus } from '@/lib/db/queries/posts'
 import { SetupBanner } from '@/components/SetupBanner'
 import { CLIENT_TYPES } from '@/types/client'
 
+function healthDot(days: number | null): string {
+  if (days === null) return 'bg-gray-700'
+  if (days <= 3) return 'bg-emerald-500'
+  if (days <= 7) return 'bg-amber-400'
+  return 'bg-red-500'
+}
+
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const [clients, toValidate] = await Promise.all([
-    listClientsWithStats(),
-    countPostsByStatus(['draft', 'ready']),
-  ])
+  let clients: Awaited<ReturnType<typeof listClientsWithStats>> = []
+  let toValidate = 0
+  try {
+    ;[clients, toValidate] = await Promise.all([
+      listClientsWithStats(),
+      countPostsByStatus(['draft', 'ready']),
+    ])
+  } catch (err) {
+    console.error('[HomePage] DB error:', err)
+    // Continue with empty data — the SetupBanner will indicate DB misconfiguration
+  }
   const activeClients = clients.filter(c => c.status === 'active')
   const totalPosts = clients.reduce((sum, c) => sum + c.postsThisMonth, 0)
   const avgEngagement = clients.length
@@ -21,6 +35,15 @@ export default async function HomePage() {
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'GOOD MORNING' : hour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING'
+
+  const urgentClients = clients
+    .filter(c => c.status === 'active' && (c.daysSincePost === null || c.daysSincePost > 7))
+    .sort((a, b) => {
+      if (a.daysSincePost === null) return -1
+      if (b.daysSincePost === null) return 1
+      return b.daysSincePost - a.daysSincePost
+    })
+    .slice(0, 3)
 
   return (
     <div className="space-y-8">
@@ -46,9 +69,45 @@ export default async function HomePage() {
           <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
           <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
           <StatCard label="ENGAGEMENT MOY."  value={`${avgEngagement}%`}   icon={BarChart3}   accent="text-emerald-400" sub="VS 2.1% INDUSTRIE" />
-          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'FILE VIDE' : `${toValidate} POST${toValidate > 1 ? 'S' : ''}`} />
+          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'FILE VIDE' : `${toValidate} POST${toValidate > 1 ? 'S' : ''}`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
         </div>
       </section>
+
+      {/* Priorités du jour */}
+      {clients.length > 0 && (
+        <section aria-labelledby="priorities-heading">
+          <h2 id="priorities-heading" className={`text-[8px] font-mono tracking-[0.3em] uppercase mb-3 ${urgentClients.length > 0 ? 'text-amber-500/70' : 'text-emerald-500/70'}`}>
+            // PRIORITÉS DU JOUR
+          </h2>
+          {urgentClients.length === 0 ? (
+            <div className="flex items-center gap-2.5 p-3 bg-emerald-950/20 border border-emerald-900/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+              <span className="text-[11px] text-emerald-400/80 font-mono tracking-wide">Tous vos clients sont à jour — aucun retard de publication</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {urgentClients.map(c => (
+                <Link
+                  key={c.id}
+                  href={`/clients/${c.id}`}
+                  className="flex items-center gap-3 p-3 bg-amber-950/20 border border-amber-900/30 hover:border-amber-600/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.08)] transition-all group"
+                >
+                  <div className={`w-8 h-8 bg-gradient-to-br ${c.color} flex items-center justify-center text-sm flex-shrink-0`}>
+                    {c.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-medium text-[#E0E3FF] truncate font-mono tracking-wide uppercase">{c.name}</div>
+                    <div className="text-[9px] text-amber-400/70 font-mono mt-0.5">
+                      {c.daysSincePost === null ? '⚑ Jamais publié' : `⚑ ${c.daysSincePost}j sans post`}
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-amber-700/60 font-mono group-hover:text-amber-400 transition-colors flex-shrink-0">CRÉER →</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Quick actions */}
       <section aria-labelledby="actions-heading">
@@ -111,8 +170,11 @@ export default async function HomePage() {
                     href={`/clients/${c.id}`}
                     className="flex items-center gap-3 p-3 border border-gray-800 hover:border-indigo-700/50 transition-all group"
                   >
-                    <div className={`w-9 h-9 bg-gradient-to-br ${c.color} flex items-center justify-center text-base flex-shrink-0`}>
-                      {c.emoji}
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-9 h-9 bg-gradient-to-br ${c.color} flex items-center justify-center text-base`}>
+                        {c.emoji}
+                      </div>
+                      <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900 ${healthDot(c.daysSincePost)}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[11px] font-medium text-[#E0E3FF] truncate group-hover:text-indigo-300 transition-colors font-mono tracking-wide uppercase">{c.name}</div>
@@ -133,18 +195,23 @@ export default async function HomePage() {
 }
 
 function StatCard({
-  label, value, icon: Icon, accent, sub,
+  label, value, icon: Icon, accent, sub, href, urgent,
 }: {
-  label: string; value: string | number; icon: React.ElementType; accent: string; sub: string
+  label: string; value: string | number; icon: React.ElementType; accent: string; sub: string; href?: string; urgent?: boolean
 }) {
-  return (
-    <div className="hud-corners bg-gray-900/60 border border-gray-800 hover:border-indigo-700/50 hover:shadow-[0_0_16px_rgba(99,102,241,0.1)] transition-all duration-200 p-4 group">
+  const inner = (
+    <div className={`hud-corners bg-gray-900/60 border transition-all duration-200 p-4 group ${
+      urgent
+        ? 'border-amber-800/50 hover:border-amber-600/60 hover:shadow-[0_0_16px_rgba(245,158,11,0.12)]'
+        : 'border-gray-800 hover:border-indigo-700/50 hover:shadow-[0_0_16px_rgba(99,102,241,0.1)]'
+    }`}>
       <div className="flex items-center justify-between mb-3">
         <span className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase">{label}</span>
         <Icon aria-hidden="true" className={`w-3.5 h-3.5 ${accent} group-hover:scale-110 transition-transform duration-200`} />
       </div>
       <div className="text-2xl lg:text-3xl font-bold text-[#E0E3FF] font-mono">{value}</div>
-      <div className="text-[8px] text-gray-600 font-mono tracking-[0.15em] mt-1.5">{sub}</div>
+      <div className={`text-[8px] font-mono tracking-[0.15em] mt-1.5 ${urgent ? 'text-amber-600/70' : 'text-gray-600'}`}>{sub}</div>
     </div>
   )
+  return href ? <Link href={href}>{inner}</Link> : inner
 }

@@ -30,10 +30,10 @@ const NAV_SYSTEM = [
 ]
 
 function NavItem({
-  href, icon: Icon, label, seq, badge, dot,
+  href, icon: Icon, label, seq, badge, dot, count,
 }: {
   href: string; icon: React.ElementType; label: string; seq: string
-  badge?: string | null; dot?: boolean
+  badge?: string | null; dot?: boolean; count?: number
 }) {
   const pathname = usePathname()
   const active = pathname === href || (href !== '/' && pathname.startsWith(href))
@@ -56,13 +56,24 @@ function NavItem({
           {badge}
         </span>
       )}
+      {count != null && count > 0 && (
+        <span className="min-w-[18px] h-[18px] flex items-center justify-center text-[9px] font-bold bg-amber-500 text-black rounded-full px-1 font-mono flex-shrink-0">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
       {dot && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />}
       {active && <span className="text-[9px] text-indigo-600 flex-shrink-0">&#9658;</span>}
     </Link>
   )
 }
 
-export function Sidebar() {
+export function Sidebar({ validationCount = 0 }: { validationCount?: number }) {
+  const navWork = NAV_WORK.map(item =>
+    item.href === '/validation' && validationCount > 0
+      ? { ...item, count: validationCount }
+      : item
+  )
+
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-[#07081A] border-r border-indigo-950/60 flex-col z-40">
       {/* Logo */}
@@ -83,7 +94,7 @@ export function Sidebar() {
         {NAV_PRIMARY.map(item => <NavItem key={item.href} {...item} />)}
 
         <p className="px-4 pt-4 pb-1.5 text-[8px] text-indigo-600/60 tracking-[0.3em] font-mono">{'// WORKFLOW'}</p>
-        {NAV_WORK.map(item => <NavItem key={item.href} {...item} />)}
+        {navWork.map(item => <NavItem key={item.href} {...item} />)}
 
         <p className="px-4 pt-4 pb-1.5 text-[8px] text-indigo-600/60 tracking-[0.3em] font-mono">{'// SYSTÈME'}</p>
         {NAV_SYSTEM.map(item => <NavItem key={item.href} {...item} />)}

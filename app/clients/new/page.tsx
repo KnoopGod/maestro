@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import { ArrowLeft } from 'lucide-react'
 import { createClientAction } from '@/lib/actions/clients'
 import { CLIENT_TYPES, type ClientType } from '@/types/client'
+import { SubmitButton } from '@/components/ui/SubmitButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -122,12 +123,7 @@ export default function NewClientPage() {
           >
             Annuler
           </Link>
-          <button
-            type="submit"
-            className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium"
-          >
-            Créer le client
-          </button>
+          <SubmitButton label="Créer le client" pendingLabel="Création en cours..." />
         </div>
       </form>
     </div>

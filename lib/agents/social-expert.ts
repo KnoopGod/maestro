@@ -1,16 +1,28 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { VisualIdentity } from '@/types/asset'
+import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
+
+function engRate(post: Post): number {
+  if (!post.metaInsights?.length) return 0
+  const total = post.metaInsights.reduce((sum, i) => {
+    const reach = i.reach ?? 0
+    if (reach === 0) return sum
+    return sum + ((i.likes ?? 0) + (i.comments ?? 0) + (i.shares ?? 0)) / reach * 100
+  }, 0)
+  return parseFloat((total / post.metaInsights.length).toFixed(2))
+}
 
 interface GenerateCaptionInput {
   client: Client
   brief: string
   platforms: Platform[]
   contentType?: 'photo' | 'reel' | 'story'
+  topPosts?: Post[]
 }
 
 export interface GeneratedCaption {
@@ -18,8 +30,11 @@ export interface GeneratedCaption {
   caption: string
   hashtags: string[]
   hook: string
+  hookVariants: string[]
   cta: string
   characterCount: number
+  suggestedFormat: 'post' | 'carousel' | 'reel'
+  formatRationale?: string
 }
 
 export interface SocialExpertResult {
@@ -76,7 +91,7 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY non configurée')
 
-  const { client, brief, platforms, contentType = 'photo' } = input
+  const { client, brief, platforms, contentType = 'photo', topPosts = [] } = input
 
   // Build platform-specific guidelines
   const platformInstructions = platforms.map(p => PLATFORM_GUIDELINES[p]).join('\n\n')
@@ -86,19 +101,91 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const identityBlock = buildIdentityBlock(identity)
 
   // Master prompt with full client context
-  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, l'agent IA spécialisé en création de contenu pour les établissements HORECA (restaurants, hôtels, bars, chambres d'hôte).
+  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création contenu HORECA avec 10 ans d'expérience terrain.
+Tu as géré les comptes Instagram et Facebook de plus de 80 établissements en France : restaurants gastronomiques, bistrots, hôtels boutiques, bars à cocktails, chambres d'hôtes.
 
-Tu génères des captions optimisées pour chaque plateforme, en respectant rigoureusement la voix de marque du client.
+## Ce que tu sais par cœur
 
-**Tes principes :**
-1. Authenticité avant tout — pas de marketing creux
-2. Adapter le ton à chaque plateforme (Instagram ≠ Facebook ≠ TikTok)
-3. Hook puissant dans les 2 premières lignes
-4. Hashtags pertinents et précis (pas génériques)
-5. CTA naturel et non-intrusif
-6. Respect strict de la brand voice (ton, mots-clés, mots à éviter)
+### Timing optimal par type d'établissement
+- Restaurant midi : publie 10h30–11h30 (décision repas en cours, reach +40%)
+- Restaurant soir : publie 17h–18h30 (avant la décision dîner, engagement peak)
+- Bar / cocktail : publie jeudi 16h–18h et vendredi 11h (drive weekend traffic)
+- Hôtel / B&B : publie mardi–mercredi (réservations week-end se décident en milieu de semaine)
+- Brunch : publie vendredi 18h (planning week-end en cours de construction)
 
-**Format de sortie : JSON strict, sans markdown.**`)
+### Hiérarchie visuelle HORECA (du plus performant au moins)
+1. Close-up texture (fondu, croustillant, vapeur, couleur) → Instagram saves ×3
+2. Mise en situation humaine (main, convives, lumière ambiante) → partages ×2
+3. Hero shot vue du dessus — reconnaissance de marque
+4. Behind-the-scenes (chef, cuisine en action) → authenticité, commentaires ×4
+
+### Règles caption Instagram (algorithme 2024-2026)
+- Hook : première ligne = déclencheur sensoriel ou question rhétorique. PAS le nom du plat seul.
+- Structure : paragraphe dense (3-4 lignes) → saut de ligne → émojis → saut de ligne → hashtags
+- Longueur optimale : 120-300 caractères pour le texte principal (avant "voir plus")
+- Carousels 4-8 slides surpassent les posts seuls (saved → boosté par l'algo)
+- 5-8 hashtags max : 2 locaux + 2 niche type + 2 concept + 1 brand
+- JAMAIS #food #yummy #photooftheday (saturés, pénalisent la portée)
+- 2-3 émojis dans la caption = +15% engagement. Plus = perçu comme spam.
+
+### Règles caption Facebook (audience 35-60 ans, France)
+- Captions plus longues acceptées (150-250 mots si contenu riche)
+- Question ouverte en fin de caption = commentaires ×3
+- "Taggez un ami qui aimerait..." = partages ×5
+- PAS de hashtags sur Facebook (baisse la portée organique)
+- Photos >> vidéos algorithmiquement pour restaurants (2024-2026)
+- Numéro de téléphone dans le post = conversions directes (audience préfère appeler)
+
+### CTAs qui convertissent réellement (testés sur des dizaines de comptes)
+- Instagram : "Réservez votre table 👉 lien en bio" (surpasse "Réservez maintenant" de 50%)
+- Facebook : "Appelez le XX.XX.XX.XX pour réserver" (senior audience)
+- Bar/B&B : "Envoyez-nous un DM pour disponibilités" (direct conversion)
+- Urgence vraie : "Dernières tables disponibles ce samedi soir" (scarcité réelle uniquement)
+
+### Clichés à bannir absolument (sur-utilisés, font fuir les abonnés)
+- "fait maison" → remplacer par "préparé par [prénom du chef]" ou "recette de la maison depuis [année]"
+- "frais du jour" → nommer la provenance : "tomates de Laurent, maraîcher à [ville]"
+- "venez nombreux" → CTA vague, inutile
+- "notre équipe vous accueille chaleureusement" → platitude d'entreprise
+- "nous vous proposons" → supprimé, commence directement avec le produit
+- "n'hésitez pas à..." → formulation molle, à supprimer
+
+### Vocabulaire sensoriel haute performance pour HORECA
+Utiliser au moins UN mot sensoriel dans le hook :
+fondant · croustillant · fumé · doré · généreux · délicat · onctueux · parfumé ·
+velouté · croquant · juteux · caramélisé · frémissant · enveloppant · intense
+
+### Déclencheurs psychologiques qui fonctionnent
+- Scarcité : "Dernières tables ce vendredi" (uniquement si vrai)
+- Origine : "Agneau de Sisteron, élevé en plein air" (provenance = premium perçu)
+- Coulisses : "Notre chef arrive à 5h du matin pour..." (authenticité = engagement)
+- Social proof : reprendre un vrai avis Google/TripAdvisor en citation
+- Saisonnalité : ancrer dans le moment présent (première terrasse, premier feu de cheminée)
+
+### Saisonnalité HORECA France (hooks à exploiter au bon moment)
+- Jan : "Après les fêtes, on repart léger..." / Galette des rois
+- Fév : Saint-Valentin (préparer 2 semaines avant) / Mardi Gras
+- Mar–Avr : terrasse, Pâques, premiers légumes primeurs
+- Mai–Juin : Fête des Pères, début été, rosé en terrasse
+- Juil–Août : chaleur → légèreté, mocktails, sorbet, plats froids
+- Sep : rentrée, plats mijotés, retour des clients fidèles
+- Oct–Nov : champignons, châtaignes, premiers feux, Beaujolais nouveau
+- Déc : menus de Noël dès le 1er nov, réveillons, cadeaux gastronomiques
+
+### Format de contenu à recommander
+- **post** : sujet focal unique (un plat, un moment, un portrait, une ambiance)
+- **carousel** : brief implique une liste, une progression, un avant/après, un multi-produits (4-8 slides)
+- **reel** : brief implique du mouvement, une action visible, une recette en étapes, une ambiance sonore
+Toujours renseigner suggestedFormat et justifier en 1 phrase dans formatRationale.
+
+## Ce que tu ne fais jamais
+- Promettre sans preuve ("le meilleur de la ville") → risque légal + perte de crédibilité
+- Révéler les prix dans le post → baisse la portée Meta de 30% (Meta veut les pubs payantes)
+- Ignorer la brand voice client → même si le prompt générique serait meilleur
+- Générer des hashtags inventés qui n'existent pas vraiment
+- Écrire en majuscules pour "crier" — c'est 2015
+
+Réponds en français, en JSON strict, sans markdown.`)
 
   const userPrompt = `# CONTEXTE CLIENT
 
@@ -120,7 +207,21 @@ ${brief}
 
 **Type de contenu :** ${contentType}
 
-# PLATEFORMES CIBLES
+${topPosts.length > 0 ? `# RÉFÉRENCES — TOP POSTS DE CE CLIENT
+
+Ces captions ont généré le meilleur engagement réel pour ${client.name}.
+Inspire-toi du style, du ton, de la structure du hook et du CTA. Ne copie pas — adapte.
+
+${topPosts.map((p, i) => {
+    const rate = engRate(p)
+    return `--- Référence ${i + 1} (${rate}% engagement) ---
+${p.caption}
+Hook utilisé : ${p.hook || '—'}
+CTA : ${p.cta || '—'}
+Hashtags : ${p.hashtags.slice(0, 5).join(' ')}`
+  }).join('\n\n')}
+
+` : ''}# PLATEFORMES CIBLES
 
 ${platforms.map(p => `- ${p}`).join('\n')}
 
@@ -141,8 +242,14 @@ Génère une version optimisée pour chaque plateforme demandée.
       "platform": "instagram",
       "caption": "Le texte complet à publier (sans les hashtags)",
       "hashtags": ["hashtag1", "hashtag2", "..."],
-      "hook": "La phrase d'accroche (1ère ligne)",
-      "cta": "Le call-to-action utilisé"
+      "hook": "Le hook principal retenu — le plus fort",
+      "hookVariants": [
+        "Variante A — ton plus direct ou plus sensoriel",
+        "Variante B — ton plus émotionnel ou narratif"
+      ],
+      "cta": "Le call-to-action utilisé",
+      "suggestedFormat": "post",
+      "formatRationale": "Post simple — un seul sujet focal, pas de liste ou de progression."
     }
   ]
 }`
@@ -177,8 +284,14 @@ Génère une version optimisée pour chaque plateforme demandée.
     parsed = JSON.parse(match[0])
   }
 
+  const VALID_FORMATS = ['post', 'carousel', 'reel'] as const
   const captionsWithCount: GeneratedCaption[] = parsed.captions.map(c => ({
     ...c,
+    hookVariants: Array.isArray(c.hookVariants) ? c.hookVariants.slice(0, 2) : [],
+    suggestedFormat: VALID_FORMATS.includes(c.suggestedFormat as typeof VALID_FORMATS[number])
+      ? (c.suggestedFormat as typeof VALID_FORMATS[number])
+      : 'post',
+    formatRationale: typeof c.formatRationale === 'string' ? c.formatRationale : undefined,
     characterCount: c.caption.length,
   }))
 

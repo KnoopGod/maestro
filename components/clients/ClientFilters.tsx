@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { CLIENT_TYPES, type ClientType, type ClientWithStats } from '@/types/client'
 import { ClientCard } from './ClientCard'
 
@@ -23,6 +24,25 @@ export function ClientGridWithFilters({
   const filtered = filter === 'all'
     ? clients
     : clients.filter(c => c.type === filter)
+
+  if (clients.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-5 text-center">
+        <div className="text-5xl">🏢</div>
+        <div>
+          <p className="text-lg font-medium text-white">Aucun client pour l&apos;instant</p>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs">Commencez par ajouter votre premier établissement HORECA pour générer du contenu avec les agents IA.</p>
+        </div>
+        <Link
+          href="/clients/new"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Créer mon premier client
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <>
