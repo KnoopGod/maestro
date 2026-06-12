@@ -4,10 +4,22 @@ This file records stable decisions so Claude and Codex keep the same direction.
 
 ## Product Direction
 
-- CODEXRS is an internal agency operating system, not a public SaaS.
+- AGENT RS started as an internal agency operating system.
+- The V2 target is a SaaS-ready collaborative platform for agencies/freelancers managing multiple clients.
+- The transition must be progressive: keep the V1 production workflow stable while introducing SaaS foundations.
 - The first market is HORECA: bars, restaurants, hotels, guesthouses, and chambres d'hote.
 - The MVP priority is automatic high-quality Facebook/Instagram post creation with human validation.
 - Automatic publishing can exist, but validation stays required until the system is proven reliable.
+
+## V2 SaaS Direction
+
+- Add administrator, collaborator, and client portal spaces.
+- Introduce real users, roles, permissions, and client-level access control before opening collaboration broadly.
+- Store social tokens securely and never expose secrets in frontend code.
+- Prepare for future providers: Meta, LinkedIn, TikTok, X, and YouTube.
+- Add onboarding forms that collect client business, marketing, social, content, and media context.
+- Plan queue-based AI jobs for image/video generation, media analysis, scheduled publishing, and token refresh.
+- Track AI/API costs per client before scaling paid usage.
 
 ## Core Workflow
 
