@@ -32,6 +32,26 @@ export interface BriefFields {
   includes: string
 }
 
+// ── Suivi de progression du pipeline asynchrone ──────────────────────────────
+// Sous-ensemble client-safe de AgentJob/AgentEvent (lib/db/queries/agent-jobs.ts).
+export type JobStatus = 'running' | 'completed' | 'failed' | 'awaiting_validation'
+export type JobEventStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+
+export interface JobProgressEvent {
+  agent: string
+  sequence: number
+  status: JobEventStatus
+  taskLabel: string
+  outputSummary: string | null
+  errorMessage: string | null
+}
+
+export interface JobProgress {
+  status: JobStatus
+  postId: string | null
+  events: JobProgressEvent[]
+}
+
 export const PLATFORM_INFO: Record<Platform, { label: string; emoji: string; color: string }> = {
   instagram: { label: 'Instagram', emoji: '📷', color: 'bg-pink-600/20 border-pink-600/40 text-pink-300' },
   facebook:  { label: 'Facebook',  emoji: '👍', color: 'bg-blue-600/20 border-blue-600/40 text-blue-300' },

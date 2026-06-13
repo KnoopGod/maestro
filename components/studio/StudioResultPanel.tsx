@@ -1,8 +1,8 @@
 'use client'
-import { Sparkles, Loader2, AlertCircle, RefreshCw, Target } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw, Target, Check } from 'lucide-react'
 import type { Post } from '@/types/post'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
-import type { ContentType, GenerationResult } from '@/lib/studio/types'
+import type { ContentType, GenerationResult, JobProgress } from '@/lib/studio/types'
 import type { Client } from '@/types/client'
 import { CaptionResult } from './CaptionResult'
 
@@ -10,6 +10,7 @@ interface StudioResultPanelProps {
   result: GenerationResult | null
   error: string | null
   isPending: boolean
+  progress?: JobProgress | null
   selectedClient: Client | undefined
   clientId: string
   ctaType: string
@@ -25,6 +26,7 @@ export function StudioResultPanel({
   result,
   error,
   isPending,
+  progress,
   selectedClient,
   clientId,
   ctaType,
@@ -50,15 +52,47 @@ export function StudioResultPanel({
       )}
 
       {isPending && (
-        <div className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-12 text-center">
+        <div className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-8 text-center">
           <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-3 animate-spin" />
           <p className="text-white font-medium">L&apos;agent réfléchit...</p>
-          <div className="mt-4 space-y-1 text-xs text-gray-400">
-            <p>→ Chargement du contexte client</p>
-            <p>→ Application de la voix de marque et de la DA</p>
-            <p>→ Génération texte + image</p>
-            <p>→ Scoring d&apos;impact</p>
-          </div>
+
+          {progress && progress.events.length > 0 ? (
+            // Progression live, alimentée par le polling du job
+            <div className="mt-5 space-y-1.5 text-left max-w-sm mx-auto">
+              {progress.events.map(event => (
+                <div key={event.sequence} className="flex items-start gap-2 text-xs">
+                  <span className="mt-0.5 flex-shrink-0">
+                    {event.status === 'completed' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : event.status === 'running' ? (
+                      <Loader2 className="w-3.5 h-3.5 text-purple-300 animate-spin" />
+                    ) : event.status === 'failed' ? (
+                      <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                    ) : event.status === 'skipped' ? (
+                      <span className="block w-3.5 h-3.5 text-center text-gray-600">–</span>
+                    ) : (
+                      <span className="block w-3.5 h-3.5 rounded-full border border-gray-700" />
+                    )}
+                  </span>
+                  <span className={
+                    event.status === 'completed' ? 'text-gray-300'
+                    : event.status === 'running' ? 'text-purple-200'
+                    : event.status === 'failed' ? 'text-red-300'
+                    : 'text-gray-500'
+                  }>
+                    {event.outputSummary || event.taskLabel}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 space-y-1 text-xs text-gray-400">
+              <p>→ Chargement du contexte client</p>
+              <p>→ Application de la voix de marque et de la DA</p>
+              <p>→ Génération texte + image</p>
+              <p>→ Scoring d&apos;impact</p>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { Sparkles, Loader2, ImageIcon, Wand2, BrainCircuit, ChevronDown, Film, Check } from 'lucide-react'
 import type { Client } from '@/types/client'
 import type { Post } from '@/types/post'
@@ -7,10 +7,11 @@ import type { ClientAsset } from '@/types/asset'
 import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
 import type { PostIdea } from '@/lib/agents/planner'
 import { META_CTA_TYPES, getMetaCtaLabel } from '@/lib/meta-cta-types'
-import type { Platform, ContentType, GenerationResult, BriefFields } from '@/lib/studio/types'
+import type { Platform, ContentType, GenerationResult, BriefFields, JobProgress } from '@/lib/studio/types'
 import { PLATFORM_INFO, CONTENT_TYPE_INFO } from '@/lib/studio/types'
 import { BRIEF_TEMPLATES } from '@/lib/studio/brief-templates'
 import { createLoadedPostResult, createInitialBriefFields, composeStructuredBrief } from '@/lib/studio/brief-utils'
+import { pollJob, failureMessage } from '@/lib/studio/poll-job'
 import { GuidedBriefField } from './GuidedBriefField'
 import { AgentWorkPlan } from './AgentWorkPlan'
 import { StudioResultPanel } from './StudioResultPanel'
@@ -49,6 +50,11 @@ export function StudioForm({
   const [regenInstruction, setRegenInstruction] = useState('')
   const [isPending, startTransition] = useTransition()
 
+  // Génération asynchrone : la route rend un jobId, on suit la progression par polling.
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [jobProgress, setJobProgress] = useState<JobProgress | null>(null)
+  const pollAbortRef = useRef<AbortController | null>(null)
+
   const [imageMode, setImageMode] = useState<'generate' | 'library'>(initialContentType === 'reel' ? 'library' : 'generate')
   const [selectedAsset, setSelectedAsset] = useState<ClientAsset | null>(null)
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
@@ -64,10 +70,15 @@ export function StudioForm({
   const selectedClient = clients.find(c => c.id === clientId)
   const selectedDa = clientDaStatus?.[clientId]
   const brief = composeStructuredBrief(briefFields)
+  // Occupé = génération asynchrone en cours OU régénération texte (useTransition).
+  const busy = isPending || isGenerating
 
   function updateBriefField(key: keyof BriefFields, value: string) {
     setBriefFields(prev => ({ ...prev, [key]: value }))
   }
+
+  // Stopper le polling si le composant est démonté en cours de génération.
+  useEffect(() => () => pollAbortRef.current?.abort(), [])
 
   useEffect(() => {
     if (!clientId || imageMode !== 'library') return
@@ -125,12 +136,20 @@ export function StudioForm({
   const handleGenerate = () => {
     setError(null)
     setResult(null)
+    setJobProgress(null)
 
-    startTransition(async () => {
+    // Annuler un éventuel polling en cours avant d'en relancer un.
+    pollAbortRef.current?.abort()
+    const controller = new AbortController()
+    pollAbortRef.current = controller
+    setIsGenerating(true)
+
+    void (async () => {
       try {
         const res = await fetch('/api/studio/generate-post', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             clientId,
             brief,
@@ -145,11 +164,31 @@ export function StudioForm({
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Erreur génération')
-        setResult(data)
+        if (!data.jobId) throw new Error('Job de génération non créé')
+
+        // Suivre la progression jusqu'à un état terminal.
+        const final = await pollJob(data.jobId, {
+          signal: controller.signal,
+          onProgress: setJobProgress,
+        })
+
+        if (final.status === 'failed') throw new Error(failureMessage(final))
+        if (!final.postId) throw new Error('Post introuvable après génération')
+
+        // Récupérer le post final et reconstruire le résultat affichable.
+        const postRes = await fetch(`/api/posts/${final.postId}`, { signal: controller.signal })
+        const postData = await postRes.json()
+        if (!postRes.ok) throw new Error(postData.error || 'Post introuvable après génération')
+        setResult(createLoadedPostResult(postData.post))
       } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return
         setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      } finally {
+        if (pollAbortRef.current === controller) pollAbortRef.current = null
+        setIsGenerating(false)
+        setJobProgress(null)
       }
-    })
+    })()
   }
 
   async function regenerateTextOnly() {
@@ -534,11 +573,11 @@ export function StudioForm({
         {/* Generate button */}
         <button
           onClick={handleGenerate}
-          disabled={!clientId || platforms.length === 0 || isPending || (imageMode === 'library' && !selectedAsset) || (contentType === 'reel' && selectedAsset?.type !== 'video')}
+          disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && !selectedAsset) || (contentType === 'reel' && selectedAsset?.type !== 'video')}
           title="Lancer la chaîne d'agents : analyse client, stratégie, rédaction, visuel, scoring puis draft prêt à valider"
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {isPending ? (
+          {busy ? (
             <><Loader2 className="w-5 h-5 animate-spin" /> Création du post complet...</>
           ) : (
             <><Sparkles className="w-5 h-5" /> Générer post complet</>
@@ -564,7 +603,8 @@ export function StudioForm({
       <StudioResultPanel
         result={result}
         error={error}
-        isPending={isPending}
+        isPending={busy}
+        progress={jobProgress}
         selectedClient={selectedClient}
         clientId={clientId}
         ctaType={ctaType}
