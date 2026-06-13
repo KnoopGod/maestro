@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * AI Command Center — MCP Server pour Claude Desktop
- * Expose les outils de routing IA directement dans Claude Desktop
+ * MAESTRO — MCP Server pour Claude Desktop
+ * Expose les outils Claude + ChatGPT directement dans Claude Desktop
  */
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -9,7 +9,6 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
-import { Ollama } from 'ollama'
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
 
@@ -17,8 +16,6 @@ import OpenAI from 'openai'
 const log = (...args: unknown[]) => process.stderr.write(args.join(' ') + '\n')
 
 // ── Clients IA ───────────────────────────────────────────────────────────────
-
-const ollama = new Ollama({ host: 'http://localhost:11434' })
 
 function getAnthropic() {
   if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY manquante')
@@ -36,29 +33,16 @@ const TASK_PATTERNS = {
   image:    /image|photo|visuel|bannière|logo|illustration/i,
   code:     /code|programme|fonction|script|bug|typescript|javascript|python|react/i,
   strategy: /stratégie|architecture|plan|analyse|vision|roadmap/i,
-  simple:   /résume|reformule|hashtag|variante|brouillon|liste|traduis/i,
 }
 
-function detectBestAI(prompt: string): 'claude' | 'chatgpt' | 'ollama' {
+function detectBestAI(prompt: string): 'claude' | 'chatgpt' {
   if (TASK_PATTERNS.image.test(prompt))    return 'chatgpt'
   if (TASK_PATTERNS.code.test(prompt))     return 'claude'
   if (TASK_PATTERNS.strategy.test(prompt)) return 'claude'
-  if (TASK_PATTERNS.simple.test(prompt))   return 'ollama'
-  return 'ollama'
+  return 'claude'
 }
 
 // ── Appels IA ────────────────────────────────────────────────────────────────
-
-async function callOllama(prompt: string, model = 'llama3.2:3b') {
-  const res = await ollama.chat({ model, messages: [{ role: 'user', content: prompt }] })
-  return {
-    response: res.message.content,
-    tokens: res.eval_count ?? 0,
-    cost: 0,
-    ai: 'ollama',
-    model,
-  }
-}
 
 async function callClaude(prompt: string) {
   const client = getAnthropic()
@@ -89,23 +73,22 @@ async function callChatGPT(prompt: string) {
 // ── Serveur MCP ───────────────────────────────────────────────────────────────
 
 const server = new Server(
-  { name: 'ai-command-center', version: '1.0.0' },
+  { name: 'maestro-mcp', version: '1.0.0' },
   { capabilities: { tools: {} } }
 )
 
-// Liste des outils disponibles
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: 'route_task',
-      description: 'Route automatiquement une tâche vers la meilleure IA (Claude, ChatGPT ou Ollama) selon le type de tâche. Utilise le mode Hybride : Ollama pour les tâches simples, Claude pour la stratégie/code, ChatGPT pour le visuel.',
+      description: 'Route automatiquement une tâche vers Claude ou ChatGPT selon le type (code/stratégie → Claude, visuel/image → ChatGPT).',
       inputSchema: {
         type: 'object',
         properties: {
           prompt: { type: 'string', description: 'La tâche ou question à traiter' },
           force_ai: {
             type: 'string',
-            enum: ['claude', 'chatgpt', 'ollama'],
+            enum: ['claude', 'chatgpt'],
             description: 'Forcer une IA spécifique (optionnel)',
           },
         },
@@ -113,35 +96,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
-      name: 'call_ollama',
-      description: 'Appelle directement Ollama (IA locale, gratuite, 0 token Claude). Idéal pour les brouillons, résumés, hashtags, reformulations, et toute tâche simple pour économiser les tokens.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          prompt: { type: 'string', description: 'La tâche à traiter' },
-          model:  { type: 'string', description: 'Modèle Ollama (défaut: llama3.2:3b)', default: 'llama3.2:3b' },
-        },
-        required: ['prompt'],
-      },
-    },
-    {
       name: 'get_ai_status',
-      description: 'Retourne le statut en temps réel de toutes les IAs : Ollama (local), Claude API, ChatGPT API. Indique quelles IAs sont actives, configurées ou indisponibles.',
-      inputSchema: { type: 'object', properties: {} },
-    },
-    {
-      name: 'list_ollama_models',
-      description: 'Liste tous les modèles Ollama téléchargés et disponibles localement.',
+      description: 'Retourne le statut des APIs Claude et ChatGPT (clés configurées ou non).',
       inputSchema: { type: 'object', properties: {} },
     },
     {
       name: 'estimate_cost',
-      description: 'Estime le coût d\'une tâche selon l\'IA choisie. Compare Claude vs ChatGPT vs Ollama (gratuit).',
+      description: "Estime le coût d'une tâche selon l'IA choisie (Claude ou ChatGPT).",
       inputSchema: {
         type: 'object',
         properties: {
           prompt: { type: 'string', description: 'Le prompt pour estimer les tokens' },
-          ai:     { type: 'string', enum: ['claude', 'chatgpt', 'ollama'], description: 'IA à évaluer' },
+          ai:     { type: 'string', enum: ['claude', 'chatgpt'], description: 'IA à évaluer' },
         },
         required: ['prompt', 'ai'],
       },
@@ -149,7 +115,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   ],
 }))
 
-// Exécution des outils
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params
 
@@ -157,20 +122,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // ── route_task ────────────────────────────────────────────────────────────
     if (name === 'route_task') {
       const prompt = args?.prompt as string
-      const forceAI = args?.force_ai as 'claude' | 'chatgpt' | 'ollama' | undefined
+      const forceAI = args?.force_ai as 'claude' | 'chatgpt' | undefined
       const chosenAI = forceAI ?? detectBestAI(prompt)
       const reason = forceAI ? 'Choix manuel' : `Détection automatique → ${chosenAI}`
 
-      let result: { response: string; tokens: number; cost: number; ai: string; model: string }
-
-      try {
-        if (chosenAI === 'claude')  result = await callClaude(prompt)
-        else if (chosenAI === 'chatgpt') result = await callChatGPT(prompt)
-        else result = await callOllama(prompt)
-      } catch {
-        result = await callOllama(prompt)
-        result.response = `[Fallback Ollama — ${chosenAI} indisponible]\n\n${result.response}`
-      }
+      const result = chosenAI === 'claude'
+        ? await callClaude(prompt)
+        : await callChatGPT(prompt)
 
       return {
         content: [{
@@ -179,25 +137,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             `## Résultat — ${result.ai.toUpperCase()}`,
             `**Routing** : ${reason}`,
             `**Modèle** : ${result.model}`,
-            `**Tokens** : ${result.tokens} | **Coût** : ${result.cost === 0 ? 'GRATUIT 🟢' : `$${result.cost.toFixed(5)}`}`,
-            '',
-            result.response,
-          ].join('\n'),
-        }],
-      }
-    }
-
-    // ── call_ollama ───────────────────────────────────────────────────────────
-    if (name === 'call_ollama') {
-      const prompt = args?.prompt as string
-      const model  = (args?.model as string) || 'llama3.2:3b'
-      const result = await callOllama(prompt, model)
-      return {
-        content: [{
-          type: 'text',
-          text: [
-            `## Ollama (${model}) — GRATUIT 🟢`,
-            `**Tokens** : ${result.tokens}`,
+            `**Tokens** : ${result.tokens} | **Coût** : $${result.cost.toFixed(5)}`,
             '',
             result.response,
           ].join('\n'),
@@ -207,46 +147,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     // ── get_ai_status ─────────────────────────────────────────────────────────
     if (name === 'get_ai_status') {
-      const ollamaModels = await ollama.list().then(r => r.models.map((m: { name: string }) => m.name)).catch(() => [])
       const lines = [
-        '## Statut AI Command Center',
+        '## Statut MAESTRO MCP',
         '',
-        `🏠 **Ollama Local** : ${ollamaModels.length > 0 ? '✅ ACTIF' : '❌ Inactif'}`,
-        `   Modèles : ${ollamaModels.join(', ') || 'aucun'}`,
-        '',
-        `👑 **Claude API** : ${process.env.ANTHROPIC_API_KEY ? '🔑 Clé configurée' : '❌ Clé manquante'}`,
+        `👑 **Claude API** : ${process.env.ANTHROPIC_API_KEY ? '✅ Clé configurée' : '❌ Clé manquante'}`,
         `   Modèle : claude-sonnet-4-6`,
         '',
-        `🎨 **ChatGPT API** : ${process.env.OPENAI_API_KEY ? '🔑 Clé configurée' : '❌ Clé manquante'}`,
+        `🎨 **ChatGPT API** : ${process.env.OPENAI_API_KEY ? '✅ Clé configurée' : '❌ Clé manquante'}`,
         `   Modèle : gpt-4o`,
       ]
       return { content: [{ type: 'text', text: lines.join('\n') }] }
-    }
-
-    // ── list_ollama_models ────────────────────────────────────────────────────
-    if (name === 'list_ollama_models') {
-      const list = await ollama.list()
-      const models = list.models.map((m: { name: string; size: number }) =>
-        `- **${m.name}** (${(m.size / 1e9).toFixed(1)} Go)`
-      )
-      return {
-        content: [{
-          type: 'text',
-          text: ['## Modèles Ollama disponibles', '', ...models].join('\n'),
-        }],
-      }
     }
 
     // ── estimate_cost ─────────────────────────────────────────────────────────
     if (name === 'estimate_cost') {
       const prompt = args?.prompt as string
       const ai     = args?.ai as string
-      const estimatedTokens = Math.ceil(prompt.length / 4) * 2 // estimation grossière
+      const estimatedTokens = Math.ceil(prompt.length / 4) * 2
 
       const costs: Record<string, { price: number; label: string }> = {
         claude:  { price: (estimatedTokens * 9) / 1_000_000, label: '$3/1M input + $15/1M output' },
         chatgpt: { price: (estimatedTokens * 6.25) / 1_000_000, label: '$2.5/1M input + $10/1M output' },
-        ollama:  { price: 0, label: 'Gratuit — local' },
       }
 
       const c = costs[ai]
@@ -257,9 +178,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             `## Estimation coût — ${ai.toUpperCase()}`,
             `**Tokens estimés** : ~${estimatedTokens}`,
             `**Tarif** : ${c.label}`,
-            `**Coût estimé** : ${c.price === 0 ? 'GRATUIT 🟢' : `$${c.price.toFixed(5)}`}`,
-            '',
-            ai !== 'ollama' ? `💡 *Même résultat avec Ollama : GRATUIT*` : '✅ *Choix optimal — aucun coût*',
+            `**Coût estimé** : $${c.price.toFixed(5)}`,
           ].join('\n'),
         }],
       }
@@ -273,11 +192,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 })
 
-// Démarrage
 async function main() {
   const transport = new StdioServerTransport()
   await server.connect(transport)
-  log('AI Command Center MCP server démarré')
+  log('MAESTRO MCP server démarré')
 }
 
 main().catch((err) => process.stderr.write(String(err) + '\n'))

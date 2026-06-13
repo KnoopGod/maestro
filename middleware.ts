@@ -10,7 +10,7 @@ const PUBLIC_PATHS = [
   '/data-deletion',
 ]
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   if (!isAuthEnabled() || isPublicPath(req.nextUrl.pathname)) {
     return NextResponse.next()
   }
@@ -35,8 +35,6 @@ function isPublicPath(pathname: string) {
   if (pathname === '/sitemap.xml') return true
   return false
 }
-
-export { proxy as default }
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],

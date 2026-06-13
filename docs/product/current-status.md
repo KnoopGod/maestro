@@ -4,7 +4,7 @@ Dernière mise à jour : 2026-06-13
 
 ---
 
-## Phase actuelle : Stabilisation V1 — Phase 0 en cours
+## Phase actuelle : Stabilisation V1 — Phase 1 en cours
 
 ### Ce qui fonctionne
 
@@ -34,8 +34,8 @@ Dernière mise à jour : 2026-06-13
 |---|---|---|
 | Génération asynchrone | ⚠️ Risque critique | Phase 4 |
 | Chiffrement tokens Meta | ⚠️ Risque critique | Phase 3 |
-| Suppression pages legacy | 🔄 Phase 1 | Prochain |
-| Découpage StudioForm.tsx | 🔄 Phase 2 | Après Phase 1 |
+| Suppression pages legacy | ✅ Fait Phase 1 | proxy→middleware, 7 pages, ollama |
+| Découpage StudioForm.tsx | 🔄 Phase 2 | Prochain |
 | CSRF protection | ⚠️ Important | Phase 3 |
 
 ### Ce qui n'existe pas encore

@@ -109,3 +109,7 @@ Réalisé par : Claude Code (session `maestro-project-handoff`)
 | 2026-06-13 | README.md par défaut | Réécrit (Phase 0) |
 | 2026-06-13 | CLAUDE.md branding CODEXRS | Mis à jour (Phase 0) |
 | 2026-06-13 | DB incompatible (ancien schéma) | Réinitialisée + seed |
+| 2026-06-13 | 7 pages legacy | Supprimées (Phase 1) |
+| 2026-06-13 | `proxy.ts` non standard | Renommé `middleware.ts` (Phase 1) |
+| 2026-06-13 | Package ollama + routes API legacy | Supprimés (Phase 1) |
+| 2026-06-13 | `lib/mock-data/`, `lib/mode-config.ts`, store | Supprimés (Phase 1) |
