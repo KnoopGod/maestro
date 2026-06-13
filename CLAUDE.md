@@ -1,198 +1,253 @@
-# CLAUDE.md
+# CLAUDE.md — Règles permanentes du projet MAESTRO
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Ce fichier est lu avant chaque session de travail. Il définit les règles qui ne changent pas.
 
-## ⚠️ Critical context
+---
 
-- **The folder is named `ai-command-center` for legacy reasons. The product is called CODEXRS** — a unified social media management platform for HORECA clients (restaurants, hotels, bars, B&Bs) powered by AI agents.
-- **Next.js 16.2.6**. This version has breaking changes from your training data — read `node_modules/next/dist/docs/` (especially `01-app/01-getting-started/`) before writing routes, actions, or layouts. Heed deprecation notices.
-- **Dev server runs on port 3010, not 3000** (`npm run dev` → http://localhost:3010).
-- A few legacy pages still exist from the original "AI Command Center" iteration (`/dashboard`, `/models`, `/task-router`, `/token-economy`, `/work-memory`, `/resume-for-claude`, `/setup-guide`). They are no longer in the sidebar but the files are still in `app/`. Do not refactor them unless asked.
-- **Claude should act primarily as product director, UX strategist, marketing strategist, and agent behavior reviewer.** Codex owns implementation on `codex/mvp-hardening` unless Bradley explicitly asks Claude to code.
-- Before proposing significant work, read:
-  - `docs/ai/ROLES.md`
-  - `docs/ai/WORKFLOW.md`
-  - `docs/ai/DECISIONS.md`
-  - `docs/ops/CONNECTIONS.md`
-  - `docs/ai/CODEX_HANDOFF.md`
+## Vision produit
 
-## Claude collaboration contract
+MAESTRO est une plateforme de production automatisée de contenus pour les réseaux sociaux, destinée aux agences gérant des clients HORECA (restaurants, hôtels, bars, B&Bs, chambres d'hôtes).
 
-When Bradley asks for a new feature or improvement, default to a spec, not code.
+Elle permet de :
+- gérer plusieurs clients avec leurs ADN de marque ;
+- générer automatiquement des posts (texte + image) via des agents IA spécialisés ;
+- valider les contenus en interne et par le client ;
+- programmer et publier sur Facebook et Instagram via l'API Meta ;
+- suivre les coûts IA, les délais et les performances des publications.
 
-Use this format:
+**Cible V1** : outil interne d'agence, un seul utilisateur admin. Pas encore SaaS public.
+**Cible V2** : SaaS multi-utilisateurs avec portail client et facturation.
 
-1. Objective
-2. User workflow
-3. Agents involved
-4. Data needed
-5. Business rules
-6. MVP priority
-7. What Codex should code
-8. What should not be coded yet
+---
 
-Do not create a second architecture, duplicate the data model, or rewrite broad UI/code areas without an explicit request. If implementation is requested, keep changes small, verifiable, and aligned with the client -> strategy -> Library -> Studio -> validation -> calendar/publication workflow.
+## Priorités techniques (dans cet ordre)
 
-## Common commands
+1. **Stabilité** — le produit doit fonctionner sans crash ni perte de données
+2. **Sécurité** — les tokens sociaux clients ne doivent jamais fuiter
+3. **Clarté** — un développeur doit comprendre le code sans avoir besoin de l'auteur
+4. **Simplicité utilisateur** — un débutant doit pouvoir utiliser MAESTRO
+5. **Performance** — les pages doivent se charger en moins de 2 secondes
+6. **Maintenabilité** — chaque fichier a une responsabilité unique
+7. **Évolutivité** — l'architecture peut accueillir de nouveaux agents et plateformes
 
-```bash
-npm run dev              # Dev server on :3010 (Turbopack)
-npm run build            # Production build (use to verify changes compile)
-npm run lint             # ESLint
-npx tsc --noEmit         # Fast type check (preferred over build for quick checks)
-
-# Database (LibSQL, file at ./codexrs.db)
-npx tsx -e "import('./lib/db/schema').then(m => m.initSchema())"   # Init schema
-npx tsx lib/db/seed.ts                                              # Seed HORECA mock clients
-
-# MCP server (optional, separate from main app)
-npm run mcp:build && npm run mcp:start
-```
-
-There is no test framework configured.
+---
 
 ## Architecture
 
-### The 4 layers of CODEXRS
+### Quatre couches
 
 ```
-UI (Next.js App Router)
+UI (Next.js 16.2.6 — App Router)
     ↓ Server Actions / fetch
 API routes (app/api/**/route.ts)
-    ↓ call
-Agents (lib/agents/*.ts)         ← AI orchestration + external APIs
-    ↓ persist via
-Data layer (lib/db/queries/*.ts)
+    ↓ appelle
+Agents (lib/agents/*.ts)           ← orchestration IA + APIs externes
+    ↓ persiste via
+Couche données (lib/db/queries/*.ts)
     ↓
-LibSQL (./codexrs.db, local SQLite — same client as Turso for cloud migration)
+LibSQL (./maestro.db local — compatible Turso pour migration cloud)
 ```
 
 ### Agents (`lib/agents/`)
 
-Each agent is a single TypeScript module with one or two exported functions. They are pure functions: take context, hit an external API (Anthropic/OpenAI/Meta), return structured data. They never touch the DB directly — that's done by their caller (an API route or another agent).
+Chaque agent est un module TypeScript avec une ou deux fonctions exportées.
+Les agents sont des fonctions pures : reçoivent un contexte, appellent une API externe, retournent des données structurées. **Ils ne touchent jamais directement la DB** — c'est la route API ou le pipeline qui le fait.
 
-- `social-expert.ts` — generates captions/hashtags per platform via Claude Sonnet 4.6. **Reads `client_visual_identity` and injects the DA into the prompt** when available.
-- `vision-analyzer.ts` — analyzes an image with Claude Vision (palette, mood, tags, description).
-- `visual-identity.ts` — synthesizes the **Direction Artistique (DA)** from analyzed assets. Produces a `style_prompt` that is automatically injected into all future generations for that client. This is the killer differentiator.
-- `image-generator.ts` — calls OpenAI Images (gpt-image-1), stores the result via `lib/storage/local.ts`, creates a `client_assets` row.
-- `meta-publisher.ts` — Meta Graph API wrapper. Token exchange, page discovery, Facebook + Instagram publishing, `debug_token`.
+Agents actuels :
+- `account-director.ts` — analyse le profil client, enrichit le brief
+- `social-expert.ts` — génère captions + hashtags (Claude Sonnet 4.6)
+- `image-generator.ts` — génère les images (gpt-image-1), stocke dans `client_assets`
+- `supervisor.ts` — contrôle qualité + verdict (ready / revise / blocked)
+- `vision-analyzer.ts` — analyse les images uploadées (Claude Vision)
+- `visual-identity.ts` — synthèse Direction Artistique (DA) du client
+- `meta-publisher.ts` — wrappeur Graph API Meta (Facebook + Instagram)
+- `pipeline.ts` — orchestrateur principal (Account Director → Social Expert → Image Gen → Supervisor)
+- `publish-pipeline.ts` — pipeline de publication avec vérification supervisor
 
-### Data model (`lib/db/schema.ts`)
+### Stockage
 
-Tables:
-- `clients` — HORECA establishments (name, type, city, brand voice tone/keywords/avoid).
-- `client_social_accounts` — Meta/IG/TikTok tokens, **stored in clear** (TODO: encrypt before prod).
-- `client_assets` — uploaded photos/videos/docs + AI analysis (palette, mood, ai_description, extracted_text). One asset per uploaded file.
-- `client_visual_identity` — one row per client, synthesized DA (style_prompt, palette, mood, etc.). Upserted, never duplicated.
-- `posts` — generated posts. Status: `draft | published | failed`. `meta_post_ids` is a JSON map `{platform: postId}`.
-- `client_agents` — agent assignments per client (placeholder; not actively used yet).
+Local : `public/uploads/clients/<clientId>/` — servi en statique.
+Production : Vercel Blob (`BLOB_READ_WRITE_TOKEN` requis).
+**Meta ne peut pas accéder aux URLs `localhost`** — `CODEXRS_PUBLIC_URL` doit être une URL HTTPS publique.
 
-### Storage (`lib/storage/local.ts`)
+### Auth (`proxy.ts` → middleware Next.js)
 
-Local filesystem under `public/uploads/clients/<clientId>/`. Files are served as static assets at `/uploads/clients/<clientId>/...`. The path is what gets stored in `client_assets.url`.
+Mot de passe unique (`CODEXRS_PASSWORD`). Session HMAC-SHA256, cookie `codexrs_session`, 30 jours.
+**Attention** : pas de CSRF actuellement. À corriger avant tout partage d'accès.
 
-**Production gotcha**: Meta cannot fetch images from `localhost`. The publish flow in `app/api/studio/publish-post/route.ts` rewrites local URLs using `CODEXRS_PUBLIC_URL` env var. Without it, Facebook posts go through as text-only, Instagram posts are skipped with a warning.
+---
 
-### Server Actions
+## Commandes communes
 
-Located in `lib/actions/clients.ts`. They are imported into Server Components and passed to `<form action={...}>`. After mutating they call `revalidatePath()` and often `redirect()`.
+```bash
+npm run dev              # Serveur dev sur :3010 (Turbopack)
+npm run build            # Build production (vérifie la compilation)
+npm run lint             # ESLint
+npx tsc --noEmit         # Vérification TypeScript rapide
 
-### Studio → Publish flow (the critical path)
+# Base de données (LibSQL, fichier ./maestro.db)
+npx tsx lib/db/seed.ts   # Seed 6 clients HORECA mock
 
-1. User opens `/studio`, picks a client, writes a brief, picks platforms.
-2. POST `/api/studio/generate-post` → `generateCaption` + `generateAndStoreImage` → row inserted in `posts` with `status='draft'`.
-3. User clicks "Publier" → POST `/api/studio/publish-post` with `{postId}`.
-4. Route loads the post + the client's `client_social_accounts`, calls `publishToFacebook`/`publishToInstagram`.
-5. On success → `markPostPublished` writes the `meta_post_ids`. On failure → `markPostFailed` writes the error string (visible in `/plan`).
-
-If Meta returns an error, `decorateMetaError()` in the publish route rewrites it with the actionable fix (permissions, admin role, etc.) — don't strip those hints.
-
-### Meta connection flow (per client)
-
-`/clients/[id]/connections` hosts the wizard:
-
-1. User pastes a User Access Token from Graph API Explorer.
-2. POST `/api/meta/discover` → returns all FB Pages the user manages + their linked IG Business accounts.
-3. User picks the page that represents this client.
-4. POST `/api/meta/connect` → saves the **Page Access Token** (not the user token) in `client_social_accounts`.
-
-The `/api/meta/debug-token` endpoint (called by the "Diagnostiquer" button) returns the actual permissions on the stored token by calling Meta's `/debug_token`. This is the first thing to check when publishing fails.
-
-## Environment variables
-
-```
-ANTHROPIC_API_KEY=sk-ant-...    # Required (Claude Sonnet 4.6 + Vision)
-OPENAI_API_KEY=sk-...           # Required for image generation
-META_APP_ID=...                 # Optional (enables long-lived token exchange)
-META_APP_SECRET=...             # Optional
-CODEXRS_PUBLIC_URL=https://...  # Required in prod so Meta can fetch /uploads/*
-DATABASE_URL=                   # Default: file:./codexrs.db (swap to Turso URL for cloud)
-DATABASE_AUTH_TOKEN=            # Only if DATABASE_URL is a Turso URL
-OLLAMA_HOST=                    # Legacy, unused by CODEXRS core
-LUMA_API_KEY=                   # Optional, video generation
-BLOB_READ_WRITE_TOKEN=          # Optional in dev, recommended in prod for public assets
-CRON_SECRET=                    # Recommended in prod for scheduled publishing
-CODEXRS_PASSWORD=               # Required if auth protection is enabled
-NEXT_PUBLIC_APP_URL=            # Optional fallback URL
+# MCP server (optionnel, indépendant de l'app)
+npm run mcp:build && npm run mcp:start
 ```
 
-## Conventions
+---
 
-- French UI throughout (labels, error messages, comments often in French). Variable/function names stay in English.
-- Server Components by default. Client Components only when interactivity is required (state, events). Mark with `'use client'`.
-- DB queries return camelCase domain objects (see `mapRow` helpers); SQL columns are snake_case.
-- Tailwind classes follow the dark theme: `bg-gray-950` background, `bg-gray-900/40` cards, `border-gray-800`, `purple-600` accent for primary, gradients for emphasis.
-- Status colors are consistent: emerald (success), amber (warning/pause), red (error), purple (primary action).
-- Icons from `lucide-react`. Note: `Facebook` and `Instagram` icons were removed from lucide — use inline SVG (see `MetaConnectionWizard.tsx`).
+## Règles de sécurité
 
-## Debugging the publishing flow
+- **Ne jamais afficher, logger ou committer** un secret, token ou clé API.
+- **Ne jamais modifier `.env.local`** sauf si explicitement demandé.
+- Les tokens Meta (Page Access Tokens) sont actuellement en clair dans la DB. **TODO avant prod** : chiffrer avec AES-256-GCM.
+- Toute route API mutante (POST/PATCH/DELETE) doit être protégée par le middleware. Vérifier qu'elle n'est pas dans `PUBLIC_PATHS` de `proxy.ts` sans raison.
+- Ne jamais exposer les données d'un client à une route qui n'a pas vérifié que la requête est authentifiée.
+- Les uploads de fichiers doivent valider le type MIME côté serveur, pas seulement côté client.
+- Ne jamais annoncer que le projet est sécurisé sans audit complet.
 
-If "Publier sur Meta" fails:
+---
 
-1. Go to `/clients/[id]/connections` → click **"Diagnostiquer le token"**. The panel shows exact stored scopes vs required ones.
-2. If `pages_manage_posts` is missing → the Meta app needs the **"Tout gérer sur votre Page"** use case added (at `developers.facebook.com/apps/<APP_ID>/use_cases/`). Generating a token without this use case enabled will silently strip the permission.
-3. If the error is "(#200)" → user must be **Admin** of the page (not Editor/Moderator), AND the app must be in Development mode with the page linked to the same Business Manager.
-4. If Instagram fails with image error → confirm `CODEXRS_PUBLIC_URL` is set and not `localhost`. The route auto-rejects localhost URLs.
+## Règles de performance
 
-## Things to know before refactoring
+- La génération de post (`/api/studio/generate-post`) est **synchrone et bloquante**. Sur Vercel, le timeout est 60 secondes. **C'est un risque critique** à traiter en Phase 4.
+- Ne pas faire d'appel IA redondant. Si la DA du client existe déjà, ne pas la régénérer.
+- Les pages Server Component fetchent leurs données en `Promise.all()` quand les requêtes sont indépendantes.
+- Ne jamais annoncer un gain de performance sans mesure avant/après.
+- Les images uploadées doivent être redimensionnées avant stockage. Ne pas servir des images de 10 Mo.
 
-- Posts table is the source of truth for the entire pipeline (generation, scheduling, publishing, analytics). Do not split it without a real reason.
-- The DA is what makes CODEXRS unique. Any change to `social-expert.ts` or `image-generator.ts` must continue to read and inject `getVisualIdentity()` results.
-- All Anthropic responses are parsed as JSON with a robust fallback (regex extraction). Keep this pattern when adding new agents — Claude occasionally wraps JSON in markdown despite instructions.
-- Cost tracking on posts is real (token-based). Vision/DA costs in `/usage` are estimates (`COST_ESTIMATES` in `lib/db/queries/usage.ts`). If you add per-call cost tracking for those, update the usage page to use real numbers.
+---
 
-## Claude ↔ Codex duo workflow
+## Règles d'architecture
 
-This project uses a two-agent architecture: **Claude** (architect) + **Codex** (executor).
+- **Server Components par défaut.** Client Components uniquement si état, événement ou animation nécessaires. Marquer avec `'use client'`.
+- **Un fichier = une responsabilité.** Si un composant dépasse 400 lignes, le découper.
+- La logique métier vit dans les agents ou les queries, pas dans les routes API ou les composants React.
+- Les routes API ne contiennent que : parsing de la requête, appel à un agent ou query, retour de la réponse.
+- Ne pas dupliquer la logique entre le frontend et le backend.
+- Les statuts (post, agent job) sont définis dans `types/post.ts` et `lib/db/queries/agent-jobs.ts`. Ne pas écrire des statuts en clair ailleurs.
+
+---
+
+## Règles de nommage
+
+- **Fichiers** : kebab-case pour tous les fichiers TypeScript et Markdown.
+- **Variables et fonctions** : camelCase en anglais.
+- **Composants React** : PascalCase.
+- **Types TypeScript** : PascalCase.
+- **Tables SQL** : snake_case.
+- **Objets domaine retournés par les queries** : camelCase (voir les fonctions `mapRow`).
+- **UI** : textes en français. Code (variables, fonctions, commentaires techniques) en anglais.
+- **Branches Git** : `feature/`, `fix/`, `refactor/`, `performance/`, `security/`, `docs/`.
+
+---
+
+## Règles pour les agents IA
+
+Chaque agent doit avoir :
+- une **responsabilité unique** clairement nommée ;
+- un **input typé** (interface TypeScript) ;
+- un **output typé** (interface TypeScript) ;
+- un suivi de **coût** (tokens input + output, coût estimé) ;
+- un suivi de **durée** (via `withTracking`) ;
+- une **gestion d'erreur** qui ne casse pas le pipeline si l'agent est non bloquant ;
+- une **version du prompt** commentée dans le code si le prompt a évolué.
+
+Les réponses JSON de Claude sont parsées avec un fallback regex (Claude peut wrapper du JSON dans du markdown). Garder ce pattern pour tout nouvel agent.
+
+Ne jamais appeler un agent depuis un composant React côté client. Toujours passer par une route API.
+
+---
+
+## Règles Git
+
+- **Ne jamais travailler directement sur `main`** pour une modification importante.
+- **Une branche par phase ou par fonctionnalité.** Préfixe selon convention (`feature/`, `fix/`, `docs/`, etc.).
+- **Commits courts et cohérents.** Un commit = un sujet. Ne pas mélanger refactoring et nouvelle feature.
+- **Toujours lancer `npx tsc --noEmit` et `npm run lint` avant de committer.**
+- **Toujours pusher la branche sur GitHub** après validation technique locale.
+- **Ne jamais fusionner dans `main` sans validation explicite** de Bradley.
+- Documenter dans le commit message : fichiers concernés, risques, migrations si applicable.
+
+---
+
+## Règles de tests
+
+- Il n'y a pas encore de framework de test. **Ne pas annoncer qu'un test passe s'il n'existe pas.**
+- Avant chaque commit, vérifier manuellement les flux critiques : génération → validation → publication.
+- Quand un bug est corrigé, noter le scénario exact dans `docs/audits/technical-audit.md`.
+- La commande de validation minimale avant commit est :
+  ```bash
+  npx tsc --noEmit && npm run lint
+  ```
+
+---
+
+## Règles de documentation
+
+- Documenter uniquement ce qui **existe réellement**. Ne pas décrire des fonctionnalités futures comme disponibles.
+- Mettre à jour `docs/product/current-status.md` après chaque phase complétée.
+- Enregistrer les décisions importantes dans `docs/product/decisions.md`.
+- Les specs pour Codex vont dans `CODEX_SPECS/NNN-feature.md` (numérotées, séquentielles).
+- `CLAUDE.md` est mis à jour si une règle change de façon permanente.
+
+---
+
+## Interdictions absolues
+
+- **Ne jamais afficher les secrets** (API keys, tokens, mots de passe) dans les logs, l'UI ou les commits.
+- **Ne jamais modifier `.env.local`** sans instruction explicite.
+- **Ne jamais supprimer une fonctionnalité utile** sans preuve que personne ne l'utilise.
+- **Ne jamais inventer une architecture** qui n'existe pas dans le code.
+- **Ne jamais cacher une erreur de test** ou un échec de build.
+- **Ne jamais contourner TypeScript avec `any`** sans commentaire justificatif.
+- **Ne jamais ajouter une dépendance npm** sans vérifier qu'elle n'est pas déjà disponible.
+- **Ne jamais annoncer que le projet est sécurisé** sans audit complet.
+- **Ne jamais annoncer un gain de performance** sans mesure avant/après.
+- **Ne jamais développer plusieurs gros modules simultanément** dans la même session.
+- **Ne jamais casser la V1** pour accélérer la V2.
+- **Ne jamais pusher sur `main`** sans accord explicite de Bradley.
+
+---
+
+## Format de rapport après chaque mission
 
 ```
-Claude writes spec → CODEX_SPECS/NNN-feature.md → codex exec → Claude reviews diff
+## Analyse
+[Ce qui a été analysé]
+
+## Problèmes critiques
+[Liste avec fichier + ligne]
+
+## Problèmes importants
+[Liste]
+
+## Architecture documentée
+[Ce qui a changé]
+
+## Fichiers créés
+[Liste]
+
+## Fichiers modifiés
+[Liste avec nature du changement]
+
+## Tests exécutés
+[Commandes lancées + résultats]
+
+## Risques restants
+[Ce qui n'a pas été traité]
+
+## Prochaine phase recommandée
+[Une seule phase, une seule priorité]
 ```
 
-### Claude's responsibilities
-- Architecture decisions, cross-file consistency, strategic trade-offs
-- Writing detailed specs in `CODEX_SPECS/NNN-feature.md` (numbered, sequential)
-- Reviewing Codex output (`git diff`) and fixing edge cases
-- Never implementing features that belong to a Codex spec unless there's no Codex session available
+---
 
-### Codex's responsibilities
-- Verbose code generation, repetitive scaffolds, single-file implementations
-- Running `npx tsc --noEmit` + `npm run build` after every spec to validate
-- Writing a summary of what was created/modified
+## Contexte technique rapide
 
-### Spec format (CODEX_SPECS/NNN-feature.md)
-Each spec must include: **Context** (files to read), **Goal** (one-line outcome), **Files to modify** (exact paths + precise changes), **Don't touch**, **Validation** (commands to run), **Output expected**.
-
-### Invoking Codex (run from project root)
-```sh
-codex exec \
-  --cd /Users/bradleydave/Dev/ai-command-center \
-  --sandbox workspace-write \
-  --output-last-message /tmp/codex-last.md \
-  "$(cat CODEX_SPECS/NNN-feature.md)"
-```
-
-### When to write a new spec vs implement directly
-- **Write a spec** when the task is >50 lines of code, touches >2 files, or is mostly scaffolding
-- **Implement directly** for small fixes (<30 lines), urgent hotfixes, or when Codex is not available
-- Existing specs: `CODEX_SPECS/` — always check before starting an implementation to avoid duplication
+- **Next.js 16.2.6** avec App Router. Lire `node_modules/next/dist/docs/` si doute sur une API.
+- **Port dev : 3010** (pas 3000).
+- **DB** : `./maestro.db` (LibSQL/SQLite local). Production : Turso (`DATABASE_URL` + `DATABASE_AUTH_TOKEN`).
+- **Middleware auth** : `proxy.ts` à la racine (exporté comme middleware Next.js via Turbopack).
+- **Cookie session** : `codexrs_session` (nom legacy, à mettre à jour).
+- **URL publique** : `CODEXRS_PUBLIC_URL` requis en production pour que Meta accède aux images uploadées.
+- **Pages legacy** (à supprimer en Phase 1) : `/dashboard`, `/models`, `/task-router`, `/token-economy`, `/work-memory`, `/resume-for-claude`, `/setup-guide`.
+- **Vercel Cron** : `POST /api/cron/publish-due` — configuré dans `vercel.json`.

@@ -150,7 +150,7 @@ export function LaunchTunnel({
       {/* Barre de progression globale */}
       <div className="bg-gray-900/40 border border-gray-800 p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[9px] text-indigo-600/60 font-mono tracking-[0.25em] uppercase">// PROGRESSION DU LANCEMENT</span>
+          <span className="text-[9px] text-indigo-600/60 font-mono tracking-[0.25em] uppercase">PROGRESSION DU LANCEMENT</span>
           <span className={`text-xs font-bold font-mono ${pct === 100 ? 'text-emerald-400' : 'text-indigo-300'}`}>
             {doneCount}/{totalTasks} — {pct}%
           </span>

@@ -14,5 +14,28 @@
       "mcp__Claude_in_Chrome__select_browser",
       "mcp__Claude_in_Chrome__tabs_context_mcp"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-tool-bash.mjs"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/stop-reminder.mjs"
+          }
+        ]
+      }
+    ]
   }
 }
