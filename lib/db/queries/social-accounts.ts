@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
 import type { ClientSocialAccount, SocialPlatform } from '@/types/client'
+import { encryptToken, decryptToken } from '@/lib/crypto/tokens'
 
 interface SocialAccountRow {
   id: string
@@ -15,15 +16,34 @@ interface SocialAccountRow {
   created_at: number
 }
 
-function mapRow(row: SocialAccountRow): ClientSocialAccount {
+async function mapRow(row: SocialAccountRow): Promise<ClientSocialAccount> {
+  let accessToken = row.access_token
+  let refreshToken = row.refresh_token
+
+  if (accessToken) {
+    try {
+      accessToken = await decryptToken(accessToken, row.client_id)
+    } catch {
+      // Decryption failed — token may be corrupted; surface null so callers can prompt reconnection
+      accessToken = null
+    }
+  }
+  if (refreshToken) {
+    try {
+      refreshToken = await decryptToken(refreshToken, row.client_id)
+    } catch {
+      refreshToken = null
+    }
+  }
+
   return {
     id: row.id,
     clientId: row.client_id,
     platform: row.platform,
     handle: row.handle,
     accountId: row.account_id,
-    accessToken: row.access_token,
-    refreshToken: row.refresh_token,
+    accessToken,
+    refreshToken,
     connectedAt: row.connected_at,
     expiresAt: row.expires_at,
     createdAt: row.created_at,
@@ -44,7 +64,7 @@ export async function listClientSocialAccounts(clientId: string): Promise<Client
     `SELECT * FROM client_social_accounts WHERE client_id = ? ORDER BY created_at DESC`,
     [clientId]
   )
-  return rows.map(mapRow)
+  return Promise.all(rows.map(mapRow))
 }
 
 export async function listClientSocialAccountSummaries(clientId: string): Promise<ClientSocialAccountSummary[]> {
@@ -87,6 +107,7 @@ export async function getSocialAccount(clientId: string, platform: SocialPlatfor
   return row ? mapRow(row) : null
 }
 
+
 export async function saveSocialAccount(input: {
   clientId: string
   platform: SocialPlatform
@@ -95,6 +116,8 @@ export async function saveSocialAccount(input: {
   accessToken: string
   expiresAt?: number
 }): Promise<ClientSocialAccount> {
+  const encryptedToken = await encryptToken(input.accessToken, input.clientId)
+
   // Upsert: delete any existing then insert (simpler than ON CONFLICT for our case)
   await db.execute({
     sql: `DELETE FROM client_social_accounts WHERE client_id = ? AND platform = ?`,
@@ -115,7 +138,7 @@ export async function saveSocialAccount(input: {
       input.platform,
       input.handle,
       input.accountId,
-      input.accessToken,
+      encryptedToken,
       now,
       input.expiresAt ?? null,
       now,

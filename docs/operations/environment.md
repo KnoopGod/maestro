@@ -21,7 +21,14 @@ DATABASE_URL=libsql://...turso.io                      # Turso
 DATABASE_AUTH_TOKEN=...                                # Turso
 CRON_SECRET=...                                        # Vercel Cron
 BLOB_READ_WRITE_TOKEN=...                              # Vercel Blob
+MAESTRO_ENCRYPTION_KEY=...                             # AES-256-GCM : chiffrement des tokens Meta
 ```
+
+> **`MAESTRO_ENCRYPTION_KEY`** : chaîne aléatoire d'au moins 32 caractères.
+> Générer avec : `openssl rand -base64 32`
+> Sans cette variable, les tokens sont stockés en clair avec un warning dans les logs.
+> Les tokens existants (stockés en clair) continuent de fonctionner — ils seront
+> chiffrés automatiquement lors de la prochaine reconnexion Meta.
 
 ### Optionnelles
 
@@ -31,7 +38,6 @@ META_APP_ID=...                         # Active l'échange token long-durée Me
 META_APP_SECRET=...                     # Secret app Meta
 LUMA_API_KEY=...                        # Génération vidéo (future)
 CODEXRS_AUTO_INIT_SCHEMA=false          # Désactive l'init auto schema en prod
-OLLAMA_HOST=http://localhost:11434      # Ollama local (feature expérimentale)
 ```
 
 ### Variables Legacy (compatibilité)

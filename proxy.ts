@@ -11,9 +11,22 @@ const PUBLIC_PATHS = [
   '/data-deletion',
 ]
 
+// Methods that mutate state — validate Origin header on these.
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
 export async function proxy(req: NextRequest) {
   if (!isAuthEnabled() || isPublicPath(req.nextUrl.pathname)) {
     return NextResponse.next()
+  }
+
+  // CSRF: reject cross-origin mutating requests.
+  // SameSite=Strict on the session cookie already prevents most CSRF, but
+  // Origin validation adds defense-in-depth for browsers that don't enforce it.
+  if (MUTATING_METHODS.has(req.method)) {
+    const originError = validateOrigin(req)
+    if (originError) {
+      return NextResponse.json({ error: originError }, { status: 403 })
+    }
   }
 
   const valid = await isValidSessionToken(req.cookies.get(SESSION_COOKIE)?.value)
@@ -26,6 +39,29 @@ export async function proxy(req: NextRequest) {
   const loginUrl = new URL('/login', req.url)
   loginUrl.searchParams.set('next', req.nextUrl.pathname + req.nextUrl.search)
   return NextResponse.redirect(loginUrl)
+}
+
+/**
+ * Returns an error string if the request Origin is not the same as the app host,
+ * or null if the request is acceptable.
+ *
+ * We allow requests with no Origin header (server-to-server calls, curl, Vercel cron)
+ * because those cannot be triggered by a malicious web page — only browser requests
+ * reliably include the Origin header.
+ */
+function validateOrigin(req: NextRequest): string | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null // non-browser request — allow
+
+  const host = req.headers.get('host')
+  if (!host) return 'Missing Host header'
+
+  // Derive the expected origin from the request itself (handles localhost + production)
+  const expectedOrigin = `${req.nextUrl.protocol}//${host}`
+  if (origin !== expectedOrigin) {
+    return `CSRF: origin mismatch (got ${origin}, expected ${expectedOrigin})`
+  }
+  return null
 }
 
 function isPublicPath(pathname: string) {
