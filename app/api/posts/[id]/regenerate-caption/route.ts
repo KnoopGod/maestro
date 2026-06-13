@@ -5,9 +5,11 @@ import { generateCaption, type Platform } from '@/lib/agents/social-expert'
 
 const ALLOWED_PLATFORMS = new Set<Platform>(['instagram', 'facebook', 'tiktok', 'linkedin'])
 
-export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+    const body = await req.json().catch(() => ({}))
+    const instruction = typeof body.instruction === 'string' ? body.instruction.trim() : ''
     const post = await getPost(id)
     if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
 
@@ -21,7 +23,9 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
     const result = await generateCaption({
       client,
-      brief: post.brief,
+      brief: instruction
+        ? `${post.brief}\n\nConsigne de régénération texte uniquement : ${instruction}`
+        : post.brief,
       platforms,
       contentType: post.contentType,
     })
