@@ -3,6 +3,7 @@ import { Bot, CheckCircle2, Clock, Sparkles, Activity, AlertTriangle, ArrowRight
 import { AGENTS, type AgentStatus, type MaestroAgent } from '@/lib/agent-registry'
 import { listRecentJobs } from '@/lib/db/queries/agent-jobs'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { AutoRefresh } from '@/components/agents/AutoRefresh'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
 
 export const dynamic = 'force-dynamic'
@@ -188,6 +189,9 @@ export default async function AgentsPage() {
 
   return (
     <div className="space-y-8">
+      {/* Suit les jobs async en direct tant qu'au moins un est en cours. */}
+      <AutoRefresh active={runningJobs.length > 0} />
+
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div>
