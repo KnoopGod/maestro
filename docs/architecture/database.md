@@ -35,8 +35,8 @@ Connexions Meta par client.
 |---|---|---|
 | platform | TEXT | `instagram\|facebook\|tiktok\|linkedin\|google_business` |
 | account_id | TEXT | ID Meta de la page |
-| access_token | TEXT | ⚠️ En clair — à chiffrer (Phase 3) |
-| refresh_token | TEXT | ⚠️ En clair — à chiffrer (Phase 3) |
+| access_token | TEXT | Chiffré AES-256-GCM si `MAESTRO_ENCRYPTION_KEY` est configuré |
+| refresh_token | TEXT | Chiffré AES-256-GCM si `MAESTRO_ENCRYPTION_KEY` est configuré |
 | expires_at | INTEGER | Timestamp expiration token |
 
 ### `client_assets`

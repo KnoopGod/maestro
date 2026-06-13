@@ -10,12 +10,12 @@ Contexte : V1 mono-utilisateur interne. Non ouvert au public.
 | Domaine | État | Priorité |
 |---|---|---|
 | Authentification | ⚠️ Suffisant V1, insuffisant V2 | Phase 7 |
-| Tokens sociaux | 🔴 En clair — critique avant prod partagée | Phase 3 |
-| CSRF | 🔴 Absent | Phase 3 |
+| Tokens sociaux | ✅ Chiffrés si `MAESTRO_ENCRYPTION_KEY` configuré | Vérifier prod |
+| CSRF | ✅ Réduit par SameSite strict + Origin check | Renforcer V2 |
 | Isolation données | ✅ Mono-tenant — OK en V1 | Phase 7 |
 | Validation entrées | ⚠️ Partielle | En continu |
 | Secrets | ✅ Jamais dans le code | Maintenir |
-| Headers HTTP | 🔴 Absents | Phase 6 |
+| Headers HTTP | ✅ Headers sécurité configurés | Maintenir |
 | Uploads | ⚠️ À vérifier | Phase 3 |
 | Routes protégées | ✅ Middleware sur toutes les routes | Maintenir |
 
@@ -32,17 +32,16 @@ Contexte : V1 mono-utilisateur interne. Non ouvert au public.
 - Middleware sur toutes les routes sauf les publiques
 
 **Ce qui manque** :
-- Pas de CSRF token
+- Pas de CSRF token dédié (actuellement SameSite strict + Origin check)
 - Pas d'expiration de session dynamique
 - Pas de rotation de session après login
 - Session liée au mot de passe, pas à une session DB
 
 ### Tokens Meta
 
-Stockés en clair dans `client_social_accounts.access_token`.  
-Un dump de `maestro.db` expose tous les tokens.
+Chiffrés dans `client_social_accounts.access_token` si `MAESTRO_ENCRYPTION_KEY` est configuré. Les tokens historiques en clair restent lisibles pour compatibilité jusqu'à reconnexion/migration.
 
-**Plan de chiffrement (Phase 3)** :
+**Chiffrement Phase 3** :
 ```
 clé = PBKDF2(MAESTRO_ENCRYPTION_KEY, client_id, iterations=100000)
 stockage = { iv: hex, ciphertext: hex, tag: hex }

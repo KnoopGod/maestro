@@ -12,7 +12,7 @@ MAESTRO V1 est un outil interne mono-utilisateur. Le niveau de sécurité actuel
 CODEXRS_PASSWORD → HMAC-SHA256("codexrs-session") → cookie codexrs_session
 ```
 
-- Cookie httpOnly, secure (prod), sameSite: lax
+- Cookie httpOnly, secure (prod), sameSite: strict
 - Durée : 30 jours
 - Pas d'expiration dynamique
 - Pas de révocation individuelle
@@ -23,23 +23,22 @@ CODEXRS_PASSWORD → HMAC-SHA256("codexrs-session") → cookie codexrs_session
 
 | Risque | Gravité | Phase de correction |
 |---|---|---|
-| Pas de CSRF protection | Critique avant partage d'accès | Phase 3 |
+| CSRF résiduel sur mutations | Réduit par SameSite strict + validation Origin | À renforcer si multi-utilisateur |
 | Session permanente (pas de rotation) | Important | Phase 7 (SaaS) |
 | Un seul mot de passe pour tous | Important (V2) | Phase 7 (SaaS) |
 
-## Tokens Meta (⚠️ critique)
+## Tokens Meta
 
-Les tokens `access_token` et `refresh_token` des comptes Meta sont stockés **en clair** dans la table `client_social_accounts`.
+Les tokens `access_token` et `refresh_token` des comptes Meta sont chiffrés avant stockage si `MAESTRO_ENCRYPTION_KEY` est configuré.
 
-**Risque** : Si `maestro.db` est accessible (backup exposé, accès serveur), tous les comptes Meta clients sont compromis.
+**Risque résiduel** : les anciens tokens restent en clair jusqu'à reconnexion/migration, et l'absence de `MAESTRO_ENCRYPTION_KEY` force le mode compatibilité en clair.
 
-**Plan Phase 3** : Chiffrement AES-256-GCM avec clé dérivée de `DATABASE_AUTH_TOKEN`.
+**Implémentation Phase 3** : AES-256-GCM avec clé dérivée de `MAESTRO_ENCRYPTION_KEY` + `client_id`.
 
 ```typescript
-// Plan de chiffrement (Phase 3)
-// encrypt(token, key) → { iv, ciphertext, tag }
-// decrypt(iv, ciphertext, tag, key) → token
-// Clé = PBKDF2(DATABASE_AUTH_TOKEN || ENCRYPTION_KEY, salt)
+// encrypt(token, clientId) → { v, iv, tag, ct }
+// decrypt(envelope, clientId) → token
+// Clé = PBKDF2(MAESTRO_ENCRYPTION_KEY, client_id, iterations=100000)
 ```
 
 ## Routes publiques

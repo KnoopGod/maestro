@@ -29,6 +29,11 @@ export async function GET() {
       label: 'META_APP_ID + META_APP_SECRET',
       hint: 'Requis pour convertir les User Tokens Meta en tokens longue durée fiables.',
     },
+    encryption: {
+      ok: !!process.env.MAESTRO_ENCRYPTION_KEY,
+      label: 'MAESTRO_ENCRYPTION_KEY',
+      hint: 'Requis pour chiffrer les nouveaux tokens Meta en base. À définir avant de reconnecter les comptes clients.',
+    },
     publicMedia: {
       ok: !!(
         process.env.BLOB_READ_WRITE_TOKEN ||

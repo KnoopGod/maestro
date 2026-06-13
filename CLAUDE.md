@@ -73,7 +73,7 @@ Production : Vercel Blob (`BLOB_READ_WRITE_TOKEN` requis).
 ### Auth (`proxy.ts` → middleware Next.js)
 
 Mot de passe unique (`CODEXRS_PASSWORD`). Session HMAC-SHA256, cookie `codexrs_session`, 30 jours.
-**Attention** : pas de CSRF actuellement. À corriger avant tout partage d'accès.
+Cookie `httpOnly`, `secure` en production, `sameSite=strict`. Les mutations passent aussi par une vérification `Origin` dans `proxy.ts` pour réduire le risque CSRF.
 
 ---
 

@@ -30,7 +30,7 @@ interface SocialAccount {
   platform: 'facebook' | 'instagram'
   accountId: string      // ID Meta de la page/compte
   accountName: string
-  accessToken: string    // ⚠️ en clair — à chiffrer Phase 3
+  accessToken: string    // chiffré en DB si MAESTRO_ENCRYPTION_KEY est configuré
   tokenExpiresAt: string | null
   pageId: string | null  // ID de la Page Facebook
   instagramAccountId: string | null
@@ -41,8 +41,8 @@ interface SocialAccount {
 
 ## Sécurité des tokens
 
-⚠️ **C2 — Critique** : Les tokens Meta sont stockés en clair dans `client_social_accounts.access_token`.
-**Plan Phase 3** : chiffrement AES-256-GCM avec clé maître dans variable d'environnement.
+Les tokens Meta sont chiffrés dans `client_social_accounts.access_token` avec AES-256-GCM si `MAESTRO_ENCRYPTION_KEY` est configuré.
+Les anciens tokens en clair doivent être reconnectés ou migrés après activation de la clé.
 
 ## Vérification de token
 

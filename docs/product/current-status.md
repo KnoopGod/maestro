@@ -32,11 +32,11 @@ Dernière mise à jour : 2026-06-13
 
 | Fonctionnalité | État | Priorité |
 |---|---|---|
-| Génération asynchrone | ⚠️ Risque critique | Phase 4 |
-| Chiffrement tokens Meta | ⚠️ Risque critique | Phase 3 |
+| Génération asynchrone | ✅ Phase 4 livrée | À tester en prod |
+| Chiffrement tokens Meta | ✅ Phase 3 livrée | Définir clé + reconnecter |
 | Suppression pages legacy | 🔄 Phase 1 | Prochain |
 | Découpage StudioForm.tsx | 🔄 Phase 2 | Après Phase 1 |
-| CSRF protection | ⚠️ Important | Phase 3 |
+| CSRF protection | ✅ SameSite strict + Origin check | Token dédié en V2 |
 
 ### Ce qui n'existe pas encore
 

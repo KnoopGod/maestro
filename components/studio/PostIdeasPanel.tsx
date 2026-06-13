@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Lightbulb, Loader2, Sparkles, Wand2, Zap, CheckCircle2, XCircle } from 'lucide-react'
 import type { PostIdea } from '@/lib/agents/planner'
+import { failureMessage, pollJob } from '@/lib/studio/poll-job'
 
 interface PostIdeasPanelProps {
   clientId: string | null
@@ -77,8 +78,13 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
               contentType: 'photo',
             }),
           })
-          if (res.ok) done++
-          else failed++
+          const data = await res.json()
+          if (!res.ok || !data.jobId) throw new Error(data.error || 'Job non créé')
+
+          const final = await pollJob(data.jobId, { intervalMs: 2000 })
+          if (final.status === 'failed') throw new Error(failureMessage(final))
+          if (!final.postId) throw new Error('Post introuvable après génération')
+          done++
         } catch {
           failed++
         }
