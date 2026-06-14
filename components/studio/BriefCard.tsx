@@ -1,5 +1,6 @@
 'use client'
-import { BrainCircuit, ChevronDown, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { BrainCircuit, ChevronDown, Loader2, Link as LinkIcon } from 'lucide-react'
 import type { BriefFields, GenerationResult } from '@/lib/studio/types'
 import { BRIEF_TEMPLATES } from '@/lib/studio/brief-templates'
 import { GuidedBriefField } from './GuidedBriefField'
@@ -21,23 +22,108 @@ export function BriefCard({
   clientId, aiLoading, aiDirective, briefFields, brief, templateCategory,
   onSuggestBrief, onUpdateField, onApplyTemplate, onSetTemplateCategory,
 }: Props) {
+  const [showUrlPanel, setShowUrlPanel] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
+  const [urlLoading, setUrlLoading] = useState(false)
+  const [urlError, setUrlError] = useState('')
+  const [urlResult, setUrlResult] = useState<{ title: string; keyPoints: string[]; suggestedPillar: string | null } | null>(null)
+
+  async function analyzeUrl() {
+    if (!urlInput.trim() || !clientId) return
+    setUrlLoading(true)
+    setUrlError('')
+    setUrlResult(null)
+    try {
+      const res = await fetch('/api/studio/brief-from-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: urlInput.trim(), clientId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur analyse URL')
+      onApplyTemplate(data.brief)
+      setUrlResult({ title: data.title, keyPoints: data.keyPoints, suggestedPillar: data.suggestedPillar })
+    } catch (err) {
+      setUrlError(err instanceof Error ? err.message : 'Erreur')
+    } finally {
+      setUrlLoading(false)
+    }
+  }
+
   return (
     <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <label className="text-sm font-semibold text-white">✍️ Ordre pour le post</label>
-        <button
-          type="button"
-          onClick={onSuggestBrief}
-          disabled={!clientId || aiLoading}
-          title="Demander à l'Account Director de proposer un brief aligné avec la stratégie du client"
-          className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg bg-purple-900/40 border border-purple-700/40 text-purple-300 hover:bg-purple-800/40 hover:border-purple-500/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono tracking-wide"
-        >
-          {aiLoading
-            ? <><Loader2 className="w-3 h-3 animate-spin" /> Analyse en cours...</>
-            : <><BrainCircuit className="w-3 h-3" /> Brief IA</>
-          }
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => { setShowUrlPanel(v => !v); setUrlError(''); setUrlResult(null) }}
+            disabled={!clientId}
+            title="Générer un brief à partir d'une URL (événement, menu, article…)"
+            className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg border transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono tracking-wide ${
+              showUrlPanel
+                ? 'bg-indigo-900/40 border-indigo-600/40 text-indigo-300'
+                : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:bg-gray-700/60 hover:text-gray-200'
+            }`}
+          >
+            <LinkIcon className="w-3 h-3" />
+            Depuis URL
+          </button>
+          <button
+            type="button"
+            onClick={onSuggestBrief}
+            disabled={!clientId || aiLoading}
+            title="Demander à l'Account Director de proposer un brief aligné avec la stratégie du client"
+            className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg bg-purple-900/40 border border-purple-700/40 text-purple-300 hover:bg-purple-800/40 hover:border-purple-500/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono tracking-wide"
+          >
+            {aiLoading
+              ? <><Loader2 className="w-3 h-3 animate-spin" /> Analyse en cours...</>
+              : <><BrainCircuit className="w-3 h-3" /> Brief IA</>
+            }
+          </button>
+        </div>
       </div>
+
+      {showUrlPanel && (
+        <div className="bg-indigo-950/20 border border-indigo-700/30 rounded-xl p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="url"
+              value={urlInput}
+              onChange={e => setUrlInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && !urlLoading && analyzeUrl()}
+              placeholder="https://..."
+              className="flex-1 px-2.5 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-600 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={analyzeUrl}
+              disabled={!urlInput.trim() || urlLoading}
+              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-40"
+            >
+              {urlLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LinkIcon className="w-3.5 h-3.5" />}
+              Analyser
+            </button>
+          </div>
+          {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+          {urlResult && (
+            <div className="space-y-1.5 text-xs">
+              {urlResult.title && <p className="font-medium text-indigo-300">{urlResult.title}</p>}
+              {urlResult.keyPoints.length > 0 && (
+                <ul className="space-y-0.5 text-gray-400">
+                  {urlResult.keyPoints.map((p, i) => <li key={i}>· {p}</li>)}
+                </ul>
+              )}
+              {urlResult.suggestedPillar && (
+                <span className="inline-block text-[10px] bg-indigo-950/60 border border-indigo-800/50 text-indigo-300 rounded-full px-2 py-0.5">
+                  Pilier suggéré : {urlResult.suggestedPillar}
+                </span>
+              )}
+              <p className="text-emerald-400">Brief pré-rempli ✓</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {aiDirective && (
         <div className="bg-amber-950/20 border border-amber-800/30 rounded-lg p-3 space-y-1.5 text-xs">
