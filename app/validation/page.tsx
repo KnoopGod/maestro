@@ -5,6 +5,7 @@ import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
 import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
+import { PostImageSwap } from '@/components/posts/PostImageSwap'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
@@ -147,6 +148,8 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       )}
 
       <PostSupervisor post={post} />
+      <PostImageSwap post={post} />
+
       <div className="flex items-center justify-between gap-2">
         <PostDeleteButton post={post} />
         <PostInlineEditor post={post} />

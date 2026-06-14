@@ -45,6 +45,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       hook: typeof body.hook === 'string' ? body.hook : undefined,
       cta: typeof body.cta === 'string' ? body.cta : undefined,
       reasoning: typeof body.reasoning === 'string' ? body.reasoning : undefined,
+      imageAssetId: body.imageAssetId === null ? null : typeof body.imageAssetId === 'string' ? body.imageAssetId : undefined,
+      imageUrl: body.imageUrl === null ? null : typeof body.imageUrl === 'string' ? body.imageUrl : undefined,
+      imagePrompt: body.imagePrompt === null ? null : typeof body.imagePrompt === 'string' ? body.imagePrompt : undefined,
     })
 
     return NextResponse.json({ post: updated })

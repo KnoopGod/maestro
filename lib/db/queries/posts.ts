@@ -185,6 +185,9 @@ export async function updatePostContent(id: string, input: {
   reasoning?: string | null
   cost?: number
   tokensUsed?: number
+  imageAssetId?: string | null
+  imageUrl?: string | null
+  imagePrompt?: string | null
 }): Promise<Post> {
   const existing = await getPost(id)
   if (!existing) throw new Error('Post introuvable')
@@ -199,6 +202,9 @@ export async function updatePostContent(id: string, input: {
       reasoning = ?,
       cost = ?,
       tokens_used = ?,
+      image_asset_id = ?,
+      image_url = ?,
+      image_prompt = ?,
       updated_at = ?
     WHERE id = ? RETURNING *`,
     [
@@ -209,6 +215,9 @@ export async function updatePostContent(id: string, input: {
       input.reasoning === undefined ? existing.reasoning : input.reasoning,
       input.cost ?? existing.cost,
       input.tokensUsed ?? existing.tokensUsed,
+      input.imageAssetId === undefined ? existing.imageAssetId : input.imageAssetId,
+      input.imageUrl === undefined ? existing.imageUrl : input.imageUrl,
+      input.imagePrompt === undefined ? existing.imagePrompt : input.imagePrompt,
       now,
       id,
     ]
