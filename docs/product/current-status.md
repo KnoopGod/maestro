@@ -1,10 +1,10 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-13
+Dernière mise à jour : 2026-06-14
 
 ---
 
-## Phase actuelle : Stabilisation V1 — Phase 0 en cours
+## Phase actuelle : Stabilisation V1 — Phases 1–6 complétées
 
 ### Ce qui fonctionne
 
@@ -28,15 +28,20 @@ Dernière mise à jour : 2026-06-13
 | Régénération partielle | ✅ Fonctionnel | Texte uniquement + instruction |
 | PublishErrorHint | ✅ Fonctionnel | Aide contextuelle erreurs Meta |
 
-### Ce qui est en travaux
+### Phases V1 complétées
 
-| Fonctionnalité | État | Priorité |
+| Phase | Contenu | État |
 |---|---|---|
-| Génération asynchrone | ✅ Phase 4 livrée | À tester en prod |
-| Chiffrement tokens Meta | ✅ Phase 3 livrée | Définir clé + reconnecter |
-| Suppression pages legacy | 🔄 Phase 1 | Prochain |
-| Découpage StudioForm.tsx | 🔄 Phase 2 | Après Phase 1 |
-| CSRF protection | ✅ SameSite strict + Origin check | Token dédié en V2 |
+| Phase 1 | Nettoyage code mort (7 pages, 3 routes API, store, mock-data, ollama) | ✅ |
+| Phase 2 | Découpage StudioForm.tsx → 6 sous-composants (620 → 347 lignes) | ✅ |
+| Phase 3 | Chiffrement AES-256-GCM tokens Meta + CSRF + headers HTTP | ✅ |
+| Phase 4 | Génération asynchrone (after() + polling + jobId) | ✅ |
+| Phase 5 | Agent Activity Center + AutoRefresh | ✅ |
+| Phase 6 | RETURNING * DB + batch identity + pipeline parallèle + next/image | ✅ |
+
+### Note : proxy.ts
+
+`proxy.ts` est le nom CORRECT pour Next.js 16.2.6+ (Turbopack). `middleware.ts` est déprécié dans cette version.
 
 ### Ce qui n'existe pas encore
 
