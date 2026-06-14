@@ -131,6 +131,21 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
         </div>
       )}
 
+      {post.portalFeedback && (
+        <div className={`text-xs rounded-lg p-2.5 border flex gap-1.5 ${
+          post.portalFeedback.action === 'approved'
+            ? 'text-emerald-300 bg-emerald-950/20 border-emerald-700/30'
+            : 'text-orange-300 bg-orange-950/20 border-orange-700/30'
+        }`}>
+          <span className="flex-shrink-0">{post.portalFeedback.action === 'approved' ? '✓' : '✎'}</span>
+          <div>
+            <span className="font-medium">{post.portalFeedback.action === 'approved' ? 'Client approuvé' : 'Modifications demandées'}</span>
+            {post.portalFeedback.comment && <p className="mt-0.5 text-[11px] opacity-80">{post.portalFeedback.comment}</p>}
+            <p className="text-[10px] opacity-50 mt-0.5">{new Date(post.portalFeedback.reviewedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+        </div>
+      )}
+
       <PostSupervisor post={post} />
       <div className="flex items-center justify-between gap-2">
         <PostDeleteButton post={post} />
