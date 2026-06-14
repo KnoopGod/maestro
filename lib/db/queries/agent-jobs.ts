@@ -285,3 +285,19 @@ export async function completeAgentEvent(eventId: string, params: {
     ],
   })
 }
+
+// Jobs bloqués en `running` depuis plus de STALE_THRESHOLD_MS — fonction serverless recyclée.
+const STALE_THRESHOLD_MS = 10 * 60 * 1000 // 10 minutes
+
+export async function listStaleJobs(): Promise<AgentJob[]> {
+  const cutoff = Date.now() - STALE_THRESHOLD_MS
+  const result = await db.execute({
+    sql: `SELECT j.*, c.name AS client_name, c.emoji AS client_emoji
+          FROM agent_jobs j
+          LEFT JOIN clients c ON c.id = j.client_id
+          WHERE j.status = 'running' AND j.started_at < ?
+          ORDER BY j.started_at ASC`,
+    args: [cutoff],
+  })
+  return result.rows.map(r => mapJob(r as Record<string, unknown>))
+}
