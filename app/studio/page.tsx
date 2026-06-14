@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Layers } from 'lucide-react'
 import { listClients } from '@/lib/db/queries/clients'
 import { getPost } from '@/lib/db/queries/posts'
 import { getVisualIdentityBatch } from '@/lib/db/queries/assets'
@@ -55,6 +56,14 @@ export default async function StudioPage({
             Génère des posts optimisés par plateforme avec l&apos;agent Social Expert
           </p>
         </div>
+        <Link
+          href="/studio/batch"
+          title="Générer un lot de posts pour un client"
+          className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium flex items-center gap-1.5 transition-colors"
+        >
+          <Layers className="w-4 h-4" />
+          Générer en lot
+        </Link>
       </div>
 
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4">
