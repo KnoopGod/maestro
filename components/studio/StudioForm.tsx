@@ -21,6 +21,11 @@ interface ClientDaStatus {
   summary?: string
 }
 
+interface StudioCapabilities {
+  lumaEnabled: boolean
+  imageModel: string
+}
+
 export function StudioForm({
   clients,
   initialClientId,
@@ -55,10 +60,11 @@ export function StudioForm({
   const [jobProgress, setJobProgress] = useState<JobProgress | null>(null)
   const pollAbortRef = useRef<AbortController | null>(null)
 
-  const [imageMode, setImageMode] = useState<'generate' | 'library'>(initialContentType === 'reel' ? 'library' : 'generate')
+  const [imageMode, setImageMode] = useState<'generate' | 'library'>('generate')
   const [selectedAsset, setSelectedAsset] = useState<ClientAsset | null>(null)
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
+  const [capabilities, setCapabilities] = useState<StudioCapabilities | null>(null)
 
   const [aiDirective, setAiDirective] = useState<GenerationResult['directive'] | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -79,6 +85,13 @@ export function StudioForm({
 
   // Stopper le polling si le composant est démonté en cours de génération.
   useEffect(() => () => pollAbortRef.current?.abort(), [])
+
+  useEffect(() => {
+    fetch('/api/studio/capabilities')
+      .then(r => r.json())
+      .then((data: StudioCapabilities) => setCapabilities(data))
+      .catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     if (!clientId || imageMode !== 'library') return
@@ -127,10 +140,6 @@ export function StudioForm({
   const selectContentType = (type: ContentType) => {
     setContentType(type)
     setSelectedAsset(null)
-    if (type === 'reel') {
-      setImageMode('library')
-      if (clientId) setAssetsLoading(true)
-    }
   }
 
   const handleGenerate = () => {
@@ -427,7 +436,15 @@ export function StudioForm({
               )
             })}
           </div>
-          <p className="mt-2 text-[11px] text-gray-500">{CONTENT_TYPE_INFO[contentType].note}</p>
+          <p className="mt-2 text-[11px] text-gray-500">
+            {contentType === 'reel'
+              ? capabilities === null
+                ? CONTENT_TYPE_INFO.reel.note
+                : capabilities.lumaEnabled
+                  ? 'Vidéo IA via Luma Dream Machine · format portrait 9:16.'
+                  : 'Reel possible depuis la Library. Génération IA disponible quand LUMA_API_KEY est configuré.'
+              : CONTENT_TYPE_INFO[contentType].note}
+          </p>
         </div>
 
         {/* Image mode */}
@@ -436,17 +453,16 @@ export function StudioForm({
           <div className="grid grid-cols-2 gap-2 mb-4">
             <button
               type="button"
-              disabled={contentType === 'reel'}
               onClick={() => { setImageMode('generate'); setSelectedAsset(null) }}
-              title={contentType === 'reel' ? 'Un Reel Instagram nécessite une vidéo depuis la Library' : "Créer un nouveau visuel avec l'IA"}
+              title={contentType === 'reel' ? 'Créer une vidéo Reel avec Luma si la clé est configurée' : "Créer un nouveau visuel avec l'IA"}
               className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
                 imageMode === 'generate'
                   ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
                   : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
+              }`}
             >
               <Wand2 className="w-4 h-4" />
-              Générer une image
+              {contentType === 'reel' ? 'Générer une vidéo' : 'Générer une image'}
             </button>
             <button
               type="button"
@@ -573,7 +589,7 @@ export function StudioForm({
         {/* Generate button */}
         <button
           onClick={handleGenerate}
-          disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && !selectedAsset) || (contentType === 'reel' && selectedAsset?.type !== 'video')}
+          disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && (!selectedAsset || (contentType === 'reel' && selectedAsset.type !== 'video')))}
           title="Lancer la chaîne d'agents : analyse client, stratégie, rédaction, visuel, scoring puis draft prêt à valider"
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >

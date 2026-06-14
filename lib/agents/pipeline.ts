@@ -5,6 +5,7 @@ import { createPost, getPost, listPosts, setPostStatus, setSupervisorReview } fr
 import { runAccountDirector, type AccountDirective } from '@/lib/agents/account-director'
 import { generateCaption, type GeneratedCaption } from '@/lib/agents/social-expert'
 import { generateAndStoreImage } from '@/lib/agents/image-generator'
+import { generateVideo } from '@/lib/agents/video-creator'
 import { supervisePost } from '@/lib/agents/supervisor'
 import { buildImpactAnalysis, scoreImpact } from '@/lib/agents/impact-scorer'
 import { withTracking, skipTracking } from '@/lib/agents/tracking'
@@ -98,7 +99,7 @@ export async function runPostPipeline(input: {
   if (!primaryCaption) throw new Error('Aucune caption générée')
 
   const identity = await getVisualIdentity(client.id)
-  let image: { assetId?: string; url?: string; prompt?: string; cost: number } = { cost: 0 }
+  let image: { assetId?: string; url?: string; prompt?: string; cost: number; lumaGenerationId?: string } = { cost: 0 }
   let imageError: string | undefined
 
   // ── Étape 3 : Visual Director ──────────────────────────────────────────────
@@ -106,23 +107,49 @@ export async function runPostPipeline(input: {
     image = { assetId: existingAsset.id, url: existingAsset.url, cost: 0 }
     if (jobId) await skipTracking(jobId, 'visual-director', 3, 'Génération du visuel', 'Asset sélectionné depuis la bibliothèque')
   } else if (!skipImage) {
-    const imageResult = await track(
-      () => generateAndStoreImage({ client, brief: effectiveBrief, caption: primaryCaption.caption, visualIdentity: identity, visualPrompt, contentType }),
-      { agent: 'visual-director', sequence: 3, taskLabel: 'Génération du visuel avec la DA du client' },
-      {
-        onComplete: r => ({
-          outputSummary: `Image générée${identity?.stylePrompt ? ' avec Direction Artistique' : ''} — ${r.prompt?.substring(0, 80) ?? ''}`,
-          outputData: { hasDA: !!identity?.stylePrompt, assetId: r.assetId },
-          cost: r.cost,
+    if (contentType === 'reel') {
+      const videoResult = await track(
+        () => generateVideo({
+          client,
+          brief: effectiveBrief,
+          prompt: visualPrompt?.trim() ? visualPrompt.trim() : effectiveBrief,
+          contentType: 'reel',
+          jobId,
         }),
-        onError: () => ({ errorMessage: 'Erreur génération image — post créé sans visuel', errorAction: 'retry' }),
-      }
-    ).catch(err => {
-      console.error('Erreur génération image non bloquante:', err)
-      imageError = err instanceof Error ? err.message : 'Erreur génération image inconnue'
-      return { cost: 0 as number, assetId: undefined, url: undefined, prompt: undefined }
-    })
-    image = imageResult
+        { agent: 'video-creator', sequence: 3, taskLabel: 'Génération de la vidéo Reel via Luma Dream Machine' },
+        {
+          onComplete: r => ({
+            outputSummary: `Vidéo générée — Luma ID : ${r.lumaGenerationId ?? 'n/a'}`,
+            outputData: { assetId: r.assetId, lumaGenerationId: r.lumaGenerationId },
+            cost: r.cost,
+          }),
+          onError: () => ({ errorMessage: 'Erreur génération vidéo — post créé sans visuel', errorAction: 'retry' }),
+        }
+      ).catch(err => {
+        console.error('Erreur génération vidéo non bloquante:', err)
+        imageError = err instanceof Error ? err.message : 'Erreur génération vidéo inconnue'
+        return { cost: 0 as number, assetId: undefined, url: undefined, prompt: effectiveBrief, lumaGenerationId: undefined }
+      })
+      image = videoResult
+    } else {
+      const imageResult = await track(
+        () => generateAndStoreImage({ client, brief: effectiveBrief, caption: primaryCaption.caption, visualIdentity: identity, visualPrompt, contentType }),
+        { agent: 'visual-director', sequence: 3, taskLabel: 'Génération du visuel avec la DA du client' },
+        {
+          onComplete: r => ({
+            outputSummary: `Image générée${identity?.stylePrompt ? ' avec Direction Artistique' : ''} — ${r.prompt?.substring(0, 80) ?? ''}`,
+            outputData: { hasDA: !!identity?.stylePrompt, assetId: r.assetId },
+            cost: r.cost,
+          }),
+          onError: () => ({ errorMessage: 'Erreur génération image — post créé sans visuel', errorAction: 'retry' }),
+        }
+      ).catch(err => {
+        console.error('Erreur génération image non bloquante:', err)
+        imageError = err instanceof Error ? err.message : 'Erreur génération image inconnue'
+        return { cost: 0 as number, assetId: undefined, url: undefined, prompt: undefined }
+      })
+      image = imageResult
+    }
   } else {
     if (jobId) await skipTracking(jobId, 'visual-director', 3, 'Génération du visuel', 'Visuel ignoré (mode texte seul)')
   }
@@ -193,6 +220,10 @@ export async function runPostPipeline(input: {
   const finalPost = await getPost(post.id)
   if (!finalPost) throw new Error('Post créé introuvable après supervision')
 
+  const visualModel = image.assetId
+    ? (contentType === 'reel' ? 'luma-dream-machine' : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'))
+    : 'visual-skipped'
+
   return {
     post: finalPost,
     directive: account.directive,
@@ -201,7 +232,7 @@ export async function runPostPipeline(input: {
     reasoning: text.reasoning,
     totalCost: parseFloat((account.cost + text.cost + image.cost + supervisorCost).toFixed(6)),
     totalTokens: account.tokensUsed + text.tokensUsed + supervisorTokens,
-    models: [account.model, text.model, image.prompt ? (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1') : 'image-skipped', supervisorModel].filter(Boolean) as string[],
+    models: [account.model, text.model, visualModel, supervisorModel].filter(Boolean) as string[],
     imageError,
   }
 }

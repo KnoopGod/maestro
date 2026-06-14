@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
-import type { Post, PostContentType, PostInsights, PostPlatform, PostStatus, SupervisorReview } from '@/types/post'
+import type { PortalFeedback, Post, PostContentType, PostInsights, PostPlatform, PostStatus, SupervisorReview } from '@/types/post'
 
 interface PostRow {
   id: string
@@ -22,6 +22,7 @@ interface PostRow {
   impact_score: number
   impact_analysis: string | null
   supervisor_review: string | null
+  portal_feedback: string | null
   meta_post_ids: string | null
   meta_insights: string | null
   scheduled_at: number | null
@@ -55,7 +56,8 @@ function mapRow(row: PostRow): Post {
     impactAnalysis: row.impact_analysis,
     metaPostIds: row.meta_post_ids ? JSON.parse(row.meta_post_ids) : {},
     metaInsights: (() => { try { return row.meta_insights ? JSON.parse(row.meta_insights) as PostInsights[] : [] } catch { return [] } })(),
-    supervisorReview: row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null,
+    supervisorReview: (() => { try { return row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null } catch { return null } })(),
+    portalFeedback: (() => { try { return row.portal_feedback ? JSON.parse(row.portal_feedback) as PortalFeedback : null } catch { return null } })(),
     scheduledAt: row.scheduled_at,
     publishedAt: row.published_at,
     error: row.error,
@@ -70,7 +72,7 @@ function postSelect(includeInsights: boolean) {
   return `
     id, client_id, status, platforms, content_type, brief, reasoning,
     caption, hashtags, hook, cta, cta_type, cta_url, image_asset_id, image_url, image_prompt,
-    impact_score, impact_analysis, supervisor_review, meta_post_ids,
+    impact_score, impact_analysis, supervisor_review, portal_feedback, meta_post_ids,
     ${includeInsights ? 'meta_insights' : 'NULL AS meta_insights'},
     scheduled_at, published_at, error, cost, tokens_used, created_at, updated_at
   `
@@ -298,6 +300,22 @@ export async function setSupervisorReview(id: string, review: SupervisorReview):
   const post = await getPost(id)
   if (!post) throw new Error('Failed to update post')
   return post
+}
+
+export async function setPortalFeedback(id: string, feedback: PortalFeedback): Promise<Post> {
+  const now = Date.now()
+  const newStatus = feedback.action === 'changes_requested' ? 'draft' : undefined
+
+  const row = await queryOne<PostRow>(
+    newStatus
+      ? `UPDATE posts SET portal_feedback = ?, status = ?, updated_at = ? WHERE id = ? RETURNING *`
+      : `UPDATE posts SET portal_feedback = ?, updated_at = ? WHERE id = ? RETURNING *`,
+    newStatus
+      ? [JSON.stringify(feedback), newStatus, now, id]
+      : [JSON.stringify(feedback), now, id]
+  )
+  if (!row) throw new Error('Post introuvable')
+  return mapRow(row)
 }
 
 export async function savePostInsights(id: string, insights: PostInsights[]): Promise<void> {

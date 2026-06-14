@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getClientByPortalToken } from '@/lib/db/queries/portal'
 import { listPosts } from '@/lib/db/queries/posts'
+import { PortalReviewCard } from '@/components/portal/PortalReviewCard'
 import { CLIENT_TYPES } from '@/types/client'
 import type { Post } from '@/types/post'
 
@@ -55,6 +56,7 @@ export default async function ClientPortalPage({
 
   // ── Données (uniquement ce qui concerne le client — jamais de finance/interne) ─
   const allPosts = await listPosts({ clientId: client.id, limit: 500 })
+  const pendingPosts = allPosts.filter(p => p.status === 'ready')
   const published = allPosts.filter(p =>
     p.status === 'published' && p.publishedAt && p.publishedAt >= periodStart && p.publishedAt < periodEnd
   ).sort((a, b) => (a.publishedAt ?? 0) - (b.publishedAt ?? 0))
@@ -100,6 +102,22 @@ export default async function ClientPortalPage({
               </div>
             </div>
           </header>
+
+          {/* Validation des posts */}
+          <section className="px-6 sm:px-10 py-8 border-b border-gray-200">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">
+              Contenus en attente de votre validation
+            </h2>
+            {pendingPosts.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">Aucun contenu en attente de validation.</p>
+            ) : (
+              <div className="space-y-4">
+                {pendingPosts.map(post => (
+                  <PortalReviewCard key={post.id} post={post} token={token} />
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* KPIs */}
           <section className="px-6 sm:px-10 py-8 border-b border-gray-200">

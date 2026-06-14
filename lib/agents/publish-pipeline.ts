@@ -15,6 +15,7 @@ import { getClient } from '@/lib/db/queries/clients'
 import { getSocialAccount } from '@/lib/db/queries/social-accounts'
 import { markPostFailed, markPostPublished, setSupervisorReview } from '@/lib/db/queries/posts'
 import { publishToFacebook, publishToInstagram } from '@/lib/agents/meta-publisher'
+import { publishToLinkedIn } from '@/lib/agents/linkedin-publisher'
 import { supervisePost } from '@/lib/agents/supervisor'
 
 export interface PublishOutcome {
@@ -131,6 +132,33 @@ export async function publishPost(
         }
       } catch (err) {
         throw decorateMetaError(err, 'Instagram')
+      }
+    }
+  }
+
+  // ─── LinkedIn Page (non bloquant pour Meta) ─────────────────────────────
+  if (postWithReview.platforms.includes('linkedin')) {
+    const linkedIn = await getSocialAccount(postWithReview.clientId, 'linkedin')
+    if (!linkedIn?.accountId || !linkedIn.accessToken) {
+      warnings.push('LinkedIn non publié : aucune Page LinkedIn connectée pour ce client.')
+    } else {
+      try {
+        const result = await publishToLinkedIn({
+          organizationId: linkedIn.accountId,
+          accessToken: linkedIn.accessToken,
+          caption: postWithReview.caption,
+          hashtags: postWithReview.hashtags,
+          imageUrl: publicMediaUrl && !mediaIsVideo ? publicMediaUrl : undefined,
+        })
+        published.linkedin = result.postId
+        if (mediaIsVideo) {
+          warnings.push('LinkedIn publié sans média : le publisher LinkedIn actuel accepte seulement image ou texte.')
+        } else if (!publicMediaUrl && postWithReview.imageUrl) {
+          warnings.push("LinkedIn publié sans image : l'image n'est pas accessible publiquement.")
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        warnings.push(`LinkedIn non publié : ${message}`)
       }
     }
   }

@@ -123,6 +123,7 @@ export async function initSchema() {
       impact_score INTEGER DEFAULT 0,
       impact_analysis TEXT,
       supervisor_review TEXT,
+      portal_feedback TEXT,
       meta_post_ids TEXT,
       scheduled_at INTEGER,
       published_at INTEGER,
@@ -164,4 +165,8 @@ export async function initSchema() {
   await migratePortalToken()
   const { migrateClientSummary } = await import('./migrations/010-add-client-summary')
   await migrateClientSummary()
+  const { migratePortalFeedback } = await import('./migrations/011-add-portal-feedback')
+  await migratePortalFeedback()
+  const { migrateMultiUsersFoundation } = await import('./migrations/012-add-users')
+  await migrateMultiUsersFoundation()
 }
