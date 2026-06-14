@@ -168,4 +168,6 @@ export async function initSchema() {
   await migratePortalFeedback()
   const { migrateMultiUsersFoundation } = await import('./migrations/012-add-users')
   await migrateMultiUsersFoundation()
+  const { migrateAddPostPillar } = await import('./migrations/013-add-post-pillar')
+  await migrateAddPostPillar()
 }

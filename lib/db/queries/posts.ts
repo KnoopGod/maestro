@@ -9,6 +9,7 @@ interface PostRow {
   platforms: string
   content_type: PostContentType
   brief: string
+  pillar: string | null
   reasoning: string | null
   caption: string
   hashtags: string | null
@@ -42,6 +43,7 @@ function mapRow(row: PostRow): Post {
     platforms: JSON.parse(row.platforms || '[]'),
     contentType: row.content_type,
     brief: row.brief,
+    pillar: row.pillar,
     reasoning: row.reasoning,
     caption: row.caption,
     hashtags: row.hashtags ? JSON.parse(row.hashtags) : [],
@@ -70,7 +72,7 @@ function mapRow(row: PostRow): Post {
 
 function postSelect(includeInsights: boolean) {
   return `
-    id, client_id, status, platforms, content_type, brief, reasoning,
+    id, client_id, status, platforms, content_type, brief, pillar, reasoning,
     caption, hashtags, hook, cta, cta_type, cta_url, image_asset_id, image_url, image_prompt,
     impact_score, impact_analysis, supervisor_review, portal_feedback, meta_post_ids,
     ${includeInsights ? 'meta_insights' : 'NULL AS meta_insights'},
@@ -132,6 +134,7 @@ export async function createPost(input: {
   platforms: PostPlatform[]
   contentType: PostContentType
   brief: string
+  pillar?: string
   reasoning?: string
   caption: string
   hashtags?: string[]
@@ -152,16 +155,17 @@ export async function createPost(input: {
 
   const row = await queryOne<PostRow>(
     `INSERT INTO posts (
-      id, client_id, status, platforms, content_type, brief, reasoning,
+      id, client_id, status, platforms, content_type, brief, pillar, reasoning,
       caption, hashtags, hook, cta, cta_type, cta_url, image_asset_id, image_url, image_prompt,
       impact_score, impact_analysis, cost, tokens_used, created_at, updated_at
-    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
     [
       id,
       input.clientId,
       JSON.stringify(input.platforms),
       input.contentType,
       input.brief,
+      input.pillar ?? null,
       input.reasoning ?? null,
       input.caption,
       JSON.stringify(input.hashtags ?? []),

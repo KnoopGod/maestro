@@ -15,6 +15,7 @@ export interface Post {
   platforms: PostPlatform[]
   contentType: PostContentType
   brief: string
+  pillar: string | null
   reasoning: string | null
   caption: string
   hashtags: string[]

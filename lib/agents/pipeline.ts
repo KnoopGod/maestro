@@ -168,6 +168,7 @@ export async function runPostPipeline(input: {
     platforms,
     contentType,
     brief: effectiveBrief,
+    pillar: account.directive.priorityPillar ?? null,
     reasoning: text.reasoning,
     caption: primaryCaption.caption,
     hashtags: primaryCaption.hashtags,

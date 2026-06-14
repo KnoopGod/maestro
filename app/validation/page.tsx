@@ -116,6 +116,11 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
               </Link>
             )}
             <StatusPill status={post.status} />
+            {post.pillar && (
+              <span className="text-[10px] bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 rounded-full px-2 py-0.5 truncate max-w-[100px]">
+                {post.pillar}
+              </span>
+            )}
             <span className="text-[10px] text-gray-600 ml-auto">Impact {post.impactScore}/100</span>
           </div>
           <p className="text-sm font-medium text-white line-clamp-2">{post.brief}</p>
