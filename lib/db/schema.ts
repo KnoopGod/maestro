@@ -164,4 +164,6 @@ export async function initSchema() {
   await migratePortalToken()
   const { migrateClientSummary } = await import('./migrations/010-add-client-summary')
   await migrateClientSummary()
+  const { migratePortalFeedback } = await import('./migrations/011-add-portal-feedback')
+  await migratePortalFeedback()
 }
