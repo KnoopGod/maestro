@@ -57,6 +57,10 @@ export default async function ClientPortalPage({
   // ── Données (uniquement ce qui concerne le client — jamais de finance/interne) ─
   const allPosts = await listPosts({ clientId: client.id, limit: 500 })
   const pendingPosts = allPosts.filter(p => p.status === 'ready')
+  const reviewedPosts = allPosts
+    .filter(p => p.portalFeedback !== null && p.status !== 'ready')
+    .sort((a, b) => (b.portalFeedback?.reviewedAt ?? 0) - (a.portalFeedback?.reviewedAt ?? 0))
+    .slice(0, 5)
   const published = allPosts.filter(p =>
     p.status === 'published' && p.publishedAt && p.publishedAt >= periodStart && p.publishedAt < periodEnd
   ).sort((a, b) => (a.publishedAt ?? 0) - (b.publishedAt ?? 0))
@@ -118,6 +122,46 @@ export default async function ClientPortalPage({
               </div>
             )}
           </section>
+
+          {/* Recently reviewed */}
+          {reviewedPosts.length > 0 && (
+            <section className="px-6 sm:px-10 py-8 border-b border-gray-200">
+              <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">
+                Contenus récemment examinés
+              </h2>
+              <div className="space-y-2">
+                {reviewedPosts.map(p => {
+                  const fb = p.portalFeedback!
+                  return (
+                    <div key={p.id} className={`rounded-xl p-3 border flex gap-3 items-start text-sm ${
+                      fb.action === 'approved'
+                        ? 'border-emerald-200 bg-emerald-50'
+                        : 'border-orange-200 bg-orange-50'
+                    }`}>
+                      {p.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.imageUrl} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-800 line-clamp-2 text-xs leading-relaxed">{p.caption}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className={`text-[10px] font-medium ${fb.action === 'approved' ? 'text-emerald-600' : 'text-orange-600'}`}>
+                            {fb.action === 'approved' ? '✓ Approuvé' : '✎ Modifications demandées'}
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {new Date(fb.reviewedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                        {fb.comment && (
+                          <p className="text-[11px] text-gray-500 mt-1 italic">{fb.comment}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
           {/* KPIs */}
           <section className="px-6 sm:px-10 py-8 border-b border-gray-200">
