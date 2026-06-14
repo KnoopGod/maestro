@@ -5,6 +5,7 @@ import { getClient } from '@/lib/db/queries/clients'
 import { listClientSocialAccounts } from '@/lib/db/queries/social-accounts'
 import { MetaConnectionWizard } from '@/components/clients/MetaConnectionWizard'
 import { MetaPreflightChecklist } from '@/components/clients/MetaPreflightChecklist'
+import { LinkedInConnectionForm } from '@/components/clients/LinkedInConnectionForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,9 +66,21 @@ export default async function ClientConnectionsPage({ params }: { params: Promis
         />
       </section>
 
+      {/* LinkedIn */}
+      <section>
+        <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <span className="text-lg">💼</span>
+          LinkedIn
+        </h2>
+        <LinkedInConnectionForm
+          clientId={id}
+          existing={accounts.find(a => a.platform === 'linkedin') ?? undefined}
+        />
+      </section>
+
       {/* Future platforms placeholder */}
       <section className="opacity-50">
-        <h2 className="text-sm font-semibold text-white mb-3">🎵 TikTok · 💼 LinkedIn · 📍 Google Business</h2>
+        <h2 className="text-sm font-semibold text-white mb-3">🎵 TikTok · 📍 Google Business</h2>
         <div className="bg-gray-900/20 border border-dashed border-gray-700 rounded-2xl p-6 text-center text-sm text-gray-500">
           Intégrations à venir
         </div>

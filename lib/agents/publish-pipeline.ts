@@ -15,6 +15,7 @@ import { getClient } from '@/lib/db/queries/clients'
 import { getSocialAccount } from '@/lib/db/queries/social-accounts'
 import { markPostFailed, markPostPublished, setSupervisorReview } from '@/lib/db/queries/posts'
 import { publishToFacebook, publishToInstagram } from '@/lib/agents/meta-publisher'
+import { publishToLinkedIn } from '@/lib/agents/linkedin-publisher'
 import { supervisePost } from '@/lib/agents/supervisor'
 
 export interface PublishOutcome {
@@ -131,6 +132,28 @@ export async function publishPost(
         }
       } catch (err) {
         throw decorateMetaError(err, 'Instagram')
+      }
+    }
+  }
+
+  // ─── LinkedIn (manual token, non-blocking on failure) ───────────────────
+  if (postWithReview.platforms.includes('linkedin')) {
+    const li = await getSocialAccount(postWithReview.clientId, 'linkedin')
+    if (!li?.accountId || !li.accessToken) {
+      warnings.push('LinkedIn non connecté pour ce client — va sur /clients/[id]/connections pour configurer la connexion LinkedIn.')
+    } else {
+      try {
+        const result = await publishToLinkedIn({
+          organizationId: li.accountId,
+          accessToken: li.accessToken,
+          caption: postWithReview.caption,
+          hashtags: postWithReview.hashtags,
+          imageUrl: publicMediaUrl ?? undefined,
+        })
+        published.linkedin = result.postId
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        warnings.push(`LinkedIn non publié : ${msg}`)
       }
     }
   }
