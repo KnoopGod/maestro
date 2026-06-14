@@ -246,8 +246,10 @@ Ne jamais appeler un agent depuis un composant React côté client. Toujours pas
 - **Next.js 16.2.6** avec App Router. Lire `node_modules/next/dist/docs/` si doute sur une API.
 - **Port dev : 3010** (pas 3000).
 - **DB** : `./maestro.db` (LibSQL/SQLite local). Production : Turso (`DATABASE_URL` + `DATABASE_AUTH_TOKEN`).
-- **Middleware auth** : `proxy.ts` à la racine (exporté comme middleware Next.js via Turbopack).
-- **Cookie session** : `codexrs_session` (nom legacy, à mettre à jour).
+- **Middleware auth** : `proxy.ts` à la racine. IMPORTANT : dans Next.js 16.2.6, `proxy.ts` est le nom correct (Turbopack). `middleware.ts` est DÉPRÉCIÉ dans cette version — ne pas le renommer.
+- **Cookie session** : `codexrs_session` (nom legacy, à mettre à jour en V2).
 - **URL publique** : `CODEXRS_PUBLIC_URL` requis en production pour que Meta accède aux images uploadées.
-- **Pages legacy** (à supprimer en Phase 1) : `/dashboard`, `/models`, `/task-router`, `/token-economy`, `/work-memory`, `/resume-for-claude`, `/setup-guide`.
-- **Vercel Cron** : `POST /api/cron/publish-due` — configuré dans `vercel.json`.
+- **Pages legacy supprimées (Phase 1)** : `/dashboard`, `/models`, `/task-router`, `/token-economy`, `/work-memory`, `/resume-for-claude`, `/setup-guide` — ne pas les recréer.
+- **Vercel Cron** : `POST /api/cron/publish-due` (8h quotidien) + `POST /api/cron/cleanup-jobs` (toutes les 15 min) — configurés dans `vercel.json`.
+- **Portail client** : `/portal/[token]` est PUBLIC (dans PUBLIC_PATHS). Le jeton est l'autorisation. Ne jamais exiger de session admin pour ce préfixe.
+- **MAESTRO_ENCRYPTION_KEY** : si défini, chiffre les tokens Meta (AES-256-GCM). Sans clé, tokens en clair avec warning — l'app fonctionne dans les deux cas.
