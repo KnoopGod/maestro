@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 const SECTIONS = [
   { icon: Plug,       title: 'Connexions API',  desc: 'Anthropic, OpenAI, Meta...',          color: 'text-purple-400',  href: '/social/settings/connections', wip: false },
   { icon: DollarSign, title: 'Usage & Coûts',   desc: 'Tokens, coûts par client, par mois',  color: 'text-emerald-400', href: '/usage',                       wip: false },
-  { icon: User,       title: 'Profil & compte', desc: 'Email, mot de passe, préférences',    color: 'text-blue-400',    href: '#',                            wip: true  },
+  { icon: User,       title: 'Profil & compte', desc: 'Email, mot de passe, préférences',    color: 'text-blue-400',    href: process.env.NEXT_PUBLIC_MULTI_USER_MODE === 'true' ? '/settings/profile' : '#', wip: process.env.NEXT_PUBLIC_MULTI_USER_MODE !== 'true' },
   { icon: CreditCard, title: 'Facturation',     desc: 'Plan, paiement, factures',            color: 'text-emerald-400', href: '#',                            wip: true  },
   { icon: Users,      title: 'Équipe',          desc: 'Inviter collaborateurs, permissions', color: 'text-amber-400',   href: '/settings/team',               wip: false },
   { icon: Palette,    title: 'Apparence',       desc: 'Thème, langue, notifications',        color: 'text-pink-400',    href: '#',                            wip: true  },

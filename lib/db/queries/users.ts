@@ -92,6 +92,10 @@ export async function updateUser(
   return user
 }
 
+export async function updateUserPassword(id: string, passwordHash: string): Promise<void> {
+  await queryOne(`UPDATE users SET password_hash = ? WHERE id = ?`, [passwordHash, id])
+}
+
 export async function setLastLogin(id: string): Promise<void> {
   await queryOne(`UPDATE users SET last_login_at = ? WHERE id = ?`, [Date.now(), id])
 }
