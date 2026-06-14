@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
-import { CalendarDays, ExternalLink, AlertCircle, Sparkles } from 'lucide-react'
+import { CalendarDays, ExternalLink, AlertCircle, Sparkles, Copy } from 'lucide-react'
 import type { Post, PostStatus } from '@/types/post'
 import type { Client } from '@/types/client'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
@@ -273,6 +273,14 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
               <span>{formatTime(post.createdAt)}</span>
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
+              <Link
+                href={`/studio?cloneFrom=${post.id}`}
+                title="Réutiliser le brief de ce post comme template dans le Studio"
+                className="ml-auto flex items-center gap-1 text-indigo-400 hover:text-indigo-300 hover:underline"
+              >
+                <Copy className="w-3 h-3" />
+                Réutiliser
+              </Link>
             </div>
           </div>
         </div>

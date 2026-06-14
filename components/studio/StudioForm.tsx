@@ -26,24 +26,28 @@ export function StudioForm({
   initialPost,
   initialPillar,
   clientDaStatus,
+  cloneFromPost,
 }: {
   clients: Client[]
   initialClientId?: string
   initialPost?: Post
   initialPillar?: string
   clientDaStatus?: Record<string, ClientDaStatus>
+  /** Pre-fill brief/platforms/pillar from this post but start with blank result (clone as template). */
+  cloneFromPost?: Post
 }) {
+  const templateSource = cloneFromPost ?? initialPost
   const [clientId, setClientId] = useState(initialClientId || clients[0]?.id || '')
-  const [briefFields, setBriefFields] = useState<BriefFields>(() => createInitialBriefFields(initialPost?.brief, initialPillar))
+  const [briefFields, setBriefFields] = useState<BriefFields>(() => createInitialBriefFields(templateSource?.brief, initialPillar))
   const [visualPrompt, setVisualPrompt] = useState(initialPost?.imagePrompt || '')
   const [platforms, setPlatforms] = useState<Platform[]>(
-    initialPost?.platforms.filter((p): p is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)) ?? ['instagram']
+    templateSource?.platforms.filter((p): p is Platform => ['instagram', 'facebook', 'tiktok', 'linkedin'].includes(p)) ?? ['instagram']
   )
-  const initialContentType = initialPost?.contentType ?? 'photo'
+  const initialContentType = templateSource?.contentType ?? 'photo'
   const [contentType, setContentType] = useState<ContentType>(initialContentType)
 
   const [result, setResult] = useState<GenerationResult | null>(
-    initialPost ? createLoadedPostResult(initialPost) : null
+    initialPost && !cloneFromPost ? createLoadedPostResult(initialPost) : null
   )
   const [error, setError] = useState<string | null>(null)
   const [regenInstruction, setRegenInstruction] = useState('')

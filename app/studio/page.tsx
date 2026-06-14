@@ -10,12 +10,13 @@ export const dynamic = 'force-dynamic'
 export default async function StudioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ client?: string; postId?: string; pillar?: string }>
+  searchParams: Promise<{ client?: string; postId?: string; pillar?: string; cloneFrom?: string }>
 }) {
-  const { client: initialClientId, postId, pillar } = await searchParams
-  const [clients, initialPost] = await Promise.all([
+  const { client: initialClientId, postId, pillar, cloneFrom } = await searchParams
+  const [clients, initialPost, cloneFromPost] = await Promise.all([
     listClients(),
     postId ? getPost(postId) : Promise.resolve(null),
+    cloneFrom ? getPost(cloneFrom) : Promise.resolve(null),
   ])
   const identityMap = await getVisualIdentityBatch(clients.map(c => c.id))
   const clientDaStatus = Object.fromEntries(clients.map(c => {
@@ -66,6 +67,17 @@ export default async function StudioPage({
         </Link>
       </div>
 
+      {cloneFromPost && (
+        <div className="bg-indigo-950/20 border border-indigo-700/30 rounded-2xl p-4 text-sm text-indigo-200 flex items-center gap-2">
+          <span className="text-lg">📋</span>
+          <div>
+            <span className="font-semibold text-white">Mode template :</span>{' '}
+            le brief du post <span className="text-indigo-300">#{cloneFromPost.id}</span> est pré-chargé.
+            Modifie-le si besoin et clique <strong>Générer</strong> pour créer un nouveau post.
+          </div>
+        </div>
+      )}
+
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4">
         <div className="text-xs uppercase tracking-wider text-purple-400 mb-2">Tunnel MVP</div>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs">
@@ -87,9 +99,10 @@ export default async function StudioPage({
 
       <StudioForm
         clients={clients}
-        initialClientId={initialPost?.clientId ?? initialClientId}
+        initialClientId={cloneFromPost?.clientId ?? initialPost?.clientId ?? initialClientId}
         initialPost={initialPost ?? undefined}
-        initialPillar={pillar}
+        cloneFromPost={cloneFromPost ?? undefined}
+        initialPillar={cloneFromPost?.pillar ?? pillar ?? undefined}
         clientDaStatus={clientDaStatus}
       />
     </div>
