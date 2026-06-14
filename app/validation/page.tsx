@@ -7,6 +7,7 @@ import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/post
 import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
 import { PostImageSwap } from '@/components/posts/PostImageSwap'
 import { BulkSelectionProvider, PostSelectCheckbox, BulkActionBar } from '@/components/posts/BulkActions'
+import { CopyCaptionButton } from '@/components/posts/CopyCaptionButton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
@@ -161,7 +162,10 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       <PostImageSwap post={post} />
 
       <div className="flex items-center justify-between gap-2">
-        <PostDeleteButton post={post} />
+        <div className="flex items-center gap-2">
+          <PostDeleteButton post={post} />
+          <CopyCaptionButton post={post} />
+        </div>
         <PostInlineEditor post={post} />
       </div>
       <PostActions post={post} />
