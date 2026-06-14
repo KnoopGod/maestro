@@ -166,4 +166,6 @@ export async function initSchema() {
   await migrateClientSummary()
   const { migratePortalFeedback } = await import('./migrations/011-add-portal-feedback')
   await migratePortalFeedback()
+  const { migrateMultiUsersFoundation } = await import('./migrations/012-add-users')
+  await migrateMultiUsersFoundation()
 }
