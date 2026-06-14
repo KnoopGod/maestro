@@ -21,6 +21,16 @@ export default async function AnalyticsPage() {
     count: published.filter(p => p.clientId === c.id).length,
   })).sort((a, b) => b.count - a.count)
 
+  // Pillar breakdown
+  const pillarMap = new Map<string, number>()
+  for (const p of published) {
+    const pillar = p.pillar ?? 'Non catégorisé'
+    pillarMap.set(pillar, (pillarMap.get(pillar) ?? 0) + 1)
+  }
+  const pillarBreakdown = Array.from(pillarMap.entries())
+    .map(([pillar, count]) => ({ pillar, count }))
+    .sort((a, b) => b.count - a.count)
+
   const clientsWithPublished = clients.filter(c =>
     published.some(p => p.clientId === c.id)
   )
@@ -47,6 +57,30 @@ export default async function AnalyticsPage() {
 
       {/* Performance Analyst */}
       <PerformancePanel clients={clientsWithPublished} />
+
+      {/* Pillar breakdown */}
+      {pillarBreakdown.length > 0 && (
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Posts par pilier de contenu</h2>
+          <div className="space-y-2">
+            {pillarBreakdown.map(({ pillar, count }) => {
+              const max = Math.max(...pillarBreakdown.map(x => x.count), 1)
+              return (
+                <div key={pillar} className="flex items-center gap-4">
+                  <span className="text-xs text-gray-300 w-40 truncate flex-shrink-0">{pillar}</span>
+                  <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-indigo-600 to-purple-500 transition-all duration-300"
+                      style={{ width: `${(count / max) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-white w-8 text-right">{count}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Per-client breakdown */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
