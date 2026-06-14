@@ -5,6 +5,7 @@ import { listPosts } from '@/lib/db/queries/posts'
 import { CLIENT_TYPES } from '@/types/client'
 import type { Post } from '@/types/post'
 import { PortalReviewCard } from '@/components/portal/PortalReviewCard'
+import { PortalPrintButton } from '@/components/portal/PortalPrintButton'
 
 // Page publique : jamais mise en cache, jamais indexée.
 export const dynamic = 'force-dynamic'
@@ -87,9 +88,19 @@ export default async function ClientPortalPage({
   const periodLabel = `${MONTH_NAMES[month]} ${year}`
 
   return (
-    <main className="min-h-screen bg-[#07080d] text-white px-4 py-8 sm:py-14">
+    <main className="min-h-screen bg-[#07080d] text-white px-4 py-8 sm:py-14 print:bg-white print:p-0 print:m-0">
+      <style>{`
+        @media print {
+          body { background: white !important; color: black !important; }
+          .print\\:hidden { display: none !important; }
+          @page { margin: 1.5cm; }
+        }
+      `}</style>
       <div className="max-w-3xl mx-auto">
-        <article className="bg-white text-gray-900 rounded-xl shadow-2xl overflow-hidden">
+        <div className="print:hidden flex justify-end mb-3">
+          <PortalPrintButton />
+        </div>
+        <article className="bg-white text-gray-900 rounded-xl shadow-2xl overflow-hidden print:shadow-none print:rounded-none">
           {/* Header */}
           <header className="px-6 sm:px-10 pt-10 pb-8 border-b-2 border-gray-900">
             <div className="flex items-start justify-between gap-4">
@@ -107,8 +118,8 @@ export default async function ClientPortalPage({
             </div>
           </header>
 
-          {/* Validation des posts */}
-          <section className="px-6 sm:px-10 py-8 border-b border-gray-200">
+          {/* Validation des posts — masquée à l'impression */}
+          <section className="print:hidden px-6 sm:px-10 py-8 border-b border-gray-200">
             <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">
               Contenus en attente de votre validation
             </h2>
@@ -250,7 +261,7 @@ export default async function ClientPortalPage({
           </footer>
         </article>
 
-        <p className="text-center text-[10px] text-gray-600 mt-6 font-mono tracking-wider">
+        <p className="print:hidden text-center text-[10px] text-gray-600 mt-6 font-mono tracking-wider">
           Lien privé · ne pas partager publiquement
         </p>
       </div>
