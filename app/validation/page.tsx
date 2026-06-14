@@ -3,6 +3,7 @@ import { ShieldCheck, AlertCircle, Sparkles, Edit3 } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
+import { DeletePostButton } from '@/components/posts/DeletePostButton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
@@ -131,7 +132,8 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       )}
 
       <PostSupervisor post={post} />
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <DeletePostButton postId={post.id} />
         <Link
           href={`/studio?postId=${post.id}`}
           title="Ouvrir ce draft dans le Studio pour modifier le brief, le texte ou le visuel avant publication"
