@@ -1,7 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ImageIcon, X, Check, Loader2 } from 'lucide-react'
+import { ImageIcon, X, Check, Loader2, RefreshCw } from 'lucide-react'
 import type { Post } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
 
@@ -17,6 +17,33 @@ export function PostImageSwap({ post }: Props) {
   const [selected, setSelected] = useState<ClientAsset | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+
+  // AI image regeneration
+  const [showRegenPanel, setShowRegenPanel] = useState(false)
+  const [regenPrompt, setRegenPrompt] = useState('')
+  const [regenLoading, setRegenLoading] = useState(false)
+  const [regenError, setRegenError] = useState<string | null>(null)
+
+  async function regenImage() {
+    setRegenLoading(true)
+    setRegenError(null)
+    try {
+      const res = await fetch(`/api/posts/${post.id}/regenerate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visualPrompt: regenPrompt }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur régénération image')
+      setShowRegenPanel(false)
+      setRegenPrompt('')
+      router.refresh()
+    } catch (err) {
+      setRegenError(err instanceof Error ? err.message : 'Erreur inconnue')
+    } finally {
+      setRegenLoading(false)
+    }
+  }
 
   async function openPicker() {
     setOpen(true)
@@ -66,9 +93,9 @@ export function PostImageSwap({ post }: Props) {
     })
   }
 
-  if (!open) {
+  if (!open && !showRegenPanel) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           onClick={openPicker}
@@ -78,6 +105,17 @@ export function PostImageSwap({ post }: Props) {
           <ImageIcon className="w-3.5 h-3.5" />
           Changer le visuel
         </button>
+        {post.status !== 'published' && (
+          <button
+            type="button"
+            onClick={() => setShowRegenPanel(true)}
+            title="Régénérer l'image avec l'IA (coût ~$0.04)"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-700 text-gray-500 hover:text-indigo-300 hover:border-indigo-700/40 text-xs transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Régénérer l&apos;image
+          </button>
+        )}
         {post.imageUrl && (
           <button
             type="button"
@@ -89,6 +127,52 @@ export function PostImageSwap({ post }: Props) {
             {isPending ? <Loader2 className="w-3 h-3 animate-spin inline" /> : '✕ Retirer'}
           </button>
         )}
+      </div>
+    )
+  }
+
+  if (showRegenPanel) {
+    return (
+      <div className="space-y-3 border border-indigo-700/30 rounded-xl bg-indigo-950/10 p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-indigo-300 flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" />
+            Régénérer l&apos;image IA
+          </span>
+          <button type="button" onClick={() => { setShowRegenPanel(false); setRegenError(null) }} className="text-gray-500 hover:text-gray-300">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div>
+          <label className="block text-[10px] text-gray-500 mb-1">Direction visuelle personnalisée (optionnel)</label>
+          <textarea
+            value={regenPrompt}
+            onChange={e => setRegenPrompt(e.target.value)}
+            placeholder="Ex: photo d'assiette sur fond sombre, lumière chaude, vue de dessus"
+            rows={2}
+            className="w-full px-2.5 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-600 focus:outline-none resize-none"
+          />
+          <p className="text-[10px] text-gray-600 mt-1">Laisse vide pour utiliser le brief et la DA existants.</p>
+        </div>
+        {regenError && <p className="text-xs text-red-400">{regenError}</p>}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={regenImage}
+            disabled={regenLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-medium transition-colors"
+          >
+            {regenLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {regenLoading ? 'Génération…' : 'Régénérer'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setShowRegenPanel(false); setRegenError(null) }}
+            className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 text-xs hover:text-gray-200 transition-colors"
+          >
+            Annuler
+          </button>
+        </div>
       </div>
     )
   }
