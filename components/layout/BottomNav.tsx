@@ -69,16 +69,28 @@ export function BottomNav() {
                 })}
               </div>
             </nav>
-            <form action="/api/auth/logout" method="post" className="mt-4">
+            {process.env.NEXT_PUBLIC_MULTI_USER_MODE === 'true' ? (
               <button
-                type="submit"
+                type="button"
+                onClick={async () => { await fetch('/api/auth/logout-v2', { method: 'POST' }); window.location.href = '/login' }}
                 title="Fermer la session et revenir à la page de connexion"
-                className="w-full min-h-[44px] rounded-xl border border-red-900/40 bg-red-950/20 text-red-300 text-xs flex items-center justify-center gap-2"
+                className="mt-4 w-full min-h-[44px] rounded-xl border border-red-900/40 bg-red-950/20 text-red-300 text-xs flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Déconnexion
               </button>
-            </form>
+            ) : (
+              <form action="/api/auth/logout" method="post" className="mt-4">
+                <button
+                  type="submit"
+                  title="Fermer la session et revenir à la page de connexion"
+                  className="w-full min-h-[44px] rounded-xl border border-red-900/40 bg-red-950/20 text-red-300 text-xs flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Déconnexion
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}

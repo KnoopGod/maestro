@@ -5,6 +5,9 @@ const PUBLIC_PATHS = [
   '/login',
   '/api/auth/login',
   '/api/auth/logout',
+  '/api/auth/login-v2',
+  '/api/auth/logout-v2',
+  '/api/auth/me',
   '/api/admin/migrate',
   '/api/cron/publish-due',
   '/privacy',
@@ -27,6 +30,27 @@ export async function proxy(req: NextRequest) {
     if (originError) {
       return NextResponse.json({ error: originError }, { status: 403 })
     }
+  }
+
+  if (process.env.MULTI_USER_MODE === 'true') {
+    const sessionCookie = req.cookies.get('maestro_session_v2')?.value
+    if (sessionCookie) {
+      // Verify session against /api/auth/me (DB lookup not available in Edge runtime)
+      const checkRes = await fetch(new URL('/api/auth/me', req.url), {
+        headers: { Cookie: `maestro_session_v2=${sessionCookie}` },
+      })
+      if (checkRes.ok) {
+        const data = await checkRes.json().catch(() => ({}))
+        if (data?.user) return NextResponse.next()
+      }
+    }
+    // MULTI_USER_MODE active — no V1 fallback
+    if (req.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('next', req.nextUrl.pathname + req.nextUrl.search)
+    return NextResponse.redirect(loginUrl)
   }
 
   const valid = await isValidSessionToken(req.cookies.get(SESSION_COOKIE)?.value)

@@ -70,6 +70,24 @@ function NavItem({
   )
 }
 
+function LogoutButtonV2() {
+  async function handleLogout() {
+    await fetch('/api/auth/logout-v2', { method: 'POST' })
+    window.location.href = '/login'
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleLogout}
+      title="Fermer la session et revenir à la page de connexion"
+      className="w-full flex items-center gap-2 px-2 py-1.5 text-[9px] text-gray-600 hover:text-red-300 hover:bg-red-950/20 border border-transparent hover:border-red-900/40 font-mono tracking-widest transition-colors"
+    >
+      <LogOut className="w-3 h-3" />
+      DECONNEXION
+    </button>
+  )
+}
+
 export function Sidebar({ validationCount = 0 }: { validationCount?: number }) {
   const navWork = NAV_WORK.map(item =>
     item.href === '/validation' && validationCount > 0
@@ -119,16 +137,20 @@ export function Sidebar({ validationCount = 0 }: { validationCount?: number }) {
             </div>
           </div>
         </div>
-        <form action="/api/auth/logout" method="post">
-          <button
-            type="submit"
-            title="Fermer la session et revenir à la page de connexion"
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-[9px] text-gray-600 hover:text-red-300 hover:bg-red-950/20 border border-transparent hover:border-red-900/40 font-mono tracking-widest transition-colors"
-          >
-            <LogOut className="w-3 h-3" />
-            DECONNEXION
-          </button>
-        </form>
+        {process.env.NEXT_PUBLIC_MULTI_USER_MODE === 'true' ? (
+          <LogoutButtonV2 />
+        ) : (
+          <form action="/api/auth/logout" method="post">
+            <button
+              type="submit"
+              title="Fermer la session et revenir à la page de connexion"
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-[9px] text-gray-600 hover:text-red-300 hover:bg-red-950/20 border border-transparent hover:border-red-900/40 font-mono tracking-widest transition-colors"
+            >
+              <LogOut className="w-3 h-3" />
+              DECONNEXION
+            </button>
+          </form>
+        )}
       </div>
     </aside>
   )
