@@ -6,6 +6,7 @@ import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
 import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
 import { PostImageSwap } from '@/components/posts/PostImageSwap'
+import { BulkSelectionProvider, PostSelectCheckbox, BulkActionBar } from '@/components/posts/BulkActions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
@@ -72,11 +73,14 @@ export default async function ValidationPage() {
           cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {queue.map(post => (
-            <PostCard key={post.id} post={post} client={clientsMap.get(post.clientId)} />
-          ))}
-        </div>
+        <BulkSelectionProvider>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {queue.map(post => (
+              <PostCard key={post.id} post={post} client={clientsMap.get(post.clientId)} />
+            ))}
+          </div>
+          <BulkActionBar postStatuses={Object.fromEntries(queue.map(p => [p.id, p.status]))} />
+        </BulkSelectionProvider>
       )}
     </div>
   )
@@ -96,6 +100,7 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
   return (
     <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 transition-colors duration-200`}>
       <div className="flex items-start gap-3">
+        <PostSelectCheckbox postId={post.id} />
         {post.imageUrl ? (
           <Image src={post.imageUrl} alt="" width={80} height={80} className="rounded-lg object-cover flex-shrink-0" />
         ) : (
