@@ -8,7 +8,7 @@
 
 ## Déploiement automatique
 
-Vercel déploie automatiquement depuis la branche `main` à chaque push.  
+Vercel déploie automatiquement depuis la branche `main` à chaque push.
 Les branches de feature génèrent une Preview URL.
 
 ## Processus de déploiement manuel
@@ -44,16 +44,16 @@ Vercel Cron est configuré dans `vercel.json` :
 }
 ```
 
-Publication automatique des posts schedulés chaque jour à 08h00 UTC.  
+Publication automatique des posts schedulés chaque jour à 08h00 UTC.
 `CRON_SECRET` doit être configuré pour que Vercel puisse authentifier l'appel.
 
 ## Stockage des médias en production
 
-Vercel Blob est utilisé pour les assets uploadés en production.  
-`BLOB_READ_WRITE_TOKEN` requis.  
+Vercel Blob est utilisé pour les assets uploadés en production.
+`BLOB_READ_WRITE_TOKEN` requis.
 `CODEXRS_PUBLIC_URL` doit pointer vers le domaine de production pour que Meta accède aux images.
 
 ## Logs de production
 
-Accessibles dans Vercel Dashboard → Functions → Logs.  
+Accessibles dans Vercel Dashboard → Functions → Logs.
 En cas d'erreur de publication Meta, vérifier les logs de `/api/studio/publish-post`.

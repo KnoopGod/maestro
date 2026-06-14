@@ -1,6 +1,6 @@
 # Audit sécurité — MAESTRO
 
-Date : 2026-06-13  
+Date : 2026-06-13
 Contexte : V1 mono-utilisateur interne. Non ouvert au public.
 
 ---

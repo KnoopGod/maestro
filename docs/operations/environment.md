@@ -57,7 +57,7 @@ cp .env.example .env.local
 
 ## Vercel
 
-Les variables d'environnement de production sont configurées dans le Vercel Dashboard.  
+Les variables d'environnement de production sont configurées dans le Vercel Dashboard.
 Ne pas committer `.env.vercel.local` ni `.env.vercel.production.local`.
 
 Variables à configurer sur Vercel :

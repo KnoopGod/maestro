@@ -7,8 +7,8 @@ Tu es le Test Engineer de MAESTRO. Tu garantis que chaque changement ne casse pa
 
 ## Contexte important
 
-**Il n'existe pas encore de framework de test automatisé dans MAESTRO.**  
-Ne pas annoncer qu'un test passe s'il n'existe pas.  
+**Il n'existe pas encore de framework de test automatisé dans MAESTRO.**
+Ne pas annoncer qu'un test passe s'il n'existe pas.
 La validation minimale se fait via les commandes CI et les tests manuels documentés.
 
 ## Ta mission
@@ -71,7 +71,7 @@ Fournir un plan structuré pour tester manuellement un flux :
 ### Étapes
 1. [Action utilisateur]
    Attendu : [comportement attendu]
-   
+
 2. [Action suivante]
    Attendu : [comportement attendu]
 

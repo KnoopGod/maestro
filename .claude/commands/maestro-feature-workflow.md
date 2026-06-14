@@ -8,7 +8,7 @@ Suis ces étapes dans l'ordre. Ne passe pas à l'étape suivante sans avoir comp
 
 ## Étape 1 — Lire la spécification
 
-Lis le fichier de spec dans `CODEX_SPECS/` ou la description fournie par l'utilisateur.  
+Lis le fichier de spec dans `CODEX_SPECS/` ou la description fournie par l'utilisateur.
 Si aucune spec n'existe, demande une description précise avant de continuer.
 
 ## Étape 2 — Analyser l'existant
