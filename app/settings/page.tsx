@@ -11,7 +11,7 @@ const SECTIONS = [
   { icon: CreditCard, title: 'Facturation',     desc: 'Plan, paiement, factures',            color: 'text-emerald-400', href: '#',                            wip: true  },
   { icon: Users,      title: 'Équipe',          desc: 'Inviter collaborateurs, permissions', color: 'text-amber-400',   href: '/settings/team',               wip: false },
   { icon: Palette,    title: 'Apparence',       desc: 'Thème, langue, notifications',        color: 'text-pink-400',    href: '#',                            wip: true  },
-  { icon: Shield,     title: 'Sécurité',        desc: '2FA, sessions actives, audit log',    color: 'text-red-400',     href: '#',                            wip: true  },
+  { icon: Shield,     title: 'Sécurité',        desc: 'Sessions actives, audit log',         color: 'text-red-400',     href: '/settings/audit',              wip: false },
   { icon: Code,       title: 'API & Webhooks',  desc: 'Pour intégrations custom',            color: 'text-cyan-400',    href: '#',                            wip: true  },
 ]
 
