@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   '/api/auth/me',
   '/api/admin/migrate',
   '/api/cron/publish-due',
+  '/api/cron/sync-insights',
   '/privacy',
   '/data-deletion',
 ]

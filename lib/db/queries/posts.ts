@@ -89,6 +89,8 @@ export async function listPosts(options?: {
   statuses?: PostStatus[]
   limit?: number
   includeInsights?: boolean
+  publishedAfter?: number
+  orderBy?: 'created_at' | 'published_at'
 }): Promise<Post[]> {
   const conditions: string[] = []
   const args: unknown[] = []
@@ -105,12 +107,17 @@ export async function listPosts(options?: {
     conditions.push(`status IN (${options.statuses.map(() => '?').join(',')})`)
     args.push(...options.statuses)
   }
+  if (options?.publishedAfter !== undefined) {
+    conditions.push('published_at >= ?')
+    args.push(options.publishedAfter)
+  }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
   const limit = options?.limit ? `LIMIT ${options.limit}` : ''
+  const orderBy = options?.orderBy ?? 'created_at'
 
   const rows = await query<PostRow>(
-    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY created_at DESC ${limit}`,
+    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY ${orderBy} DESC ${limit}`,
     args
   )
   return rows.map(mapRow)
