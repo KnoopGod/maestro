@@ -156,3 +156,36 @@ export async function deleteSocialAccount(clientId: string, platform: SocialPlat
     args: [clientId, platform],
   })
 }
+
+export interface ExpiringToken {
+  clientId: string
+  clientName: string
+  platform: SocialPlatform
+  expiresAt: number
+  daysLeft: number
+}
+
+export async function listExpiringTokens(withinDays = 14): Promise<ExpiringToken[]> {
+  const now = Date.now()
+  const threshold = now + withinDays * 24 * 60 * 60 * 1000
+  const rows = await query<{
+    client_id: string
+    client_name: string
+    platform: SocialPlatform
+    expires_at: number
+  }>(
+    `SELECT csa.client_id, c.name AS client_name, csa.platform, csa.expires_at
+     FROM client_social_accounts csa
+     JOIN clients c ON c.id = csa.client_id
+     WHERE csa.expires_at IS NOT NULL AND csa.expires_at <= ? AND csa.expires_at >= ?
+     ORDER BY csa.expires_at ASC`,
+    [threshold, now]
+  )
+  return rows.map(r => ({
+    clientId: r.client_id,
+    clientName: r.client_name,
+    platform: r.platform,
+    expiresAt: r.expires_at,
+    daysLeft: Math.ceil((r.expires_at - now) / (24 * 60 * 60 * 1000)),
+  }))
+}

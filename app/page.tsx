@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { countPostsByStatus } from '@/lib/db/queries/posts'
+import { listExpiringTokens } from '@/lib/db/queries/social-accounts'
 import { SetupBanner } from '@/components/SetupBanner'
+import { TokenExpiryBanner } from '@/components/TokenExpiryBanner'
 import { CLIENT_TYPES } from '@/types/client'
 
 function healthDot(days: number | null): string {
@@ -18,10 +20,12 @@ export const dynamic = 'force-dynamic'
 export default async function HomePage() {
   let clients: Awaited<ReturnType<typeof listClientsWithStats>> = []
   let toValidate = 0
+  let expiringTokens: Awaited<ReturnType<typeof listExpiringTokens>> = []
   try {
-    ;[clients, toValidate] = await Promise.all([
+    ;[clients, toValidate, expiringTokens] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
+      listExpiringTokens(14),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
@@ -48,6 +52,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-8">
       <SetupBanner />
+      <TokenExpiryBanner tokens={expiringTokens} />
 
       {/* Header */}
       <div className="border-b border-indigo-950/60 pb-5">
