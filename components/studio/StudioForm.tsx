@@ -1,25 +1,24 @@
 'use client'
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { Sparkles, Loader2, ImageIcon, Wand2, BrainCircuit, ChevronDown, Film, Check } from 'lucide-react'
+import { Sparkles, Loader2 } from 'lucide-react'
 import type { Client } from '@/types/client'
 import type { Post } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
 import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
 import type { PostIdea } from '@/lib/agents/planner'
-import { META_CTA_TYPES, getMetaCtaLabel } from '@/lib/meta-cta-types'
 import type { Platform, ContentType, GenerationResult, BriefFields, JobProgress } from '@/lib/studio/types'
-import { PLATFORM_INFO, CONTENT_TYPE_INFO } from '@/lib/studio/types'
-import { BRIEF_TEMPLATES } from '@/lib/studio/brief-templates'
 import { createLoadedPostResult, createInitialBriefFields, composeStructuredBrief } from '@/lib/studio/brief-utils'
 import { pollJob, failureMessage } from '@/lib/studio/poll-job'
-import { GuidedBriefField } from './GuidedBriefField'
+import { ClientSelectorCard } from './ClientSelectorCard'
+import { BriefCard } from './BriefCard'
+import { PlatformsCard } from './PlatformsCard'
+import { ContentTypeCard } from './ContentTypeCard'
+import { ImageVisualCard } from './ImageVisualCard'
+import { CtaFacebookSection } from './CtaFacebookSection'
 import { AgentWorkPlan } from './AgentWorkPlan'
 import { StudioResultPanel } from './StudioResultPanel'
 
-interface ClientDaStatus {
-  active: boolean
-  summary?: string
-}
+interface ClientDaStatus { active: boolean; summary?: string }
 
 export function StudioForm({
   clients,
@@ -50,7 +49,6 @@ export function StudioForm({
   const [regenInstruction, setRegenInstruction] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  // Génération asynchrone : la route rend un jobId, on suit la progression par polling.
   const [isGenerating, setIsGenerating] = useState(false)
   const [jobProgress, setJobProgress] = useState<JobProgress | null>(null)
   const pollAbortRef = useRef<AbortController | null>(null)
@@ -70,14 +68,12 @@ export function StudioForm({
   const selectedClient = clients.find(c => c.id === clientId)
   const selectedDa = clientDaStatus?.[clientId]
   const brief = composeStructuredBrief(briefFields)
-  // Occupé = génération asynchrone en cours OU régénération texte (useTransition).
   const busy = isPending || isGenerating
 
   function updateBriefField(key: keyof BriefFields, value: string) {
     setBriefFields(prev => ({ ...prev, [key]: value }))
   }
 
-  // Stopper le polling si le composant est démonté en cours de génération.
   useEffect(() => () => pollAbortRef.current?.abort(), [])
 
   useEffect(() => {
@@ -133,12 +129,28 @@ export function StudioForm({
     }
   }
 
+  function handleClientChange(id: string) {
+    setClientId(id)
+    setSelectedAsset(null)
+    if (imageMode === 'library') setAssetsLoading(true)
+  }
+
+  function handleSwitchToLibrary() {
+    setImageMode('library')
+    setSelectedAsset(null)
+    setAssetsLoading(true)
+  }
+
+  function handleSwitchToGenerate() {
+    setImageMode('generate')
+    setSelectedAsset(null)
+  }
+
   const handleGenerate = () => {
     setError(null)
     setResult(null)
     setJobProgress(null)
 
-    // Annuler un éventuel polling en cours avant d'en relancer un.
     pollAbortRef.current?.abort()
     const controller = new AbortController()
     pollAbortRef.current = controller
@@ -166,7 +178,6 @@ export function StudioForm({
         if (!res.ok) throw new Error(data.error || 'Erreur génération')
         if (!data.jobId) throw new Error('Job de génération non créé')
 
-        // Suivre la progression jusqu'à un état terminal.
         const final = await pollJob(data.jobId, {
           signal: controller.signal,
           onProgress: setJobProgress,
@@ -175,7 +186,6 @@ export function StudioForm({
         if (final.status === 'failed') throw new Error(failureMessage(final))
         if (!final.postId) throw new Error('Post introuvable après génération')
 
-        // Récupérer le post final et reconstruire le résultat affichable.
         const postRes = await fetch(`/api/posts/${final.postId}`, { signal: controller.signal })
         const postData = await postRes.json()
         if (!postRes.ok) throw new Error(postData.error || 'Post introuvable après génération')
@@ -236,341 +246,58 @@ export function StudioForm({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* LEFT: Inputs */}
       <div className="col-span-1 lg:col-span-5 space-y-4">
-        {/* Client selector */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <label className="text-sm font-semibold text-white mb-3 block">👤 Client</label>
-          <select
-            value={clientId}
-            onChange={e => {
-              setClientId(e.target.value)
-              setSelectedAsset(null)
-              if (imageMode === 'library') setAssetsLoading(true)
-            }}
-            title="Choisir le client dont la stratégie, la DA et les connexions seront utilisées pour générer le post"
-            className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500"
-          >
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.emoji} {c.name} · {c.city || '—'}
-              </option>
-            ))}
-          </select>
+        <ClientSelectorCard
+          clients={clients}
+          clientId={clientId}
+          selectedClient={selectedClient}
+          selectedDa={selectedDa}
+          initialPost={initialPost}
+          onClientChange={handleClientChange}
+        />
 
-          {selectedClient && (
-            <div className="mt-3 space-y-2">
-              <div className="p-3 rounded-lg bg-purple-950/30 border border-purple-700/30 text-xs">
-                <div className="text-purple-300 font-medium mb-1">Voix de marque chargée :</div>
-                <div className="text-gray-300">{selectedClient.brandVoiceTone || 'Non définie'}</div>
-              </div>
-              <div className={`p-3 rounded-lg border text-xs ${
-                selectedDa?.active
-                  ? 'bg-emerald-950/30 border-emerald-700/30'
-                  : 'bg-amber-950/30 border-amber-700/30'
-              }`}>
-                <div className={selectedDa?.active ? 'text-emerald-300 font-medium mb-1' : 'text-amber-300 font-medium mb-1'}>
-                  {selectedDa?.active ? 'DA active' : 'Aucune DA'}
-                </div>
-                <div className={selectedDa?.active ? 'text-emerald-100/80' : 'text-amber-100/80'}>
-                  {selectedDa?.active
-                    ? selectedDa.summary || 'Identité visuelle analysée et disponible pour les agents.'
-                    : 'Ajoute ou analyse les médias du client pour guider les visuels IA.'}
-                </div>
-                {!selectedDa?.active && (
-                  <a href={`/clients/${selectedClient.id}/library`} className="mt-2 inline-block text-amber-200 hover:underline">
-                    Ouvrir la Library →
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-
-          {initialPost && (
-            <div className="mt-3 p-3 rounded-lg bg-blue-950/30 border border-blue-700/30 text-xs">
-              <div className="text-blue-300 font-medium mb-1">Draft chargé depuis la validation</div>
-              <div className="text-gray-300">Post #{initialPost.id} · {initialPost.status}</div>
-            </div>
-          )}
-        </div>
-
-        {/* Strategy Director — post ideas */}
         <PostIdeasPanel clientId={clientId || null} onPick={applyIdea} />
 
-        {/* Brief */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-white">✍️ Ordre pour le post</label>
-            <button
-              type="button"
-              onClick={handleSuggestBrief}
-              disabled={!clientId || aiLoading}
-              title="Demander à l'Account Director de proposer un brief aligné avec la stratégie du client"
-              className="flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg bg-purple-900/40 border border-purple-700/40 text-purple-300 hover:bg-purple-800/40 hover:border-purple-500/60 transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono tracking-wide"
-            >
-              {aiLoading
-                ? <><Loader2 className="w-3 h-3 animate-spin" /> Analyse en cours...</>
-                : <><BrainCircuit className="w-3 h-3" /> Brief IA</>
-              }
-            </button>
-          </div>
+        <BriefCard
+          clientId={clientId}
+          aiLoading={aiLoading}
+          aiDirective={aiDirective}
+          briefFields={briefFields}
+          brief={brief}
+          templateCategory={templateCategory}
+          onSuggestBrief={handleSuggestBrief}
+          onUpdateField={updateBriefField}
+          onApplyTemplate={text => setBriefFields(prev => ({ ...prev, subject: text }))}
+          onSetTemplateCategory={setTemplateCategory}
+        />
 
-          {aiDirective && (
-            <div className="bg-amber-950/20 border border-amber-800/30 rounded-lg p-3 space-y-1.5 text-xs">
-              <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] tracking-wider">
-                <BrainCircuit className="w-3 h-3" />
-                Account Director — {aiDirective.priorityPillar}
-              </div>
-              <p className="text-gray-300">{aiDirective.rationale}</p>
-              <p className="text-amber-300/80">Hook : &ldquo;{aiDirective.hookSuggestion}&rdquo;</p>
-            </div>
-          )}
+        <PlatformsCard platforms={platforms} onToggle={togglePlatform} />
 
-          <div className="grid grid-cols-1 gap-3">
-            <GuidedBriefField label="Sujet" value={briefFields.subject} onChange={v => updateBriefField('subject', v)} placeholder="Ex: présenter la guesthouse Pink House et son ambiance tropicale" />
-            <GuidedBriefField label="Objectif" value={briefFields.objective} onChange={v => updateBriefField('objective', v)} placeholder="Ex: obtenir des demandes de réservation pour le week-end" />
-            <GuidedBriefField label="Ton" value={briefFields.tone} onChange={v => updateBriefField('tone', v)} placeholder="Ex: premium, chaleureux, local, calme" />
-            <GuidedBriefField label="À inclure" value={briefFields.includes} onChange={v => updateBriefField('includes', v)} placeholder="Ex: plage proche, piscine, CTA réservation, éviter ton trop touristique" />
-          </div>
+        <ContentTypeCard contentType={contentType} onSelect={selectContentType} />
 
-          <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-3">
-            <div className="text-[9px] text-gray-600 font-mono uppercase tracking-wider mb-1">Brief envoyé aux agents</div>
-            <p className="text-xs text-gray-400 whitespace-pre-wrap">{brief || 'Complète au moins le sujet pour guider les agents.'}</p>
-          </div>
+        <ImageVisualCard
+          imageMode={imageMode}
+          contentType={contentType}
+          visualPrompt={visualPrompt}
+          assetsLoading={assetsLoading}
+          clientAssets={clientAssets}
+          selectedAsset={selectedAsset}
+          clientId={clientId}
+          onSwitchToGenerate={handleSwitchToGenerate}
+          onSwitchToLibrary={handleSwitchToLibrary}
+          onAssetToggle={asset => setSelectedAsset(prev => prev?.id === asset.id ? null : asset)}
+          onVisualPromptChange={setVisualPrompt}
+        />
 
-          {/* Template categories */}
-          <div className="space-y-2">
-            <p className="text-[9px] text-gray-600 font-mono uppercase tracking-wider">Templates rapides</p>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.keys(BRIEF_TEMPLATES).map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setTemplateCategory(templateCategory === cat ? null : cat)}
-                  title={`Afficher les modèles rapides pour ${cat}`}
-                  className={`text-[10px] px-2.5 py-1 rounded-md border font-mono tracking-wide transition-all flex items-center gap-1 ${
-                    templateCategory === cat
-                      ? 'bg-indigo-900/50 border-indigo-600/60 text-indigo-200'
-                      : 'bg-gray-800/60 border-gray-700 text-gray-400 hover:bg-gray-700/60 hover:text-gray-200'
-                  }`}
-                >
-                  {cat}
-                  <ChevronDown className={`w-3 h-3 transition-transform ${templateCategory === cat ? 'rotate-180' : ''}`} />
-                </button>
-              ))}
-            </div>
-
-            {templateCategory && (
-              <div className="grid grid-cols-1 gap-1.5 pt-1">
-                {BRIEF_TEMPLATES[templateCategory].map(tpl => (
-                  <button
-                    key={tpl.label}
-                    type="button"
-                    onClick={() => { setBriefFields(prev => ({ ...prev, subject: tpl.text })); setTemplateCategory(null) }}
-                    title={`Utiliser ce modèle de brief : ${tpl.label}`}
-                    className="text-left text-xs px-3 py-2 rounded-lg bg-gray-900/60 border border-gray-700 text-gray-300 hover:border-purple-600/50 hover:bg-purple-950/20 hover:text-purple-200 transition-all"
-                  >
-                    <span className="font-medium">{tpl.label}</span>
-                    <span className="text-gray-500 ml-2 line-clamp-1">{tpl.text.slice(0, 60)}…</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Platforms */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <label className="text-sm font-semibold text-white mb-3 block">🎯 Plateformes cibles</label>
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(PLATFORM_INFO) as Platform[]).map(p => {
-              const cfg = PLATFORM_INFO[p]
-              const active = platforms.includes(p)
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => togglePlatform(p)}
-                  title={`${active ? 'Retirer' : 'Ajouter'} ${cfg.label} comme plateforme cible du post`}
-                  className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
-                    active ? cfg.color : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  <span>{cfg.emoji}</span>
-                  {cfg.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Content type */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <label className="text-sm font-semibold text-white mb-3 block">📦 Format Instagram</label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['photo', 'story', 'reel'] as ContentType[]).map(t => {
-              const info = CONTENT_TYPE_INFO[t]
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => selectContentType(t)}
-                  title={info.title}
-                  className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                    contentType === t
-                      ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
-                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
-                  }`}
-                >
-                  {info.label}
-                </button>
-              )
-            })}
-          </div>
-          <p className="mt-2 text-[11px] text-gray-500">{CONTENT_TYPE_INFO[contentType].note}</p>
-        </div>
-
-        {/* Image mode */}
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <label className="text-sm font-semibold text-white mb-3 block">🖼️ Visuel du post</label>
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <button
-              type="button"
-              disabled={contentType === 'reel'}
-              onClick={() => { setImageMode('generate'); setSelectedAsset(null) }}
-              title={contentType === 'reel' ? 'Un Reel Instagram nécessite une vidéo depuis la Library' : "Créer un nouveau visuel avec l'IA"}
-              className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
-                imageMode === 'generate'
-                  ? 'bg-purple-600/20 border-purple-600/40 text-purple-300'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              <Wand2 className="w-4 h-4" />
-              Générer une image
-            </button>
-            <button
-              type="button"
-              onClick={() => { setImageMode('library'); setSelectedAsset(null); setAssetsLoading(true) }}
-              title={contentType === 'reel' ? 'Utiliser une vidéo depuis la Library' : 'Utiliser un asset depuis la Library du client'}
-              className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all flex items-center gap-2 ${
-                imageMode === 'library'
-                  ? 'bg-blue-600/20 border-blue-600/40 text-blue-300'
-                  : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <ImageIcon className="w-4 h-4" />
-              Depuis la bibliothèque
-            </button>
-          </div>
-
-          {imageMode === 'generate' && (
-            <div className="mb-4">
-              <label htmlFor="visualPrompt" className="block text-xs text-gray-400 mb-1.5">Prompt image / vidéo</label>
-              <textarea
-                id="visualPrompt"
-                value={visualPrompt}
-                onChange={e => setVisualPrompt(e.target.value)}
-                rows={3}
-                placeholder="Ex: Photo réaliste verticale, piscine turquoise, terrasse tropicale, lumière golden hour..."
-                title="Consigne précise donnée au Visual Director pour guider l'image IA"
-                className="w-full bg-gray-950/60 border border-gray-800 rounded-lg p-3 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-purple-500 resize-y"
-              />
-              <p className="text-[11px] text-gray-500 mt-1">
-                Ce champ guide uniquement le visuel. Le texte reste piloté par l&apos;ordre du post et la stratégie client.
-              </p>
-            </div>
-          )}
-
-          {imageMode === 'library' && (
-            <div>
-              {assetsLoading && (
-                <div className="flex items-center justify-center py-6 text-gray-500 text-sm gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Chargement...
-                </div>
-              )}
-              {!assetsLoading && clientAssets.length === 0 && (
-                <p className="text-xs text-gray-500 text-center py-4">
-                  {contentType === 'reel' ? 'Aucune vidéo dans la bibliothèque de ce client.' : 'Aucune image dans la bibliothèque de ce client.'}{' '}
-                  <a href={clientId ? `/clients/${clientId}/library` : '#'} className="text-purple-400 hover:underline">
-                    Uploader des assets →
-                  </a>
-                </p>
-              )}
-              {!assetsLoading && clientAssets.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1">
-                  {clientAssets.map(asset => (
-                    <button
-                      key={asset.id}
-                      type="button"
-                      onClick={() => setSelectedAsset(prev => prev?.id === asset.id ? null : asset)}
-                      title={`Sélectionner ${asset.originalName}`}
-                      className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
-                        selectedAsset?.id === asset.id ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-transparent hover:border-gray-600'
-                      }`}
-                    >
-                      {asset.type === 'video' ? (
-                        <div className="relative h-full w-full bg-black">
-                          <video src={asset.url} preload="metadata" className="h-full w-full object-cover opacity-80" />
-                          <Film className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-white drop-shadow" />
-                        </div>
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={asset.thumbnailUrl ?? asset.url} alt={asset.originalName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                      )}
-                      {selectedAsset?.id === asset.id && (
-                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                          <Check className="w-5 h-5 text-white drop-shadow" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {selectedAsset && (
-                <p className="text-xs text-blue-400 mt-2 truncate">✓ Sélectionné : {selectedAsset.originalName}</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* CTA Button (Facebook) */}
         {platforms.includes('facebook') && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] text-indigo-600/60 font-mono tracking-[0.2em] uppercase">{'// CTA FACEBOOK'}</span>
-              <span className="text-[8px] text-gray-600 font-mono">— bouton d&apos;action sur la publication</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <select
-                value={ctaType}
-                onChange={e => setCtaType(e.target.value)}
-                className="col-span-2 sm:col-span-1 bg-gray-900/60 border border-gray-800 text-xs text-gray-300 px-2 py-2 font-mono focus:outline-none focus:border-indigo-600"
-              >
-                <option value="">Aucun bouton CTA</option>
-                {META_CTA_TYPES.map(cta => (
-                  <option key={cta.value} value={cta.value}>{cta.emoji} {cta.label}</option>
-                ))}
-              </select>
-              {ctaType && (
-                <input
-                  type="url"
-                  value={ctaUrl}
-                  onChange={e => setCtaUrl(e.target.value)}
-                  placeholder="https://votre-site.com/reserver"
-                  className="col-span-2 bg-gray-900/60 border border-gray-800 text-xs text-gray-300 px-2 py-2 font-mono placeholder:text-gray-700 focus:outline-none focus:border-indigo-600"
-                />
-              )}
-            </div>
-            {ctaType && !ctaUrl && (
-              <p className="text-[9px] text-amber-500/70 font-mono">⚠ Entrez l&apos;URL de destination pour activer le bouton</p>
-            )}
-            {ctaType && ctaUrl && (
-              <p className="text-[9px] text-emerald-500/60 font-mono">✓ Bouton &ldquo;{getMetaCtaLabel(ctaType)}&rdquo; activé → {ctaUrl.length > 40 ? ctaUrl.substring(0, 40) + '…' : ctaUrl}</p>
-            )}
-          </div>
+          <CtaFacebookSection
+            ctaType={ctaType}
+            ctaUrl={ctaUrl}
+            onCtaTypeChange={setCtaType}
+            onCtaUrlChange={setCtaUrl}
+          />
         )}
 
-        {/* Generate button */}
         <button
           onClick={handleGenerate}
           disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && !selectedAsset) || (contentType === 'reel' && selectedAsset?.type !== 'video')}
