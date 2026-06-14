@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPost, updatePostContent } from '@/lib/db/queries/posts'
+import { getPost, updatePostContent, deletePost } from '@/lib/db/queries/posts'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -10,6 +10,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Erreur lecture post'
     return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const post = await getPost(id)
+    if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
+    if (post.status === 'published') {
+      return NextResponse.json({ error: 'Un post déjà publié ne peut pas être supprimé.' }, { status: 409 })
+    }
+    await deletePost(id)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Erreur suppression' }, { status: 500 })
   }
 }
 

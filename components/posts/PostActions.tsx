@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShieldCheck, CalendarClock, Send, Loader2, AlertCircle, Sparkles, X } from 'lucide-react'
+import { ShieldCheck, CalendarClock, Send, Loader2, AlertCircle, Sparkles, X, Trash2 } from 'lucide-react'
 import type { Post, SupervisorReview } from '@/types/post'
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { getMetaCtaLabel } from '@/lib/meta-cta-types'
@@ -316,6 +316,64 @@ export function PostSupervisor({ post }: { post: Post }) {
         </div>
       )}
     </div>
+  )
+}
+
+export function PostDeleteButton({ post }: { post: Post }) {
+  const router = useRouter()
+  const [confirm, setConfirm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function doDelete() {
+    setLoading(true)
+    setError('')
+    const res = await fetch(`/api/posts/${post.id}`, { method: 'DELETE' })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError((d as { error?: string }).error ?? 'Erreur suppression')
+      setLoading(false)
+      return
+    }
+    router.refresh()
+  }
+
+  if (post.status === 'published') return null
+
+  if (confirm) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-red-300">Supprimer définitivement ?</span>
+        <button
+          type="button"
+          onClick={doDelete}
+          disabled={loading}
+          className="px-2.5 py-1 rounded-lg bg-red-700 hover:bg-red-600 text-white text-xs font-medium disabled:opacity-40"
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : 'Oui, supprimer'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirm(false)}
+          className="px-2.5 py-1 rounded-lg border border-gray-700 text-gray-400 text-xs"
+        >
+          Annuler
+        </button>
+        {error && <span className="text-xs text-red-300">{error}</span>}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setConfirm(true)}
+      title="Supprimer ce post définitivement"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-700 text-gray-500 hover:text-red-400 hover:border-red-700/40 text-xs transition-colors"
+    >
+      <Trash2 className="w-3.5 h-3.5" />
+      Supprimer
+    </button>
   )
 }
 

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ShieldCheck, AlertCircle, Sparkles } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
-import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
+import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
 import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
@@ -132,7 +132,8 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
       )}
 
       <PostSupervisor post={post} />
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-2">
+        <PostDeleteButton post={post} />
         <PostInlineEditor post={post} />
       </div>
       <PostActions post={post} />
