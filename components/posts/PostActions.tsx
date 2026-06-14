@@ -105,6 +105,21 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
             title="Choisir la date et l'heure auxquelles ce post doit être publié automatiquement"
             className="w-full px-2.5 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-sm text-gray-200 focus:border-purple-600 focus:outline-none disabled:opacity-50"
           />
+          {!isPublished && (
+            <div className="flex gap-1 mt-1.5 flex-wrap">
+              {quickScheduleOptions().map(opt => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setScheduledAt(opt.value)}
+                  title={`Planifier ${opt.label}`}
+                  className="text-[10px] px-2 py-0.5 rounded border border-gray-700 text-gray-500 hover:border-blue-700 hover:text-blue-300 transition-colors"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <button
@@ -420,4 +435,23 @@ export function PublishDueButton() {
       {error && <span className="text-xs text-red-300">{error}</span>}
     </div>
   )
+}
+
+function quickScheduleOptions(): { label: string; value: string }[] {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  function fmt(d: Date, h: number) {
+    const c = new Date(d)
+    c.setHours(h, 0, 0, 0)
+    return `${c.getFullYear()}-${pad(c.getMonth() + 1)}-${pad(c.getDate())}T${pad(h)}:00`
+  }
+  const now = new Date()
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1)
+  const in2days = new Date(now); in2days.setDate(now.getDate() + 2)
+  const in7days = new Date(now); in7days.setDate(now.getDate() + 7)
+  return [
+    { label: 'Demain 10h', value: fmt(tomorrow, 10) },
+    { label: 'Demain 19h', value: fmt(tomorrow, 19) },
+    { label: '+2j 10h',    value: fmt(in2days, 10) },
+    { label: '+7j 10h',    value: fmt(in7days, 10) },
+  ]
 }
