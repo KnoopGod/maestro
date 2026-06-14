@@ -5,6 +5,7 @@ interface Check {
   ok: boolean
   label: string
   hint?: string
+  required?: boolean
 }
 
 export async function GET() {
@@ -55,6 +56,7 @@ export async function GET() {
       ok: !!process.env.LUMA_API_KEY,
       label: 'LUMA_API_KEY',
       hint: 'Optionnel — requis uniquement pour la création de reels (Video Creator agent).',
+      required: false,
     },
   }
 
@@ -70,8 +72,8 @@ export async function GET() {
     checks.database.hint = err instanceof Error ? err.message : 'Connexion DB échouée'
   }
 
-  const allOk = Object.values(checks).every(c => c.ok)
-  const criticalFailing = ['anthropic', 'openai', 'database'].filter(k => !checks[k].ok)
+  const allOk = Object.values(checks).every(c => c.required === false || c.ok)
+  const criticalFailing = ['anthropic', 'openai', 'database', 'encryption'].filter(k => !checks[k].ok)
 
   return NextResponse.json(
     {
