@@ -4,7 +4,7 @@ import { ArrowLeft, Sparkles, Star } from 'lucide-react'
 import { getClient } from '@/lib/db/queries/clients'
 import { listClientAssets, getVisualIdentity } from '@/lib/db/queries/assets'
 import { UploadZone } from '@/components/library/UploadZone'
-import { AssetCard } from '@/components/library/AssetCard'
+import { AssetGrid } from '@/components/library/AssetGrid'
 import { AnalyzeDAButton } from '@/components/library/AnalyzeDAButton'
 
 export const dynamic = 'force-dynamic'
@@ -142,9 +142,7 @@ export default async function LibraryPage({ params }: { params: Promise<{ id: st
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {assets.map(asset => <AssetCard key={asset.id} asset={asset} />)}
-          </div>
+          <AssetGrid assets={assets} clientId={client.id} />
         </div>
       )}
     </div>

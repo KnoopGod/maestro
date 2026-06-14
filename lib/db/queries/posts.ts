@@ -121,6 +121,18 @@ export async function deletePost(id: string): Promise<void> {
   })
 }
 
+export async function deletePosts(ids: string[]): Promise<number> {
+  const uniqueIds = [...new Set(ids.map(id => id.trim()).filter(Boolean))]
+  if (uniqueIds.length === 0) return 0
+
+  const placeholders = uniqueIds.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `DELETE FROM posts WHERE id IN (${placeholders}) AND status != 'published'`,
+    args: uniqueIds,
+  })
+  return result.rowsAffected
+}
+
 export async function createPost(input: {
   clientId: string
   platforms: PostPlatform[]

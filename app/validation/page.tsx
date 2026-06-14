@@ -1,29 +1,17 @@
 import Link from 'next/link'
-import { ShieldCheck, AlertCircle, Sparkles, Edit3 } from 'lucide-react'
+import { ShieldCheck, Sparkles } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
-import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
-import { DeletePostButton } from '@/components/posts/DeletePostButton'
+import { ValidationPostQueue } from '@/components/posts/ValidationPostQueue'
 import { EmptyState } from '@/components/ui/EmptyState'
-import type { Post } from '@/types/post'
-import type { Client } from '@/types/client'
 
 export const dynamic = 'force-dynamic'
-
-const POST_STATUS_BORDER: Record<string, string> = {
-  draft:    'border-l-amber-500/70',
-  ready:    'border-l-purple-500/70',
-  failed:   'border-l-red-500/70',
-  published: 'border-l-emerald-500/70',
-}
 
 export default async function ValidationPage() {
   const [queue, clients] = await Promise.all([
     listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false }),
     listClients(),
   ])
-
-  const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
 
   const draftCount = queue.filter(p => p.status === 'draft').length
   const readyCount = queue.filter(p => p.status === 'ready').length
@@ -70,11 +58,7 @@ export default async function ValidationPage() {
           cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {queue.map(post => (
-            <PostCard key={post.id} post={post} client={clientsMap.get(post.clientId)} />
-          ))}
-        </div>
+        <ValidationPostQueue posts={queue} clients={clients} />
       )}
     </div>
   )
@@ -86,78 +70,5 @@ function StatBox({ label, value, color, border }: { label: string; value: number
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
     </div>
-  )
-}
-
-function PostCard({ post, client }: { post: Post; client: Client | undefined }) {
-  const leftBorder = POST_STATUS_BORDER[post.status] ?? ''
-  return (
-    <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 transition-colors duration-200`}>
-      <div className="flex items-start gap-3">
-        {post.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
-        ) : (
-          <div className={`w-20 h-20 rounded-lg bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-2xl flex-shrink-0`}>
-            {client?.emoji ?? '📝'}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            {client && (
-              <Link href={`/clients/${client.id}`} className="text-xs text-purple-300 hover:underline">
-                {client.emoji} {client.name}
-              </Link>
-            )}
-            <StatusPill status={post.status} />
-            <span className="text-[10px] text-gray-600 ml-auto">Impact {post.impactScore}/100</span>
-          </div>
-          <p className="text-sm font-medium text-white line-clamp-2">{post.brief}</p>
-        </div>
-      </div>
-
-      <p className="text-sm text-gray-300 line-clamp-4 leading-snug">{post.caption}</p>
-
-      {post.hashtags.length > 0 && (
-        <p className="text-[11px] text-blue-400 line-clamp-1">
-          {post.hashtags.slice(0, 6).map(h => `#${h.replace(/^#/, '')}`).join(' ')}
-        </p>
-      )}
-
-      {post.status === 'failed' && post.error && (
-        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2 flex gap-1.5">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-          <span>{post.error}</span>
-        </div>
-      )}
-
-      <PostSupervisor post={post} />
-      <div className="flex flex-wrap justify-end gap-2">
-        <DeletePostButton postId={post.id} />
-        <Link
-          href={`/studio?postId=${post.id}`}
-          title="Ouvrir ce draft dans le Studio pour modifier le brief, le texte ou le visuel avant publication"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors"
-        >
-          <Edit3 className="w-3.5 h-3.5" />
-          Modifier dans Studio
-        </Link>
-      </div>
-      <PostActions post={post} />
-    </article>
-  )
-}
-
-const STATUS_PILL: Record<string, { label: string; cls: string }> = {
-  draft:    { label: 'Brouillon', cls: 'text-amber-300 border-amber-700/40 bg-amber-950/20' },
-  ready:    { label: 'Prêt',      cls: 'text-purple-300 border-purple-700/40 bg-purple-950/20' },
-  failed:   { label: 'Échec',     cls: 'text-red-300 border-red-700/40 bg-red-950/20' },
-  published:{ label: 'Publié',    cls: 'text-emerald-300 border-emerald-700/40 bg-emerald-950/20' },
-}
-
-function StatusPill({ status }: { status: string }) {
-  const cfg = STATUS_PILL[status] ?? { label: status, cls: 'text-gray-400 border-gray-700 bg-gray-800/20' }
-  return (
-    <span title={`Statut du post : ${cfg.label}`} className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
   )
 }
