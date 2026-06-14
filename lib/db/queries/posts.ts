@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { db, query, queryOne } from '../index'
+import { query, queryOne } from '../index'
 import type { Post, PostContentType, PostInsights, PostPlatform, PostStatus, SupervisorReview } from '@/types/post'
 
 interface PostRow {
@@ -115,10 +115,7 @@ export async function listPosts(options?: {
 }
 
 export async function deletePost(id: string): Promise<void> {
-  await db.execute({
-    sql: `DELETE FROM posts WHERE id = ?`,
-    args: [id],
-  })
+  await queryOne(`DELETE FROM posts WHERE id = ?`, [id])
 }
 
 export async function createPost(input: {
@@ -144,13 +141,13 @@ export async function createPost(input: {
   const id = nanoid(12)
   const now = Date.now()
 
-  await db.execute({
-    sql: `INSERT INTO posts (
+  const row = await queryOne<PostRow>(
+    `INSERT INTO posts (
       id, client_id, status, platforms, content_type, brief, reasoning,
       caption, hashtags, hook, cta, cta_type, cta_url, image_asset_id, image_url, image_prompt,
       impact_score, impact_analysis, cost, tokens_used, created_at, updated_at
-    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [
+    ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    [
       id,
       input.clientId,
       JSON.stringify(input.platforms),
@@ -172,12 +169,10 @@ export async function createPost(input: {
       input.tokensUsed ?? 0,
       now,
       now,
-    ],
-  })
-
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to create post')
-  return post
+    ]
+  )
+  if (!row) throw new Error('Failed to create post')
+  return mapRow(row)
 }
 
 export async function updatePostContent(id: string, input: {
@@ -193,8 +188,8 @@ export async function updatePostContent(id: string, input: {
   if (!existing) throw new Error('Post introuvable')
 
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET
       caption = ?,
       hashtags = ?,
       hook = ?,
@@ -203,8 +198,8 @@ export async function updatePostContent(id: string, input: {
       cost = ?,
       tokens_used = ?,
       updated_at = ?
-    WHERE id = ?`,
-    args: [
+    WHERE id = ? RETURNING *`,
+    [
       input.caption ?? existing.caption,
       JSON.stringify(input.hashtags ?? existing.hashtags),
       input.hook === undefined ? existing.hook : input.hook,
@@ -214,86 +209,75 @@ export async function updatePostContent(id: string, input: {
       input.tokensUsed ?? existing.tokensUsed,
       now,
       id,
-    ],
-  })
-
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+    ]
+  )
+  if (!row) throw new Error('Failed to update post')
+  return mapRow(row)
 }
 
 export async function markPostPublished(id: string, metaPostIds: Record<string, string>): Promise<Post> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET status = 'published', meta_post_ids = ?, published_at = ?, error = NULL, updated_at = ? WHERE id = ?`,
-    args: [JSON.stringify(metaPostIds), now, now, id],
-  })
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET status = 'published', meta_post_ids = ?, published_at = ?, error = NULL, updated_at = ? WHERE id = ? RETURNING *`,
+    [JSON.stringify(metaPostIds), now, now, id]
+  )
+  if (!row) throw new Error('Post not found')
+  return mapRow(row)
 }
 
 export async function markPostFailed(id: string, error: string): Promise<Post> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET status = 'failed', error = ?, updated_at = ? WHERE id = ?`,
-    args: [error, now, id],
-  })
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET status = 'failed', error = ?, updated_at = ? WHERE id = ? RETURNING *`,
+    [error, now, id]
+  )
+  if (!row) throw new Error('Post not found')
+  return mapRow(row)
 }
 
 export async function setPostStatus(id: string, status: PostStatus): Promise<Post> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET status = ?, updated_at = ? WHERE id = ?`,
-    args: [status, now, id],
-  })
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET status = ?, updated_at = ? WHERE id = ? RETURNING *`,
+    [status, now, id]
+  )
+  if (!row) throw new Error('Post not found')
+  return mapRow(row)
 }
 
 export async function schedulePost(id: string, scheduledAt: number): Promise<Post> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET status = 'scheduled', scheduled_at = ?, error = NULL, updated_at = ? WHERE id = ?`,
-    args: [scheduledAt, now, id],
-  })
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET status = 'scheduled', scheduled_at = ?, error = NULL, updated_at = ? WHERE id = ? RETURNING *`,
+    [scheduledAt, now, id]
+  )
+  if (!row) throw new Error('Post not found')
+  return mapRow(row)
 }
 
 export async function unschedulePost(id: string): Promise<Post> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET status = 'draft', scheduled_at = NULL, updated_at = ? WHERE id = ?`,
-    args: [now, id],
-  })
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET status = 'draft', scheduled_at = NULL, updated_at = ? WHERE id = ? RETURNING *`,
+    [now, id]
+  )
+  if (!row) throw new Error('Post not found')
+  return mapRow(row)
 }
 
 export async function setSupervisorReview(id: string, review: SupervisorReview): Promise<Post> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET supervisor_review = ?, updated_at = ? WHERE id = ?`,
-    args: [JSON.stringify(review), now, id],
-  })
-  const post = await getPost(id)
-  if (!post) throw new Error('Failed to update post')
-  return post
+  const row = await queryOne<PostRow>(
+    `UPDATE posts SET supervisor_review = ?, updated_at = ? WHERE id = ? RETURNING *`,
+    [JSON.stringify(review), now, id]
+  )
+  if (!row) throw new Error('Post not found')
+  return mapRow(row)
 }
 
 export async function savePostInsights(id: string, insights: PostInsights[]): Promise<void> {
   const now = Date.now()
-  await db.execute({
-    sql: `UPDATE posts SET meta_insights = ?, updated_at = ? WHERE id = ?`,
-    args: [JSON.stringify(insights), now, id],
-  })
+  await queryOne(`UPDATE posts SET meta_insights = ?, updated_at = ? WHERE id = ?`, [JSON.stringify(insights), now, id])
 }
 
 export async function searchPosts(q: string): Promise<Post[]> {

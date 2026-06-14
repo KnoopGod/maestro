@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { ShieldCheck, AlertCircle, Sparkles, Edit3 } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
@@ -94,8 +95,7 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
     <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 transition-colors duration-200`}>
       <div className="flex items-start gap-3">
         {post.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-20 h-20 rounded-lg object-cover flex-shrink-0" />
+          <Image src={post.imageUrl} alt="" width={80} height={80} className="rounded-lg object-cover flex-shrink-0" />
         ) : (
           <div className={`w-20 h-20 rounded-lg bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-2xl flex-shrink-0`}>
             {client?.emoji ?? '📝'}

@@ -244,6 +244,16 @@ export async function getVisualIdentity(clientId: string): Promise<VisualIdentit
   return row ? mapIdentityRow(row) : null
 }
 
+export async function getVisualIdentityBatch(clientIds: string[]): Promise<Map<string, VisualIdentity>> {
+  if (clientIds.length === 0) return new Map()
+  const placeholders = clientIds.map(() => '?').join(',')
+  const rows = await query<IdentityRow>(
+    `SELECT * FROM client_visual_identity WHERE client_id IN (${placeholders})`,
+    clientIds
+  )
+  return new Map(rows.map(row => [row.client_id, mapIdentityRow(row)]))
+}
+
 export async function upsertVisualIdentity(input: {
   clientId: string
   palette: string[]

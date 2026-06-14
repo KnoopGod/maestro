@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import { Star, Trash2, FileText, Film, Eye, Loader2, Clapperboard, CheckCircle2, XCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { formatFileSize, ASSET_CATEGORIES, type ClientAsset } from '@/types/asset'
@@ -133,8 +134,7 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
           title={`Prévisualiser ${asset.originalName}`}
         >
           {asset.type === 'image' || asset.type === 'logo' ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={asset.thumbnailUrl ?? asset.url} alt={asset.originalName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+            <Image src={asset.thumbnailUrl ?? asset.url} alt={asset.originalName} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
           ) : asset.type === 'video' ? (
             <div className="w-full h-full bg-gradient-to-br from-amber-900 to-orange-950 flex items-center justify-center relative">
               <Film className="w-12 h-12 text-amber-300/60" />
@@ -237,8 +237,9 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
           <button onClick={() => setShowPreview(false)} title="Fermer la prévisualisation" className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white text-2xl">×</button>
           <div className="max-w-4xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
             {asset.type === 'image' || asset.type === 'logo' ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={asset.url} alt={asset.originalName} className="max-w-full max-h-[80vh] rounded-lg" />
+              <div className="relative w-[80vw] max-w-3xl h-[80vh]">
+                <Image src={asset.url} alt={asset.originalName} fill sizes="80vw" className="object-contain rounded-lg" />
+              </div>
             ) : asset.type === 'video' ? (
               <video src={asset.url} controls autoPlay className="max-w-full max-h-[80vh] rounded-lg" />
             ) : (

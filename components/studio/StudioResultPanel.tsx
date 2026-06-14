@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { Sparkles, Loader2, AlertCircle, RefreshCw, Target, Check } from 'lucide-react'
 import type { Post } from '@/types/post'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
@@ -134,8 +135,16 @@ export function StudioResultPanel({
                 {result.post.contentType === 'reel' ? (
                   <video src={result.post.imageUrl} controls className="w-full max-h-[520px] object-contain" />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={result.post.imageUrl} alt="Visuel généré" loading="lazy" decoding="async" className="w-full max-h-[520px] object-contain" />
+                  <div className="relative w-full" style={{ maxHeight: 520 }}>
+                    <Image
+                      src={result.post.imageUrl}
+                      alt="Visuel généré"
+                      width={1024}
+                      height={1024}
+                      className="w-full max-h-[520px] object-contain"
+                      priority
+                    />
+                  </div>
                 )}
               </div>
             )}

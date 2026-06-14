@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
@@ -169,10 +170,9 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
     <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
       <div className="flex items-start gap-4">
         {/* Image / placeholder */}
-        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
           {post.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+            <Image src={post.imageUrl} alt="" fill className="object-cover" sizes="80px" />
           ) : (
             <div className={`w-full h-full bg-gradient-to-br ${client?.color ?? 'from-gray-700 to-gray-900'} flex items-center justify-center text-2xl`}>
               {client?.emoji ?? '📝'}

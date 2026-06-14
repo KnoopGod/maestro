@@ -57,8 +57,11 @@ export async function runPostPipeline(input: {
     return withTracking(fn, { jobId, ...opts }, meta)
   }
 
-  // ── Learning loop : charger les top performers avant Account Director ────────
-  const publishedPosts = await listPosts({ clientId: client.id, status: 'published', limit: 30 })
+  // ── Learning loop + DA chargés en parallèle ────────────────────────────────
+  const [publishedPosts, identity] = await Promise.all([
+    listPosts({ clientId: client.id, status: 'published', limit: 30 }),
+    getVisualIdentity(client.id),
+  ])
   const postsWithInsights = publishedPosts
     .filter(p => p.metaInsights.length > 0)
     .map(p => ({ ...p, _engRate: engagementRate(p) }))
@@ -97,7 +100,6 @@ export async function runPostPipeline(input: {
   const primaryCaption = text.captions[0]
   if (!primaryCaption) throw new Error('Aucune caption générée')
 
-  const identity = await getVisualIdentity(client.id)
   let image: { assetId?: string; url?: string; prompt?: string; cost: number } = { cost: 0 }
   let imageError: string | undefined
 
