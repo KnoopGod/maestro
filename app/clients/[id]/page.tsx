@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket, Layers } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
-import { listPosts } from '@/lib/db/queries/posts'
+import { listPosts, getPillarDistribution } from '@/lib/db/queries/posts'
 import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
@@ -12,6 +12,7 @@ import { CLIENT_TYPES, CLIENT_STATUS, type Client } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
 import { PortalLinkCard } from '@/components/clients/PortalLinkCard'
+import { PillarCoverageWidget } from '@/components/clients/PillarCoverageWidget'
 import type { StrategyAdvice } from '@/lib/agents/strategy-advisor'
 import type { Post } from '@/types/post'
 
@@ -22,13 +23,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assetSummary, identity, aiStrategy, socialAccounts, clientPosts, clientJobs] = await Promise.all([
+  const [assetSummary, identity, aiStrategy, socialAccounts, clientPosts, clientJobs, pillarDistribution] = await Promise.all([
     getClientAssetSummary(id),
     getVisualIdentity(id),
     getAiStrategy(id),
     listClientSocialAccountSummaries(id),
     listPosts({ clientId: id, limit: 100, includeInsights: false }),
     listJobsByClient(id, 8),
+    getPillarDistribution(id),
   ])
 
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
@@ -251,25 +253,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      {contentPillars.length > 0 && (
-        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
-          <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-3">
-            Piliers de contenu
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {contentPillars.map(pillar => (
-              <Link
-                key={pillar}
-                href={`/studio?client=${client.id}&pillar=${encodeURIComponent(pillar)}`}
-                title={`Créer un post pour ${client.name} autour du pilier : ${pillar}`}
-                className="px-2.5 py-1.5 rounded-full bg-purple-950/30 border border-purple-700/30 text-xs text-purple-200 hover:bg-purple-900/40 hover:border-purple-500/50 transition-colors"
-              >
-                {pillar}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      <PillarCoverageWidget
+        clientId={client.id}
+        pillars={contentPillars}
+        distribution={pillarDistribution}
+      />
 
       {/* DA Banner if identity exists */}
       {identity && identity.stylePrompt && (

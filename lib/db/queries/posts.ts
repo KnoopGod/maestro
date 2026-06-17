@@ -350,6 +350,28 @@ export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {
   return rows.map(mapRow)
 }
 
+export interface PillarCount {
+  pillar: string
+  count: number
+}
+
+/** Distribution of posts by pillar for a client, within the last `withinMs` ms (default 30 days). */
+export async function getPillarDistribution(
+  clientId: string,
+  withinMs = 30 * 24 * 60 * 60 * 1000
+): Promise<PillarCount[]> {
+  const since = Date.now() - withinMs
+  const rows = await query<{ pillar: string; count: number }>(
+    `SELECT pillar, COUNT(*) AS count
+     FROM posts
+     WHERE client_id = ? AND pillar IS NOT NULL AND created_at > ?
+     GROUP BY pillar
+     ORDER BY count DESC`,
+    [clientId, since]
+  )
+  return rows.map(r => ({ pillar: r.pillar, count: Number(r.count) }))
+}
+
 export interface FailedPostSummary {
   id: string
   clientId: string
