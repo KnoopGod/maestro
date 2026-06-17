@@ -19,7 +19,7 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
   const [scheduledAt, setScheduledAt] = useState<string>(
     post.scheduledAt ? new Date(post.scheduledAt).toISOString().slice(0, 16) : ''
   )
-  const [busy, setBusy] = useState<'schedule' | 'publish' | 'unschedule' | null>(null)
+  const [busy, setBusy] = useState<'schedule' | 'publish' | 'unschedule' | 'reset' | null>(null)
   const [error, setError] = useState('')
   const [warning, setWarning] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -87,11 +87,50 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
     }
   }
 
+  async function resetToDraft() {
+    setBusy('reset')
+    setError('')
+    try {
+      const res = await fetch(`/api/posts/${post.id}/reset`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur reset')
+      setStatus(data.post.status)
+      if (refresh) router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur reset')
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const isPublished = status === 'published'
   const isScheduled = status === 'scheduled'
+  const isFailed = status === 'failed'
 
   return (
     <div className="space-y-3">
+      {isFailed && (
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-950/20 border border-red-700/30">
+          <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+          <span className="text-xs text-red-300 flex-1">Publication échouée</span>
+          <button
+            onClick={resetToDraft}
+            disabled={!!busy}
+            title="Remettre ce post en brouillon pour le corriger et réessayer"
+            className="text-[11px] px-2.5 py-1 rounded border border-amber-700/50 text-amber-300 hover:bg-amber-900/30 transition-colors disabled:opacity-40"
+          >
+            {busy === 'reset' ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Remettre en brouillon'}
+          </button>
+          <button
+            onClick={() => setConfirmOpen(true)}
+            disabled={!!busy}
+            title="Réessayer la publication immédiatement sans correction"
+            className="text-[11px] px-2.5 py-1 rounded border border-red-700/50 text-red-300 hover:bg-red-900/30 transition-colors disabled:opacity-40"
+          >
+            {busy === 'publish' ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Réessayer'}
+          </button>
+        </div>
+      )}
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex-1 min-w-[200px]">
           <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">
