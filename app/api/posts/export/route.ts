@@ -23,10 +23,16 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const clientId = searchParams.get('clientId') ?? undefined
   const status = (searchParams.get('status') as PostStatus | null) ?? undefined
+  const q = searchParams.get('q') ?? undefined
+  const platform = searchParams.get('platform') ?? undefined
+  const contentType = (searchParams.get('contentType') as import('@/types/post').PostContentType | null) ?? undefined
 
   const posts = await listPosts({
     clientId,
     status,
+    q,
+    platform,
+    contentType,
     limit: 500,
     includeInsights: false,
   })

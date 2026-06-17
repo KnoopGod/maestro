@@ -16,7 +16,14 @@ const STATUS_INFO: Record<string, { label: string; color: string; icon: typeof C
   failed:    { label: 'Échec',     color: 'text-red-300 border-red-700/40 bg-red-950/30',         icon: AlertCircle },
 }
 
-export default async function CalendarPage() {
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>
+}) {
+  const { week: weekParam } = await searchParams
+  const weekOffset = parseInt(weekParam ?? '0', 10) || 0
+
   // Toutes les statuses : la vue semaine affiche aussi les posts publiés
   const [posts, clients] = await Promise.all([
     listPosts({ limit: 200, includeInsights: false }),
@@ -39,9 +46,9 @@ export default async function CalendarPage() {
 
   // ─── Weekly grid ────────────────────────────────────────────────────────────
   const today = new Date()
-  // Monday of current week
+  // Monday of current week + offset
   const weekStart = new Date(today)
-  weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7) + weekOffset * 7)
   weekStart.setHours(0, 0, 0, 0)
   const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
   const weekDays = Array.from({ length: 7 }, (_, i) => {
@@ -69,7 +76,11 @@ export default async function CalendarPage() {
   }
 
   const activeClients = clients.filter(c => c.status === 'active')
-  const todayIndex = (today.getDay() + 6) % 7
+  const todayIndex = weekOffset === 0 ? (today.getDay() + 6) % 7 : -1
+
+  const prevWeekHref = `/calendar?week=${weekOffset - 1}`
+  const nextWeekHref = `/calendar?week=${weekOffset + 1}`
+  const weekRangeLabel = `${weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
 
   return (
     <div className="space-y-6">
@@ -83,7 +94,32 @@ export default async function CalendarPage() {
             Posts prêts, planifiés et dus à publier
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center flex-wrap">
+          <div className="flex items-center gap-1 bg-gray-900/60 border border-gray-700 rounded-lg p-1">
+            <Link
+              href={prevWeekHref}
+              className="px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-gray-700 transition-colors text-sm"
+              title="Semaine précédente"
+            >
+              ←
+            </Link>
+            <span className="text-xs text-gray-300 font-mono px-2 min-w-[160px] text-center">{weekRangeLabel}</span>
+            <Link
+              href={nextWeekHref}
+              className="px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-gray-700 transition-colors text-sm"
+              title="Semaine suivante"
+            >
+              →
+            </Link>
+          </div>
+          {weekOffset !== 0 && (
+            <Link
+              href="/calendar"
+              className="px-3 py-2 rounded-lg border border-indigo-700/50 text-indigo-300 hover:bg-indigo-950/30 text-xs transition-colors"
+            >
+              Aujourd&apos;hui
+            </Link>
+          )}
           <Link
             href="/api/posts/export/ical"
             title="Exporter les posts planifiés en fichier iCal (Google Calendar, Apple Calendar…)"
@@ -118,9 +154,11 @@ export default async function CalendarPage() {
               <CalendarDays className="w-4 h-4 text-indigo-400" />
               Vue semaine
             </h2>
-            <span className="text-[10px] text-gray-500 font-mono">
-              {weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – {weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-            </span>
+            {weekOffset !== 0 && (
+              <span className="text-[10px] text-indigo-400/60 font-mono">
+                {weekOffset > 0 ? `+${weekOffset}` : weekOffset} sem.
+              </span>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -240,8 +278,8 @@ function TimelineRow({ post, client, now }: { post: Post; client: ClientWithStat
 
   return (
     <Link
-      href={`/validation#${post.id}`}
-      title="Ouvrir ce post dans la file de validation pour le relire, planifier ou publier"
+      href={`/posts/${post.id}`}
+      title="Voir le détail de ce post"
       className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
     >
       <Icon className={`w-4 h-4 ${cfg.color.split(' ')[0]} flex-shrink-0`} />

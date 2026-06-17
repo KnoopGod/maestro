@@ -92,7 +92,7 @@ export async function listPosts(options?: {
   limit?: number
   includeInsights?: boolean
   publishedAfter?: number
-  orderBy?: 'created_at' | 'published_at' | 'impact_score'
+  orderBy?: 'created_at' | 'published_at' | 'impact_score' | 'scheduled_at'
   orderDir?: 'ASC' | 'DESC'
   q?: string
   platform?: string

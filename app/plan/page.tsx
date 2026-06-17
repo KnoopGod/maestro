@@ -44,9 +44,15 @@ function formatRelative(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR')
 }
 
-export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string; type?: string }> }) {
-  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter } = await searchParams
+type PlanSort = 'newest' | 'oldest' | 'impact' | 'scheduled'
+
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string; type?: string; sort?: string }> }) {
+  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter, sort: sortParam } = await searchParams
   const contentTypeFilter = typeFilter as PostContentType | undefined
+  const sortOption: PlanSort = (['newest', 'oldest', 'impact', 'scheduled'] as PlanSort[]).includes(sortParam as PlanSort) ? sortParam as PlanSort : 'newest'
+
+  const orderBy = sortOption === 'impact' ? 'impact_score' as const : sortOption === 'scheduled' ? 'scheduled_at' as const : 'created_at' as const
+  const orderDir = sortOption === 'oldest' ? 'ASC' as const : 'DESC' as const
 
   const showInsights = statusFilter === 'published'
   const [posts, clients] = await Promise.all([
@@ -58,6 +64,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       q: searchQuery,
       platform: platformFilter,
       contentType: contentTypeFilter,
+      orderBy,
+      orderDir,
     }),
     listClients(),
   ])
@@ -69,6 +77,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     const p = new URLSearchParams()
     const params: Record<string, string | undefined> = {
       client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter,
+      sort: sortOption !== 'newest' ? sortOption : undefined,
       ...overrides,
     }
     for (const [k, v] of Object.entries(params)) {
@@ -103,8 +112,17 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         </div>
         <div className="flex gap-2">
           <Link
-            href={`/api/posts/export${clientFilter ? `?clientId=${clientFilter}` : ''}${statusFilter ? `${clientFilter ? '&' : '?'}status=${statusFilter}` : ''}`}
-            title="Exporter l'historique des posts en CSV"
+            href={(() => {
+              const p = new URLSearchParams()
+              if (clientFilter) p.set('clientId', clientFilter)
+              if (statusFilter) p.set('status', statusFilter)
+              if (searchQuery) p.set('q', searchQuery)
+              if (platformFilter) p.set('platform', platformFilter)
+              if (typeFilter) p.set('contentType', typeFilter)
+              const str = p.toString()
+              return `/api/posts/export${str ? `?${str}` : ''}`
+            })()}
+            title="Exporter les posts filtrés en CSV"
             className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm flex items-center gap-1.5 transition-colors"
           >
             <Download className="w-4 h-4" />
@@ -183,6 +201,27 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
               ))}
             </>
           )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-gray-500">Tri :</span>
+          {([
+            ['newest',    'Récent'],
+            ['oldest',    'Ancien'],
+            ['impact',    'Impact ↓'],
+            ['scheduled', 'Planifié ↑'],
+          ] as [PlanSort, string][]).map(([val, label]) => (
+            <Link
+              key={val}
+              href={planUrl({ sort: val !== 'newest' ? val : undefined })}
+              className={`text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                sortOption === val
+                  ? 'border-purple-600/60 bg-purple-600/20 text-purple-300'
+                  : 'border-gray-700 text-gray-500 hover:border-gray-600 hover:text-gray-300'
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
         <PlanSearchInput initialQ={searchQuery} />
         {searchQuery && (
