@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { listStaleJobs, completeAgentJob } from '@/lib/db/queries/agent-jobs'
 import { markPostFailed } from '@/lib/db/queries/posts'
+import { startCronExecution, completeCronExecution } from '@/lib/db/queries/cron-log'
 import { timingSafeEqual } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
@@ -21,11 +22,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const exec = await startCronExecution('cleanup-jobs').catch(() => null)
   const stale = await listStaleJobs()
-  if (stale.length === 0) {
-    return NextResponse.json({ cleaned: 0 })
-  }
-
   const results: Array<{ jobId: string; postId: string | null }> = []
 
   for (const job of stale) {
@@ -34,6 +32,14 @@ export async function POST(req: NextRequest) {
       await markPostFailed(job.postId, 'Job interrompu — fonction serverless recyclée avant la fin du pipeline')
     }
     results.push({ jobId: job.id, postId: job.postId })
+  }
+
+  if (exec) {
+    await completeCronExecution(exec.id, {
+      status: 'completed',
+      processedCount: stale.length,
+      results,
+    }).catch(() => undefined)
   }
 
   console.log(`[cleanup-jobs] ${results.length} job(s) orphelin(s) nettoyés`)

@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { listDuePosts, markPostFailed } from '@/lib/db/queries/posts'
 import { publishPost, PublishBlockedError } from '@/lib/agents/publish-pipeline'
+import { startCronExecution, completeCronExecution } from '@/lib/db/queries/cron-log'
 import { SESSION_COOKIE, getAuthPassword, isValidSessionToken, timingSafeEqual } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const exec = await startCronExecution('publish-due').catch(() => null)
   const due = await listDuePosts()
   const results: Array<{ postId: string; status: 'published' | 'failed' | 'blocked'; error?: string }> = []
 
@@ -43,6 +45,15 @@ export async function POST(req: NextRequest) {
       await markPostFailed(post.id, message).catch(() => undefined)
       results.push({ postId: post.id, status: 'failed', error: message })
     }
+  }
+
+  const hasFailure = results.some(r => r.status !== 'published')
+  if (exec) {
+    await completeCronExecution(exec.id, {
+      status: hasFailure ? 'failed' : 'completed',
+      processedCount: due.length,
+      results,
+    }).catch(() => undefined)
   }
 
   return NextResponse.json({ count: due.length, results })

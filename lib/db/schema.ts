@@ -172,4 +172,6 @@ export async function initSchema() {
   await migrateAddPostPillar()
   const { migrateClientNotes } = await import('./migrations/014-add-client-notes')
   await migrateClientNotes()
+  const { migrateCronLog } = await import('./migrations/015-add-cron-log')
+  await migrateCronLog()
 }

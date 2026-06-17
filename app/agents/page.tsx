@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { Bot, CheckCircle2, Clock, Sparkles, Activity, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Bot, CheckCircle2, Clock, Sparkles, Activity, AlertTriangle, ArrowRight, CalendarClock } from 'lucide-react'
 import { AGENTS, type AgentStatus, type MaestroAgent } from '@/lib/agent-registry'
 import { listRecentJobs } from '@/lib/db/queries/agent-jobs'
+import { listRecentCronExecutions } from '@/lib/db/queries/cron-log'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AutoRefresh } from '@/components/agents/AutoRefresh'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
+import type { CronExecution } from '@/lib/db/queries/cron-log'
 
 export const dynamic = 'force-dynamic'
 
@@ -174,8 +176,41 @@ function AgentCard({ agent }: { agent: MaestroAgent }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const CRON_STATUS_CFG = {
+  running:   { label: 'En cours', badge: 'bg-purple-950/40 text-purple-300 border-purple-700/40', dot: 'bg-purple-400 animate-pulse' },
+  completed: { label: 'OK',       badge: 'bg-emerald-950/30 text-emerald-300 border-emerald-700/40', dot: 'bg-emerald-400' },
+  failed:    { label: 'Erreur',   badge: 'bg-red-950/30 text-red-300 border-red-700/40', dot: 'bg-red-400' },
+}
+
+const CRON_JOB_LABELS: Record<string, string> = {
+  'publish-due':  'Publication programmée',
+  'cleanup-jobs': 'Nettoyage des jobs',
+}
+
+function CronRow({ exec, referenceTs }: { exec: CronExecution; referenceTs: number }) {
+  const cfg = CRON_STATUS_CFG[exec.status]
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-800/60 last:border-0 hover:bg-gray-800/20 transition-colors">
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+      <div className="flex-1 min-w-0">
+        <span className="text-xs text-gray-200 truncate">{CRON_JOB_LABELS[exec.jobType] ?? exec.jobType}</span>
+      </div>
+      <span className={`text-[10px] border rounded-full px-2 py-0.5 flex-shrink-0 ${cfg.badge}`}>{cfg.label}</span>
+      <span className="text-[10px] text-gray-500 flex-shrink-0 w-16 text-right">
+        {exec.processedCount > 0 ? `${exec.processedCount} traité${exec.processedCount > 1 ? 's' : ''}` : '—'}
+      </span>
+      <span className="text-[10px] text-gray-500 flex-shrink-0 w-12 text-right">
+        {exec.durationMs != null ? elapsed(exec.durationMs) : '…'}
+      </span>
+      <span className="text-[10px] text-gray-600 flex-shrink-0 w-16 text-right">
+        {since(exec.startedAt, referenceTs)}
+      </span>
+    </div>
+  )
+}
+
 export default async function AgentsPage() {
-  const allJobs = await listRecentJobs(30)
+  const [allJobs, cronExecs] = await Promise.all([listRecentJobs(30), listRecentCronExecutions(12)])
   const referenceTs = new Date().getTime()
 
   const runningJobs = allJobs.filter(j => j.status === 'running')
@@ -270,6 +305,32 @@ export default async function AgentsPage() {
             cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
           />
         )}
+      </section>
+
+      {/* ── Cron / Scheduler ── */}
+      <section aria-labelledby="cron-heading">
+        <h2 id="cron-heading" className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <CalendarClock aria-hidden="true" className="w-4 h-4 text-blue-400" />
+          Cron / Scheduler
+          <span className="text-[10px] text-gray-500 font-normal ml-1">12 dernières exécutions</span>
+        </h2>
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden">
+          {cronExecs.length === 0 ? (
+            <p className="text-xs text-gray-500 text-center py-6">Aucune exécution enregistrée</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-800 bg-gray-900/60">
+                <div className="w-2 flex-shrink-0" />
+                <div className="flex-1 text-[10px] uppercase tracking-wider text-gray-500">Job</div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-500 flex-shrink-0">Statut</div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-500 flex-shrink-0 w-16 text-right">Traités</div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-500 flex-shrink-0 w-12 text-right">Durée</div>
+                <div className="text-[10px] uppercase tracking-wider text-gray-500 flex-shrink-0 w-16 text-right">Quand</div>
+              </div>
+              {cronExecs.map(exec => <CronRow key={exec.id} exec={exec} referenceTs={referenceTs} />)}
+            </>
+          )}
+        </div>
       </section>
 
       {/* ── Pipeline visuel ── */}
