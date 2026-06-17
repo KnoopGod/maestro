@@ -7,6 +7,7 @@ import type { Post, PostStatus } from '@/types/post'
 import type { Client } from '@/types/client'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
+import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,8 +42,8 @@ function formatRelative(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR')
 }
 
-export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string }> }) {
-  const { client: clientFilter, status: statusFilter } = await searchParams
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string }> }) {
+  const { client: clientFilter, status: statusFilter, q: searchQuery } = await searchParams
 
   const showInsights = statusFilter === 'published'
   const [posts, clients] = await Promise.all([
@@ -51,6 +52,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       status: statusFilter as PostStatus | undefined,
       limit: 100,
       includeInsights: showInsights,
+      q: searchQuery,
     }),
     listClients(),
   ])
@@ -93,22 +95,30 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-xs text-gray-500">Filtres :</span>
-        <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter} />
-        <FilterChip href="/plan?status=scheduled" label="Planifiés" active={statusFilter === 'scheduled'} />
-        <FilterChip href="/plan?status=published" label="Publiés" active={statusFilter === 'published'} />
-        <FilterChip href="/plan?status=ready" label="Prêts" active={statusFilter === 'ready'} />
-        <FilterChip href="/plan?status=draft" label="Brouillons" active={statusFilter === 'draft'} />
-        <FilterChip href="/plan?status=failed" label="Échecs" active={statusFilter === 'failed'} />
-        {clientFilter && (
-          <Link
-            href="/plan"
-            title="Retirer le filtre client et afficher tous les posts"
-            className="text-xs px-2 py-1 rounded bg-purple-600/30 border border-purple-600/40 text-purple-300"
-          >
-            Client : {clientsMap.get(clientFilter)?.name ?? '?'} ✕
-          </Link>
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-gray-500">Filtres :</span>
+          <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter && !searchQuery} />
+          <FilterChip href="/plan?status=scheduled" label="Planifiés" active={statusFilter === 'scheduled'} />
+          <FilterChip href="/plan?status=published" label="Publiés" active={statusFilter === 'published'} />
+          <FilterChip href="/plan?status=ready" label="Prêts" active={statusFilter === 'ready'} />
+          <FilterChip href="/plan?status=draft" label="Brouillons" active={statusFilter === 'draft'} />
+          <FilterChip href="/plan?status=failed" label="Échecs" active={statusFilter === 'failed'} />
+          {clientFilter && (
+            <Link
+              href="/plan"
+              title="Retirer le filtre client et afficher tous les posts"
+              className="text-xs px-2 py-1 rounded bg-purple-600/30 border border-purple-600/40 text-purple-300"
+            >
+              Client : {clientsMap.get(clientFilter)?.name ?? '?'} ✕
+            </Link>
+          )}
+        </div>
+        <PlanSearchInput initialQ={searchQuery} />
+        {searchQuery && (
+          <p className="text-[11px] text-gray-500">
+            {posts.length} résultat{posts.length !== 1 ? 's' : ''} pour <span className="text-purple-300">&ldquo;{searchQuery}&rdquo;</span>
+          </p>
         )}
       </div>
 

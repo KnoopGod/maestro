@@ -93,6 +93,7 @@ export async function listPosts(options?: {
   includeInsights?: boolean
   publishedAfter?: number
   orderBy?: 'created_at' | 'published_at'
+  q?: string
 }): Promise<Post[]> {
   const conditions: string[] = []
   const args: unknown[] = []
@@ -112,6 +113,11 @@ export async function listPosts(options?: {
   if (options?.publishedAfter !== undefined) {
     conditions.push('published_at >= ?')
     args.push(options.publishedAfter)
+  }
+  if (options?.q) {
+    const like = `%${options.q}%`
+    conditions.push('(caption LIKE ? OR brief LIKE ? OR hashtags LIKE ?)')
+    args.push(like, like, like)
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
