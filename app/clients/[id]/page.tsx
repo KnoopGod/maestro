@@ -36,6 +36,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
   const publishedPosts = clientPosts.filter(p => p.status === 'published')
+  const draftCount = clientPosts.filter(p => p.status === 'draft' || p.status === 'ready').length
+  const monthStartMs = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()
+  const postsThisMonth = clientPosts.filter(p => p.createdAt >= monthStartMs).length
   const contentPillars = client.strategy?.contentPillars ?? []
   const understoodSummary = client.clientSummary || buildClientUnderstanding(client, Boolean(identity?.stylePrompt))
   const setupComplete = Boolean(client.description && client.brandVoiceTone && contentPillars.length > 0)
@@ -109,6 +112,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </Link>
           <DeleteClientButton clientId={client.id} clientName={client.name} />
         </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <ClientStat label="Posts ce mois" value={postsThisMonth} sub="générés" color="text-purple-400" />
+        <ClientStat label="Posts publiés" value={publishedPosts.length} sub="total" color="text-emerald-400" />
+        <ClientStat label="Impact moyen" value={avgImpact != null ? `${avgImpact.toFixed(0)}/100` : '—'} sub="posts publiés" color="text-blue-400" />
+        <ClientStat label="En validation" value={draftCount} sub={draftCount === 0 ? 'file vide' : 'à traiter'} color={draftCount > 0 ? 'text-amber-400' : 'text-gray-500'} href={draftCount > 0 ? `/validation?client=${client.id}` : undefined} />
       </div>
 
       {/* Quick actions */}
@@ -505,6 +516,19 @@ const POST_STATUS_CFG: Record<string, { label: string; icon: React.ElementType; 
   scheduled: { label: 'Planifié',  icon: CalendarDays,  color: 'text-blue-400' },
   published: { label: 'Publié',    icon: CheckCircle2,  color: 'text-emerald-400' },
   failed:    { label: 'Échec',     icon: AlertCircle,   color: 'text-red-400' },
+}
+
+function ClientStat({ label, value, sub, color, href }: {
+  label: string; value: string | number; sub: string; color: string; href?: string
+}) {
+  const content = (
+    <div className={`bg-gray-900/40 border border-gray-800 rounded-xl p-3 ${href ? 'hover:border-purple-700/50 transition-colors' : ''}`}>
+      <div className="text-[10px] uppercase tracking-wider text-gray-500">{label}</div>
+      <div className={`text-xl font-bold mt-0.5 ${color}`}>{value}</div>
+      <div className="text-[10px] text-gray-600 mt-0.5">{sub}</div>
+    </div>
+  )
+  return href ? <Link href={href} title={`${label} : ${value}`}>{content}</Link> : content
 }
 
 function StartupStep({ done, label, detail, href }: { done: boolean; label: string; detail: string; href: string }) {
