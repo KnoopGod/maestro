@@ -92,7 +92,8 @@ export async function listPosts(options?: {
   limit?: number
   includeInsights?: boolean
   publishedAfter?: number
-  orderBy?: 'created_at' | 'published_at'
+  orderBy?: 'created_at' | 'published_at' | 'impact_score'
+  orderDir?: 'ASC' | 'DESC'
   q?: string
 }): Promise<Post[]> {
   const conditions: string[] = []
@@ -123,9 +124,10 @@ export async function listPosts(options?: {
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
   const limit = options?.limit ? `LIMIT ${options.limit}` : ''
   const orderBy = options?.orderBy ?? 'created_at'
+  const orderDir = options?.orderDir ?? 'DESC'
 
   const rows = await query<PostRow>(
-    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY ${orderBy} DESC ${limit}`,
+    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY ${orderBy} ${orderDir} ${limit}`,
     args
   )
   return rows.map(mapRow)

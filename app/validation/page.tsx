@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ShieldCheck, AlertCircle, Sparkles } from 'lucide-react'
+import { ShieldCheck, AlertCircle, Sparkles, X } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
@@ -21,17 +21,54 @@ const POST_STATUS_BORDER: Record<string, string> = {
   published: 'border-l-emerald-500/70',
 }
 
-export default async function ValidationPage() {
+type SortOption = 'newest' | 'oldest' | 'impact'
+
+function buildUrl(params: Record<string, string | undefined>) {
+  const p = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (v) p.set(k, v)
+  }
+  const str = p.toString()
+  return `/validation${str ? `?${str}` : ''}`
+}
+
+export default async function ValidationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string; sort?: string }>
+}) {
+  const { client: clientFilter, sort: sortParam } = await searchParams
+  const sortOption: SortOption = sortParam === 'oldest' ? 'oldest' : sortParam === 'impact' ? 'impact' : 'newest'
+
+  const orderBy = sortOption === 'impact' ? 'impact_score' as const : 'created_at' as const
+  const orderDir = sortOption === 'oldest' ? 'ASC' as const : 'DESC' as const
+
   const [queue, clients] = await Promise.all([
-    listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false }),
+    listPosts({
+      statuses: ['draft', 'ready', 'failed'],
+      clientId: clientFilter,
+      orderBy,
+      orderDir,
+      limit: 200,
+      includeInsights: false,
+    }),
     listClients(),
   ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
 
+  // Clients that actually have posts in the unfiltered queue for the chips
+  const [allQueue] = clientFilter
+    ? [await listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false })]
+    : [queue]
+  const clientsInQueue = clients.filter(c => allQueue.some(p => p.clientId === c.id))
+
   const draftCount = queue.filter(p => p.status === 'draft').length
   const readyCount = queue.filter(p => p.status === 'ready').length
   const failedCount = queue.filter(p => p.status === 'failed').length
+
+  const sortLabels: Record<SortOption, string> = { newest: 'Récent', oldest: 'Ancien', impact: 'Impact ↓' }
+  const sortOptions: SortOption[] = ['newest', 'oldest', 'impact']
 
   return (
     <div className="space-y-6">
@@ -66,10 +103,78 @@ export default async function ValidationPage() {
         <StatBox label="Échecs" value={failedCount} color="text-red-400" border="border-red-800/30" />
       </div>
 
+      {/* Filters & Sort */}
+      {clientsInQueue.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Client filter */}
+          <div className="flex flex-wrap items-center gap-1.5 mr-2">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500">Client</span>
+            <Link
+              href={buildUrl({ sort: sortParam })}
+              title="Afficher tous les clients"
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                !clientFilter
+                  ? 'bg-purple-600 border-purple-600 text-white'
+                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
+              }`}
+            >
+              Tous
+            </Link>
+            {clientsInQueue.map(c => (
+              <Link
+                key={c.id}
+                href={buildUrl({ client: c.id, sort: sortParam })}
+                title={`Filtrer par ${c.name}`}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  clientFilter === c.id
+                    ? 'bg-purple-600 border-purple-600 text-white'
+                    : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                }`}
+              >
+                {c.emoji} {c.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500">Trier</span>
+            {sortOptions.map(s => (
+              <Link
+                key={s}
+                href={buildUrl({ client: clientFilter, sort: s === 'newest' ? undefined : s })}
+                title={`Trier par ${sortLabels[s]}`}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  sortOption === s
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                }`}
+              >
+                {sortLabels[s]}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active filter summary */}
+      {clientFilter && (
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <span>Filtre actif :</span>
+          <span className="font-medium text-purple-300">
+            {clientsMap.get(clientFilter)?.name ?? clientFilter}
+          </span>
+          <span>· {queue.length} post{queue.length > 1 ? 's' : ''}</span>
+          <Link href={buildUrl({ sort: sortParam })} title="Supprimer le filtre client" className="ml-1 text-gray-600 hover:text-gray-400 transition-colors">
+            <X className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+
       {queue.length === 0 ? (
         <EmptyState
           icon={ShieldCheck}
-          title="Aucun post en attente de validation"
+          title={clientFilter ? `Aucun post en attente pour ${clientsMap.get(clientFilter)?.name ?? 'ce client'}` : 'Aucun post en attente de validation'}
           description="Les posts générés dans le Studio apparaîtront ici pour relecture avant publication."
           cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
         />
