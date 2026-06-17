@@ -343,3 +343,16 @@ export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {
   )
   return rows.map(mapRow)
 }
+
+/** Posts scheduled within the next `withinMs` ms (default: rest of today). */
+export async function listUpcomingPosts(withinMs?: number): Promise<Post[]> {
+  const now = Date.now()
+  const until = withinMs !== undefined
+    ? now + withinMs
+    : new Date(new Date().setHours(23, 59, 59, 999)).getTime()
+  const rows = await query<PostRow>(
+    `SELECT ${postSelect(false)} FROM posts WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at > ? AND scheduled_at <= ? ORDER BY scheduled_at ASC LIMIT 20`,
+    [now, until]
+  )
+  return rows.map(mapRow)
+}

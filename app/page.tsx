@@ -1,12 +1,14 @@
 import type React from 'react'
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
-import { listClientsWithStats } from '@/lib/db/queries/clients'
-import { countPostsByStatus } from '@/lib/db/queries/posts'
+import { listClientsWithStats, listClients } from '@/lib/db/queries/clients'
+import { countPostsByStatus, listUpcomingPosts } from '@/lib/db/queries/posts'
 import { listExpiringTokens } from '@/lib/db/queries/social-accounts'
 import { SetupBanner } from '@/components/SetupBanner'
 import { TokenExpiryBanner } from '@/components/TokenExpiryBanner'
+import { TodayScheduleWidget } from '@/components/dashboard/TodayScheduleWidget'
 import { CLIENT_TYPES } from '@/types/client'
+import type { Client } from '@/types/client'
 
 function healthDot(days: number | null): string {
   if (days === null) return 'bg-gray-700'
@@ -21,16 +23,21 @@ export default async function HomePage() {
   let clients: Awaited<ReturnType<typeof listClientsWithStats>> = []
   let toValidate = 0
   let expiringTokens: Awaited<ReturnType<typeof listExpiringTokens>> = []
+  let todayPosts: Awaited<ReturnType<typeof listUpcomingPosts>> = []
+  let allClients: Client[] = []
   try {
-    ;[clients, toValidate, expiringTokens] = await Promise.all([
+    ;[clients, toValidate, expiringTokens, todayPosts, allClients] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
       listExpiringTokens(14),
+      listUpcomingPosts(),
+      listClients(),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
     // Continue with empty data — the SetupBanner will indicate DB misconfiguration
   }
+  const clientsMap = new Map<string, Client>(allClients.map(c => [c.id, c]))
   const activeClients = clients.filter(c => c.status === 'active')
   const totalPosts = clients.reduce((sum, c) => sum + c.postsThisMonth, 0)
   const avgEngagement = clients.length
@@ -114,6 +121,14 @@ export default async function HomePage() {
           )}
         </section>
       )}
+
+      {/* Today's schedule */}
+      <section aria-labelledby="today-heading">
+        <h2 id="today-heading" className="text-[8px] text-blue-600/60 font-mono tracking-[0.3em] uppercase mb-3">
+          {'// PLANIFIÉ AUJOURD\'HUI'}
+        </h2>
+        <TodayScheduleWidget posts={todayPosts} clientsMap={clientsMap} />
+      </section>
 
       {/* Quick actions */}
       <section aria-labelledby="actions-heading">
