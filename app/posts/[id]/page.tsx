@@ -1,13 +1,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, CalendarDays, CheckCircle2, AlertCircle, Clock, Sparkles, DollarSign, Hash, FileText, ExternalLink, Copy } from 'lucide-react'
+import { ArrowLeft, CalendarDays, CheckCircle2, AlertCircle, Clock, Sparkles, DollarSign, Hash, FileText, ExternalLink } from 'lucide-react'
 import { getPost } from '@/lib/db/queries/posts'
 import { getClient } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
 import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
 import { PostImageSwap } from '@/components/posts/PostImageSwap'
 import { CopyCaptionButton } from '@/components/posts/CopyCaptionButton'
+import { DuplicatePostButton } from '@/components/posts/DuplicatePostButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,13 +82,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link
-            href={`/studio?cloneFrom=${post.id}`}
-            title="Dupliquer ce post comme point de départ"
-            className="px-3 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 transition-colors"
-          >
-            Dupliquer
-          </Link>
+          <DuplicatePostButton postId={post.id} className="px-3 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 transition-colors inline-flex items-center gap-1.5" />
           <PostDeleteButton post={post} />
         </div>
       </div>
@@ -250,9 +245,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <Link href={`/plan?client=${post.clientId}`} className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors p-2 rounded-lg hover:bg-gray-800/40">
               <CalendarDays className="w-3.5 h-3.5" /> Plan client
             </Link>
-            <Link href={`/studio?cloneFrom=${post.id}`} className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors p-2 rounded-lg hover:bg-gray-800/40">
-              <Copy className="w-3.5 h-3.5" /> Dupliquer dans le Studio
-            </Link>
+            <div className="p-2">
+              <DuplicatePostButton postId={post.id} className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors" />
+            </div>
           </div>
         </div>
       </div>

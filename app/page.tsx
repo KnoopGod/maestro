@@ -35,7 +35,7 @@ export default async function HomePage() {
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
       listExpiringTokens(14),
-      listUpcomingPosts(),
+      listUpcomingPosts(7 * 24 * 60 * 60 * 1000),
       listClients(),
       listRecentlyFailedPosts(),
       listPostsWithRecentPortalFeedback(),
@@ -133,10 +133,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Today's schedule */}
+      {/* Week schedule */}
       <section aria-labelledby="today-heading">
         <h2 id="today-heading" className="text-[8px] text-blue-600/60 font-mono tracking-[0.3em] uppercase mb-3">
-          {'// PLANIFIÉ AUJOURD\'HUI'}
+          {'// PLANIFIÉ — 7 JOURS'}
         </h2>
         <TodayScheduleWidget posts={todayPosts} clientsMap={clientsMap} />
       </section>

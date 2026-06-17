@@ -8,6 +8,7 @@ import type { Client } from '@/types/client'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
+import { DuplicatePostButton } from '@/components/posts/DuplicatePostButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -185,9 +186,33 @@ function MonthGroupedPosts({ posts, clientsMap }: { posts: Post[]; clientsMap: M
   }
 
   const sortedKeys = [...groups.keys()].sort((a, b) => (a === 'none' ? 1 : b === 'none' ? -1 : b.localeCompare(a)))
+  const currentMonthKey = (() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })()
 
   return (
     <div className="space-y-8">
+      {/* Month anchor navigation */}
+      {sortedKeys.length > 1 && (
+        <div className="flex flex-wrap gap-2 pb-1 border-b border-gray-800">
+          {sortedKeys.map(key => (
+            <a
+              key={key}
+              href={`#month-${key}`}
+              title={`Aller à ${formatMonthLabel(key)}`}
+              className={`text-xs px-2.5 py-1 rounded-lg transition-colors capitalize ${
+                key === currentMonthKey
+                  ? 'bg-purple-600/30 border border-purple-600/40 text-purple-300'
+                  : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+              }`}
+            >
+              {formatMonthLabel(key)}
+            </a>
+          ))}
+        </div>
+      )}
+
       {sortedKeys.map(key => {
         const group = groups.get(key)!
         const statusCounts = group.reduce<Record<string, number>>((acc, p) => {
@@ -195,7 +220,7 @@ function MonthGroupedPosts({ posts, clientsMap }: { posts: Post[]; clientsMap: M
           return acc
         }, {})
         return (
-          <div key={key}>
+          <div key={key} id={`month-${key}`}>
             <div className="flex items-center gap-3 mb-3">
               <h2 className="text-sm font-semibold text-gray-400 capitalize">
                 {formatMonthLabel(key)}
@@ -392,6 +417,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
                 <Copy className="w-3 h-3" />
                 Réutiliser
               </Link>
+              <DuplicatePostButton postId={post.id} className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-300 hover:underline transition-colors" />
             </div>
           </div>
         </div>
