@@ -230,8 +230,8 @@ function TimelineRow({ post, client, now }: { post: Post; client: ClientWithStat
 
   return (
     <Link
-      href={`/validation#${post.id}`}
-      title="Ouvrir ce post dans la file de validation pour le relire, planifier ou publier"
+      href={`/posts/${post.id}?from=calendar`}
+      title="Ouvrir la fiche complète de ce post pour le relire, planifier ou publier"
       className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
     >
       <Icon className={`w-4 h-4 ${cfg.color.split(' ')[0]} flex-shrink-0`} />

@@ -344,6 +344,17 @@ export async function countPostsByStatus(statuses: PostStatus[]): Promise<number
   return row?.count ?? 0
 }
 
+export async function resetPostToDraft(id: string): Promise<Post> {
+  const now = Date.now()
+  await db.execute({
+    sql: `UPDATE posts SET status = 'draft', error = NULL, scheduled_at = NULL, updated_at = ? WHERE id = ?`,
+    args: [now, id],
+  })
+  const post = await getPost(id)
+  if (!post) throw new Error('Post introuvable')
+  return post
+}
+
 export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {
   const rows = await query<PostRow>(
     `SELECT * FROM posts WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ? ORDER BY scheduled_at ASC`,

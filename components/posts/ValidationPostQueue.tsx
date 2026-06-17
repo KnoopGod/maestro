@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, CheckSquare, Edit3, Loader2, Trash2, X } from 'lucide-react'
+import { AlertCircle, CheckSquare, Edit3, Eye, Loader2, Search, Trash2, X } from 'lucide-react'
 import { PostActions, PostSupervisor } from '@/components/posts/PostActions'
 import { DeletePostButton } from '@/components/posts/DeletePostButton'
+import { PostQuickButton } from '@/components/posts/PostQuickButtons'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
 
@@ -36,9 +37,37 @@ export function ValidationPostQueue({
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [query, setQuery] = useState('')
+  const [clientFilter, setClientFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [sort, setSort] = useState<'created-desc' | 'impact-desc' | 'impact-asc'>('created-desc')
 
   const clientsMap = useMemo(() => new Map(clients.map(client => [client.id, client])), [clients])
-  const selectedPosts = posts.filter(post => selectedIds.includes(post.id))
+  const visiblePosts = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+
+    return posts
+      .filter(post => clientFilter === 'all' || post.clientId === clientFilter)
+      .filter(post => statusFilter === 'all' || post.status === statusFilter)
+      .filter(post => {
+        if (!normalizedQuery) return true
+        const client = clientsMap.get(post.clientId)
+        const haystack = [
+          post.brief,
+          post.caption,
+          post.hashtags.join(' '),
+          post.error ?? '',
+          client?.name ?? '',
+        ].join(' ').toLowerCase()
+        return haystack.includes(normalizedQuery)
+      })
+      .sort((a, b) => {
+        if (sort === 'impact-desc') return b.impactScore - a.impactScore
+        if (sort === 'impact-asc') return a.impactScore - b.impactScore
+        return b.createdAt - a.createdAt
+      })
+  }, [clientFilter, clientsMap, posts, query, sort, statusFilter])
+  const selectedPosts = visiblePosts.filter(post => selectedIds.includes(post.id))
 
   function toggleSelectionMode() {
     setSelectionMode(prev => !prev)
@@ -52,7 +81,7 @@ export function ValidationPostQueue({
   }
 
   function selectAll() {
-    setSelectedIds(posts.map(post => post.id))
+    setSelectedIds(visiblePosts.map(post => post.id))
   }
 
   function clearSelection() {
@@ -90,7 +119,7 @@ export function ValidationPostQueue({
         <div className="text-sm text-gray-400">
           {selectionMode
             ? `${selectedIds.length} post${selectedIds.length > 1 ? 's' : ''} sélectionné${selectedIds.length > 1 ? 's' : ''}`
-            : `${posts.length} post${posts.length > 1 ? 's' : ''} à traiter`}
+            : `${visiblePosts.length} / ${posts.length} post${posts.length > 1 ? 's' : ''} à traiter`}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {selectionMode && (
@@ -135,8 +164,59 @@ export function ValidationPostQueue({
         </div>
       )}
 
+      <div className="grid gap-2 rounded-2xl border border-gray-800 bg-gray-900/30 p-3 md:grid-cols-[1fr_180px_150px_150px]">
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+          <input
+            value={query}
+            onChange={event => setQuery(event.target.value)}
+            placeholder="Rechercher un client, brief, caption ou hashtag..."
+            title="Filtrer la file de validation sans recharger la page"
+            className="h-10 w-full rounded-lg border border-gray-800 bg-gray-950 pl-9 pr-3 text-sm text-gray-200 outline-none transition-colors placeholder:text-gray-600 focus:border-purple-700"
+          />
+        </label>
+        <select
+          value={clientFilter}
+          onChange={event => setClientFilter(event.target.value)}
+          title="Afficher uniquement les posts d'un client"
+          className="h-10 rounded-lg border border-gray-800 bg-gray-950 px-3 text-sm text-gray-200 outline-none focus:border-purple-700"
+        >
+          <option value="all">Tous les clients</option>
+          {clients.map(client => (
+            <option key={client.id} value={client.id}>{client.name}</option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={event => setStatusFilter(event.target.value)}
+          title="Filtrer par statut de validation"
+          className="h-10 rounded-lg border border-gray-800 bg-gray-950 px-3 text-sm text-gray-200 outline-none focus:border-purple-700"
+        >
+          <option value="all">Tous statuts</option>
+          <option value="draft">Brouillons</option>
+          <option value="ready">Prêts</option>
+          <option value="failed">Échecs</option>
+        </select>
+        <select
+          value={sort}
+          onChange={event => setSort(event.target.value as typeof sort)}
+          title="Changer l'ordre d'affichage"
+          className="h-10 rounded-lg border border-gray-800 bg-gray-950 px-3 text-sm text-gray-200 outline-none focus:border-purple-700"
+        >
+          <option value="created-desc">Plus récents</option>
+          <option value="impact-desc">Impact fort</option>
+          <option value="impact-asc">Impact faible</option>
+        </select>
+      </div>
+
+      {visiblePosts.length === 0 && (
+        <div className="rounded-2xl border border-gray-800 bg-gray-900/30 p-6 text-center text-sm text-gray-500">
+          Aucun post ne correspond aux filtres actuels.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {posts.map(post => (
+        {visiblePosts.map(post => (
           <PostCard
             key={post.id}
             post={post}
@@ -259,6 +339,17 @@ function PostCard({
       <PostSupervisor post={post} />
       <div className="flex flex-wrap justify-end gap-2">
         {!selectionMode && <DeletePostButton postId={post.id} />}
+        {!selectionMode && post.status === 'draft' && <PostQuickButton postId={post.id} action="mark-ready" />}
+        {!selectionMode && post.status === 'failed' && <PostQuickButton postId={post.id} action="reset" />}
+        {!selectionMode && <PostQuickButton postId={post.id} action="duplicate" redirectToPost />}
+        <Link
+          href={`/posts/${post.id}?from=validation`}
+          title="Ouvrir la fiche complète du post avec contexte, feedback client, métriques et actions"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm transition-colors"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          Détail
+        </Link>
         <Link
           href={`/studio?postId=${post.id}`}
           title="Ouvrir ce draft dans le Studio pour modifier le brief, le texte ou le visuel avant publication"

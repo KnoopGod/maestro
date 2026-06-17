@@ -166,7 +166,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
+    <article className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
       <div className="flex items-start gap-4">
         {/* Image / placeholder */}
         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -210,9 +210,13 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
             </span>
           </div>
 
-          <p className="text-sm text-gray-200 line-clamp-2 leading-snug">
+          <Link
+            href={`/posts/${post.id}?from=plan`}
+            title="Ouvrir la fiche complète de ce post"
+            className="block text-sm text-gray-200 line-clamp-2 leading-snug hover:text-white hover:underline"
+          >
             {post.caption}
-          </p>
+          </Link>
 
           {post.hashtags.length > 0 && (
             <p className="text-[11px] text-blue-400 mt-1 line-clamp-1">
@@ -277,6 +281,6 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
           </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
