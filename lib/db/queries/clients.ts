@@ -15,6 +15,7 @@ interface ClientRow {
   color: string
   description: string | null
   client_summary: string | null
+  internal_notes: string | null
   brand_voice_tone: string | null
   brand_voice_keywords: string | null
   brand_voice_avoid: string | null
@@ -51,6 +52,7 @@ function mapRow(row: ClientRow): Client {
     color: row.color,
     description: row.description,
     clientSummary: row.client_summary,
+    internalNotes: row.internal_notes,
     brandVoiceTone: row.brand_voice_tone,
     brandVoiceKeywords: row.brand_voice_keywords,
     brandVoiceAvoid: row.brand_voice_avoid,
@@ -224,6 +226,7 @@ export async function updateClient(
     color: 'color',
     description: 'description',
     clientSummary: 'client_summary',
+    internalNotes: 'internal_notes',
     brandVoiceTone: 'brand_voice_tone',
     brandVoiceKeywords: 'brand_voice_keywords',
     brandVoiceAvoid: 'brand_voice_avoid',

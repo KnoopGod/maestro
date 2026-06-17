@@ -399,6 +399,25 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
+      {/* Internal notes */}
+      {client.internalNotes ? (
+        <div className="bg-amber-950/20 border border-amber-800/30 rounded-2xl p-5">
+          <div className="flex items-start justify-between gap-4 mb-2">
+            <h2 className="text-sm font-semibold text-amber-200 flex items-center gap-2">
+              📋 Notes internes agence
+            </h2>
+            <Link
+              href={`/clients/${client.id}/edit`}
+              title="Modifier les notes internes"
+              className="text-xs text-amber-400/70 hover:text-amber-300 hover:underline flex-shrink-0"
+            >
+              Modifier →
+            </Link>
+          </div>
+          <p className="text-sm text-amber-100/70 leading-relaxed whitespace-pre-wrap">{client.internalNotes}</p>
+        </div>
+      ) : null}
+
       {/* Recent activity — real posts */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">

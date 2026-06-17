@@ -125,6 +125,27 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
           </div>
         </fieldset>
 
+        {/* Notes internes */}
+        <fieldset className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+          <legend className="text-sm font-semibold text-white px-1">Notes internes</legend>
+          <div className="mt-3">
+            <label htmlFor="internalNotes" className="block text-xs text-gray-400 mb-1.5">
+              Notes agence (non visibles par le client)
+            </label>
+            <textarea
+              id="internalNotes"
+              name="internalNotes"
+              defaultValue={client.internalNotes ?? ''}
+              rows={4}
+              placeholder="Ex: Client contacté le 12/06, préfère les publications le vendredi soir. Éviter de mentionner la concurrence directe. Budget limité — max 3 posts/sem."
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-amber-500 resize-y"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">
+              Informations opérationnelles internes : contacts, contraintes, historique agence. Jamais transmises aux agents IA.
+            </p>
+          </div>
+        </fieldset>
+
         {/* Brand voice */}
         <fieldset className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-4">
           <legend className="text-sm font-semibold text-white px-1">Voix de marque</legend>

@@ -170,4 +170,6 @@ export async function initSchema() {
   await migrateMultiUsersFoundation()
   const { migrateAddPostPillar } = await import('./migrations/013-add-post-pillar')
   await migrateAddPostPillar()
+  const { migrateClientNotes } = await import('./migrations/014-add-client-notes')
+  await migrateClientNotes()
 }

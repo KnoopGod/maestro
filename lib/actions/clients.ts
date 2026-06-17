@@ -56,7 +56,7 @@ export async function updateClientAction(id: string, formData: FormData) {
   }
 
   // Optional fields — null if empty
-  const optionalFields = ['city', 'description', 'clientSummary', 'brandVoiceTone', 'brandVoiceKeywords', 'brandVoiceAvoid']
+  const optionalFields = ['city', 'description', 'clientSummary', 'internalNotes', 'brandVoiceTone', 'brandVoiceKeywords', 'brandVoiceAvoid']
   for (const field of optionalFields) {
     const val = formData.get(field)
     if (val !== null) {

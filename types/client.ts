@@ -21,6 +21,7 @@ export interface Client {
   color: string
   description: string | null
   clientSummary: string | null
+  internalNotes: string | null
   brandVoiceTone: string | null
   brandVoiceKeywords: string | null
   brandVoiceAvoid: string | null
