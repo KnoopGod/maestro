@@ -19,9 +19,9 @@ const STATUS_INFO: Record<string, { label: string; color: string; icon: typeof C
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>
+  searchParams: Promise<{ week?: string; client?: string }>
 }) {
-  const { week: weekParam } = await searchParams
+  const { week: weekParam, client: clientFilter } = await searchParams
   const weekOffset = parseInt(weekParam ?? '0', 10) || 0
 
   // Toutes les statuses : la vue semaine affiche aussi les posts publiés
@@ -32,11 +32,13 @@ export default async function CalendarPage({
   const clientsMap = new Map<string, ClientWithStats>(clients.map(c => [c.id, c]))
 
   // Sort: scheduled posts first (by date asc), then drafts/ready (newest first), then published (newest first)
-  const planned = posts
+  const filteredPosts = clientFilter ? posts.filter(p => p.clientId === clientFilter) : posts
+
+  const planned = filteredPosts
     .filter(p => p.status === 'scheduled')
     .sort((a, b) => (a.scheduledAt ?? 0) - (b.scheduledAt ?? 0))
 
-  const inProgress = posts
+  const inProgress = filteredPosts
     .filter(p => p.status === 'draft' || p.status === 'ready')
     .sort((a, b) => b.createdAt - a.createdAt)
 
@@ -76,10 +78,27 @@ export default async function CalendarPage({
   }
 
   const activeClients = clients.filter(c => c.status === 'active')
+  const displayedClients = clientFilter
+    ? activeClients.filter(c => c.id === clientFilter)
+    : activeClients
   const todayIndex = weekOffset === 0 ? (today.getDay() + 6) % 7 : -1
 
-  const prevWeekHref = `/calendar?week=${weekOffset - 1}`
-  const nextWeekHref = `/calendar?week=${weekOffset + 1}`
+  function calUrl(overrides: Record<string, string | undefined>) {
+    const p = new URLSearchParams()
+    const params: Record<string, string | undefined> = {
+      week: weekOffset !== 0 ? String(weekOffset) : undefined,
+      client: clientFilter,
+      ...overrides,
+    }
+    for (const [k, v] of Object.entries(params)) {
+      if (v) p.set(k, v)
+    }
+    const qs = p.toString()
+    return `/calendar${qs ? `?${qs}` : ''}`
+  }
+
+  const prevWeekHref = calUrl({ week: String(weekOffset - 1) })
+  const nextWeekHref = calUrl({ week: String(weekOffset + 1) })
   const weekRangeLabel = `${weekStart.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} – ${weekDays[6].toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
 
   return (
@@ -114,7 +133,7 @@ export default async function CalendarPage({
           </div>
           {weekOffset !== 0 && (
             <Link
-              href="/calendar"
+              href={calUrl({ week: undefined })}
               className="px-3 py-2 rounded-lg border border-indigo-700/50 text-indigo-300 hover:bg-indigo-950/30 text-xs transition-colors"
             >
               Aujourd&apos;hui
@@ -146,6 +165,34 @@ export default async function CalendarPage({
         <StatBox label="Prochains 7 jours" value={next7d} color="text-purple-400" />
       </div>
 
+      {/* Client filter chips */}
+      {activeClients.length > 1 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-gray-500">Client :</span>
+          <Link
+            href={calUrl({ client: undefined })}
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              !clientFilter ? 'bg-purple-600 border-purple-600 text-white' : 'border-gray-700 text-gray-400 hover:border-gray-500'
+            }`}
+          >
+            Tous
+          </Link>
+          {activeClients.map(c => (
+            <Link
+              key={c.id}
+              href={clientFilter === c.id ? calUrl({ client: undefined }) : calUrl({ client: c.id })}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                clientFilter === c.id
+                  ? 'bg-purple-600 border-purple-600 text-white'
+                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
+              }`}
+            >
+              {c.emoji} {c.name}
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* Weekly grid */}
       {activeClients.length > 0 && (
         <section className="bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden">
@@ -175,7 +222,7 @@ export default async function CalendarPage({
                 </tr>
               </thead>
               <tbody>
-                {activeClients.map((c, idx) => {
+                {displayedClients.map((c, idx) => {
                   const dayMap = clientDayMap.get(c.id) ?? new Map()
                   return (
                     <tr key={c.id} className={`border-b border-gray-800/50 ${idx % 2 === 1 ? 'bg-gray-900/20' : ''}`}>

@@ -302,7 +302,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           </Link>
         </div>
       ) : (
-        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} />
+        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} now={new Date().getTime()} />
       )}
     </div>
   )
@@ -331,7 +331,7 @@ function formatMonthLabel(key: string): string {
   })
 }
 
-function MonthGroupedPosts({ posts, clientsMap, searchQuery }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string }) {
+function MonthGroupedPosts({ posts, clientsMap, searchQuery, now }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string; now: number }) {
   const groups = new Map<string, Post[]>()
   for (const post of posts) {
     const key = getPostMonth(post)
@@ -395,7 +395,7 @@ function MonthGroupedPosts({ posts, clientsMap, searchQuery }: { posts: Post[]; 
             </div>
             <div className="space-y-3">
               {group.map(p => (
-                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} />
+                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} />
               ))}
             </div>
           </div>
@@ -433,7 +433,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   )
 }
 
-function PostRow({ post, client, searchQuery }: { post: Post; client: Client | undefined; searchQuery?: string }) {
+function PostRow({ post, client, searchQuery, now }: { post: Post; client: Client | undefined; searchQuery?: string; now: number }) {
   const statusCfg = STATUS_INFO[post.status]
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
@@ -556,7 +556,17 @@ function PostRow({ post, client, searchQuery }: { post: Post; client: Client | u
             <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-gray-600">
               <span>Prochaine étape : {progress.nextStep}</span>
               <span>ETA : {progress.eta}</span>
-              <span>{formatTime(post.createdAt)}</span>
+              {post.status === 'scheduled' && post.scheduledAt ? (
+                <>
+                  <span className={`flex items-center gap-1 ${post.scheduledAt < now ? 'text-red-400' : 'text-blue-400'}`}>
+                    📅 {formatTime(post.scheduledAt)}
+                    {post.scheduledAt < now && <span className="text-[9px] px-1 rounded bg-red-900/40 border border-red-700/30">en retard</span>}
+                  </span>
+                  <span className="text-gray-700">{formatTime(post.createdAt)}</span>
+                </>
+              ) : (
+                <span>{formatTime(post.createdAt)}</span>
+              )}
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
               <Link
