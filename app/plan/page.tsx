@@ -44,12 +44,13 @@ function formatRelative(ts: number): string {
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string }> }) {
   const { client: clientFilter, status: statusFilter } = await searchParams
 
+  const showInsights = statusFilter === 'published'
   const [posts, clients] = await Promise.all([
     listPosts({
       clientId: clientFilter,
       status: statusFilter as PostStatus | undefined,
       limit: 100,
-      includeInsights: false,
+      includeInsights: showInsights,
     }),
     listClients(),
   ])
@@ -230,6 +231,21 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
               <PublishErrorHint error={post.error} clientId={post.clientId} />
             </>
           )}
+
+          {/* Engagement insights (published posts with data) */}
+          {post.status === 'published' && post.metaInsights.length > 0 && (() => {
+            const ins = post.metaInsights[0]
+            const engRate = ins.reach > 0 ? (((ins.likes ?? 0) + (ins.comments ?? 0) + (ins.shares ?? 0)) / ins.reach * 100).toFixed(1) : null
+            return (
+              <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-gray-500 bg-gray-900/40 rounded-lg px-3 py-1.5">
+                {ins.reach > 0 && <span className="text-gray-400">👁 {ins.reach.toLocaleString('fr-FR')} portée</span>}
+                {(ins.likes ?? 0) > 0 && <span>❤️ {ins.likes}</span>}
+                {(ins.comments ?? 0) > 0 && <span>💬 {ins.comments}</span>}
+                {(ins.shares ?? 0) > 0 && <span>↗ {ins.shares}</span>}
+                {engRate && <span className="text-emerald-400 font-medium">{engRate}% engagement</span>}
+              </div>
+            )
+          })()}
 
           {/* Published links */}
           {post.status === 'published' && Object.keys(post.metaPostIds).length > 0 && (
