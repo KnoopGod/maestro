@@ -415,6 +415,55 @@ export async function listRecentlyFailedPosts(withinMs = 48 * 60 * 60 * 1000): P
   }))
 }
 
+export interface PortalFeedbackSummary {
+  id: string
+  clientId: string
+  clientName: string
+  clientEmoji: string
+  caption: string
+  feedbackAction: 'approved' | 'changes_requested'
+  feedbackComment: string | null
+  reviewedAt: number
+  postStatus: PostStatus
+}
+
+/** Posts where clients submitted portal feedback recently (default 7 days). */
+export async function listPostsWithRecentPortalFeedback(
+  withinMs = 7 * 24 * 60 * 60 * 1000
+): Promise<PortalFeedbackSummary[]> {
+  const since = Date.now() - withinMs
+  const rows = await query<{
+    id: string; client_id: string; client_name: string; client_emoji: string;
+    caption: string; portal_feedback: string; status: string; updated_at: number;
+  }>(
+    `SELECT p.id, p.client_id, c.name AS client_name, c.emoji AS client_emoji,
+            p.caption, p.portal_feedback, p.status, p.updated_at
+     FROM posts p
+     JOIN clients c ON c.id = p.client_id
+     WHERE p.portal_feedback IS NOT NULL AND p.updated_at > ?
+     ORDER BY p.updated_at DESC
+     LIMIT 10`,
+    [since]
+  )
+  return rows.flatMap(r => {
+    try {
+      const fb = JSON.parse(r.portal_feedback) as { action: string; comment?: string; reviewedAt: number }
+      if (fb.action !== 'approved' && fb.action !== 'changes_requested') return []
+      return [{
+        id: r.id,
+        clientId: r.client_id,
+        clientName: r.client_name,
+        clientEmoji: r.client_emoji,
+        caption: r.caption,
+        feedbackAction: fb.action as 'approved' | 'changes_requested',
+        feedbackComment: fb.comment ?? null,
+        reviewedAt: fb.reviewedAt,
+        postStatus: r.status as PostStatus,
+      }]
+    } catch { return [] }
+  })
+}
+
 /** Posts scheduled within the next `withinMs` ms (default: rest of today). */
 export async function listUpcomingPosts(withinMs?: number): Promise<Post[]> {
   const now = Date.now()

@@ -2,11 +2,12 @@ import type React from 'react'
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats, listClients } from '@/lib/db/queries/clients'
-import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts } from '@/lib/db/queries/posts'
+import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts, listPostsWithRecentPortalFeedback } from '@/lib/db/queries/posts'
 import { listExpiringTokens } from '@/lib/db/queries/social-accounts'
 import { SetupBanner } from '@/components/SetupBanner'
 import { TokenExpiryBanner } from '@/components/TokenExpiryBanner'
 import { FailedPostsAlert } from '@/components/dashboard/FailedPostsAlert'
+import { PortalFeedbackAlert } from '@/components/dashboard/PortalFeedbackAlert'
 import { TodayScheduleWidget } from '@/components/dashboard/TodayScheduleWidget'
 import { CLIENT_TYPES } from '@/types/client'
 import type { Client } from '@/types/client'
@@ -27,14 +28,16 @@ export default async function HomePage() {
   let todayPosts: Awaited<ReturnType<typeof listUpcomingPosts>> = []
   let allClients: Client[] = []
   let failedPosts: Awaited<ReturnType<typeof listRecentlyFailedPosts>> = []
+  let portalFeedbackPosts: Awaited<ReturnType<typeof listPostsWithRecentPortalFeedback>> = []
   try {
-    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts] = await Promise.all([
+    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts, portalFeedbackPosts] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
       listExpiringTokens(14),
       listUpcomingPosts(),
       listClients(),
       listRecentlyFailedPosts(),
+      listPostsWithRecentPortalFeedback(),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
@@ -64,6 +67,7 @@ export default async function HomePage() {
       <SetupBanner />
       <TokenExpiryBanner tokens={expiringTokens} />
       <FailedPostsAlert posts={failedPosts} />
+      <PortalFeedbackAlert posts={portalFeedbackPosts} />
 
       {/* Header */}
       <div className="border-b border-indigo-950/60 pb-5">

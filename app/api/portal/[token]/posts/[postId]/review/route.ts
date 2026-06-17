@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClientByPortalToken } from '@/lib/db/queries/portal'
 import { getPost, setPortalFeedback } from '@/lib/db/queries/posts'
+import { notifyWebhook } from '@/lib/webhook/notify'
 import type { PortalFeedback } from '@/types/post'
 
 export async function POST(
@@ -49,6 +50,19 @@ export async function POST(
     reviewedAt: Date.now(),
   }
   const updated = await setPortalFeedback(postId, feedback)
+
+  notifyWebhook({
+    event: action === 'approved' ? 'portal.approved' : 'portal.changes_requested',
+    timestamp: feedback.reviewedAt,
+    post: {
+      id: post.id,
+      clientName: client.name,
+      platforms: post.platforms,
+      imageUrl: post.imageUrl,
+      caption: post.caption,
+      portalComment: feedback.comment || undefined,
+    },
+  }).catch(() => undefined)
 
   return NextResponse.json({ ok: true, status: updated.status })
 }

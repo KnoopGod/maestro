@@ -1,7 +1,7 @@
 import { logWebhookDelivery } from '@/lib/db/queries/webhook-log'
 
-interface WebhookPayload {
-  event: 'post.published' | 'post.failed' | 'post.scheduled'
+export interface WebhookPayload {
+  event: 'post.published' | 'post.failed' | 'post.scheduled' | 'portal.approved' | 'portal.changes_requested'
   timestamp: number
   post: {
     id: string
@@ -14,6 +14,7 @@ interface WebhookPayload {
     scheduledAt?: number | null
     error?: string | null
     cost?: number
+    portalComment?: string
   }
 }
 
