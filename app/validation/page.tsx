@@ -270,6 +270,9 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
         <div className="flex items-center gap-2">
           <PostDeleteButton post={post} />
           <CopyCaptionButton post={post} />
+          <Link href={`/posts/${post.id}`} title="Voir le détail complet de ce post" className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-gray-800 hover:border-gray-700">
+            Détail
+          </Link>
         </div>
         <PostInlineEditor post={post} />
       </div>

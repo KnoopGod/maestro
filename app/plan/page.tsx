@@ -310,6 +310,13 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
               <Link
+                href={`/posts/${post.id}`}
+                title="Voir le détail complet de ce post"
+                className="flex items-center gap-1 text-gray-500 hover:text-gray-300 hover:underline"
+              >
+                Détail
+              </Link>
+              <Link
                 href={`/studio?cloneFrom=${post.id}`}
                 title="Réutiliser le brief de ce post comme template dans le Studio"
                 className="ml-auto flex items-center gap-1 text-indigo-400 hover:text-indigo-300 hover:underline"
