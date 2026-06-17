@@ -2,10 +2,11 @@ import type React from 'react'
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats, listClients } from '@/lib/db/queries/clients'
-import { countPostsByStatus, listUpcomingPosts } from '@/lib/db/queries/posts'
+import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts } from '@/lib/db/queries/posts'
 import { listExpiringTokens } from '@/lib/db/queries/social-accounts'
 import { SetupBanner } from '@/components/SetupBanner'
 import { TokenExpiryBanner } from '@/components/TokenExpiryBanner'
+import { FailedPostsAlert } from '@/components/dashboard/FailedPostsAlert'
 import { TodayScheduleWidget } from '@/components/dashboard/TodayScheduleWidget'
 import { CLIENT_TYPES } from '@/types/client'
 import type { Client } from '@/types/client'
@@ -25,13 +26,15 @@ export default async function HomePage() {
   let expiringTokens: Awaited<ReturnType<typeof listExpiringTokens>> = []
   let todayPosts: Awaited<ReturnType<typeof listUpcomingPosts>> = []
   let allClients: Client[] = []
+  let failedPosts: Awaited<ReturnType<typeof listRecentlyFailedPosts>> = []
   try {
-    ;[clients, toValidate, expiringTokens, todayPosts, allClients] = await Promise.all([
+    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
       listExpiringTokens(14),
       listUpcomingPosts(),
       listClients(),
+      listRecentlyFailedPosts(),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
@@ -60,6 +63,7 @@ export default async function HomePage() {
     <div className="space-y-8">
       <SetupBanner />
       <TokenExpiryBanner tokens={expiringTokens} />
+      <FailedPostsAlert posts={failedPosts} />
 
       {/* Header */}
       <div className="border-b border-indigo-950/60 pb-5">

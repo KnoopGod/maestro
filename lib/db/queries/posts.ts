@@ -344,6 +344,37 @@ export async function listDuePosts(now: number = Date.now()): Promise<Post[]> {
   return rows.map(mapRow)
 }
 
+export interface FailedPostSummary {
+  id: string
+  clientId: string
+  clientName: string
+  error: string | null
+  platforms: string[]
+  updatedAt: number
+}
+
+/** Posts that failed within the last `withinMs` ms (default 48h). */
+export async function listRecentlyFailedPosts(withinMs = 48 * 60 * 60 * 1000): Promise<FailedPostSummary[]> {
+  const since = Date.now() - withinMs
+  const rows = await query<{ id: string; client_id: string; client_name: string; error: string | null; platforms: string; updated_at: number }>(
+    `SELECT p.id, p.client_id, c.name AS client_name, p.error, p.platforms, p.updated_at
+     FROM posts p
+     JOIN clients c ON c.id = p.client_id
+     WHERE p.status = 'failed' AND p.updated_at > ?
+     ORDER BY p.updated_at DESC
+     LIMIT 10`,
+    [since]
+  )
+  return rows.map(r => ({
+    id: r.id,
+    clientId: r.client_id,
+    clientName: r.client_name,
+    error: r.error,
+    platforms: JSON.parse(r.platforms || '[]') as string[],
+    updatedAt: r.updated_at,
+  }))
+}
+
 /** Posts scheduled within the next `withinMs` ms (default: rest of today). */
 export async function listUpcomingPosts(withinMs?: number): Promise<Post[]> {
   const now = Date.now()
