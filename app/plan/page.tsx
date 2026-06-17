@@ -98,11 +98,11 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatBox label="Total" value={posts.length} color="text-white" />
-        <StatBox label="Publiés" value={totalPublished} color="text-emerald-400" />
-        <StatBox label="Planifiés" value={totalScheduled} color="text-blue-400" />
-        <StatBox label="Brouillons" value={totalDraft} color="text-amber-400" />
-        <StatBox label="Échecs" value={totalFailed} color="text-red-400" />
+        <StatBox label="Total"     value={posts.length}   color="text-white"       href="/plan"                   active={!clientFilter && !statusFilter && !searchQuery} />
+        <StatBox label="Publiés"   value={totalPublished} color="text-emerald-400" href="/plan?status=published"  active={statusFilter === 'published'} />
+        <StatBox label="Planifiés" value={totalScheduled} color="text-blue-400"    href="/plan?status=scheduled"  active={statusFilter === 'scheduled'} />
+        <StatBox label="Brouillons" value={totalDraft}    color="text-amber-400"   href="/plan?status=draft"      active={statusFilter === 'draft'} />
+        <StatBox label="Échecs"    value={totalFailed}    color="text-red-400"     href="/plan?status=failed"     active={statusFilter === 'failed'} />
       </div>
 
       {/* Filters */}
@@ -251,13 +251,16 @@ function MonthGroupedPosts({ posts, clientsMap }: { posts: Post[]; clientsMap: M
   )
 }
 
-function StatBox({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div title={`${label} : ${value}`} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
+function StatBox({ label, value, color, href, active }: { label: string; value: number; color: string; href?: string; active?: boolean }) {
+  const inner = (
+    <div title={`Filtrer : ${label}`} className={`bg-gray-900/40 border rounded-xl p-4 transition-colors ${
+      active ? 'border-purple-700/60 bg-purple-950/10' : 'border-gray-800 hover:border-gray-700'
+    }`}>
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
     </div>
   )
+  return href ? <Link href={href} title={`Filtrer le plan : ${label}`}>{inner}</Link> : inner
 }
 
 function FilterChip({ href, label, active }: { href: string; label: string; active: boolean }) {

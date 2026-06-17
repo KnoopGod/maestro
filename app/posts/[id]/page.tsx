@@ -205,6 +205,16 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <h2 className="text-xs font-semibold text-gray-400">Métadonnées</h2>
 
             <MetaRow label="Impact score" value={`${post.impactScore}/100`} />
+            {post.impactAnalysis && (
+              <details className="text-xs">
+                <summary className="cursor-pointer text-gray-500 hover:text-gray-300 transition-colors select-none">
+                  Analyse d&apos;impact ▾
+                </summary>
+                <p className="mt-2 text-gray-400 leading-relaxed bg-gray-950/40 border border-gray-800 rounded-lg p-2">
+                  {post.impactAnalysis}
+                </p>
+              </details>
+            )}
             {post.cost > 0 && (
               <MetaRow label="Coût IA" value={`$${post.cost.toFixed(4)}`} icon={DollarSign} />
             )}

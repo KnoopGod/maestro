@@ -63,6 +63,10 @@ export default async function ValidationPage({
     ? [await listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false })]
     : [queue]
   const clientsInQueue = clients.filter(c => allQueue.some(p => p.clientId === c.id))
+  const countByClient = allQueue.reduce<Record<string, number>>((acc, p) => {
+    acc[p.clientId] = (acc[p.clientId] ?? 0) + 1
+    return acc
+  }, {})
 
   const draftCount = queue.filter(p => p.status === 'draft').length
   const readyCount = queue.filter(p => p.status === 'ready').length
@@ -125,14 +129,14 @@ export default async function ValidationPage({
               <Link
                 key={c.id}
                 href={buildUrl({ client: c.id, sort: sortParam })}
-                title={`Filtrer par ${c.name}`}
+                title={`Filtrer par ${c.name} (${countByClient[c.id] ?? 0} posts)`}
                 className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                   clientFilter === c.id
                     ? 'bg-purple-600 border-purple-600 text-white'
                     : 'border-gray-700 text-gray-400 hover:border-gray-500'
                 }`}
               >
-                {c.emoji} {c.name}
+                {c.emoji} {c.name} ({countByClient[c.id] ?? 0})
               </Link>
             ))}
           </div>
