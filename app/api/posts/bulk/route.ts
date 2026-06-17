@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPost, setPostStatus, deletePost } from '@/lib/db/queries/posts'
+import { getPost, setPostStatus, deletePost, schedulePost } from '@/lib/db/queries/posts'
 import type { PostStatus } from '@/types/post'
 
-const ALLOWED_ACTIONS = ['delete', 'mark-ready', 'mark-draft'] as const
+const ALLOWED_ACTIONS = ['delete', 'mark-ready', 'mark-draft', 'schedule'] as const
 type BulkAction = (typeof ALLOWED_ACTIONS)[number]
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
-  const { ids, action } = body as { ids?: unknown; action?: unknown }
+  const { ids, action, scheduledAts } = body as { ids?: unknown; action?: unknown; scheduledAts?: unknown }
 
   if (
     !Array.isArray(ids) ||
@@ -18,8 +18,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Champs invalides' }, { status: 400 })
   }
 
+  if (action === 'schedule') {
+    if (!Array.isArray(scheduledAts) || scheduledAts.length !== ids.length) {
+      return NextResponse.json({ error: 'scheduledAts doit avoir la même longueur que ids' }, { status: 400 })
+    }
+  }
+
   const results = await Promise.allSettled(
-    (ids as string[]).map(id => processOne(id, action as BulkAction))
+    (ids as string[]).map((id, i) => processOne(
+      id,
+      action as BulkAction,
+      action === 'schedule' ? (scheduledAts as number[])[i] : undefined
+    ))
   )
   const affected = results.filter(r => r.status === 'fulfilled').length
   const errors = results
@@ -36,13 +46,17 @@ export async function POST(req: NextRequest) {
   )
 }
 
-async function processOne(id: string, action: BulkAction) {
+async function processOne(id: string, action: BulkAction, scheduledAt?: number) {
   const post = await getPost(id)
   if (!post) throw new Error(`Post introuvable`)
 
   if (action === 'delete') {
     if (post.status === 'published') throw new Error(`Post déjà publié — non supprimable`)
     await deletePost(id)
+  } else if (action === 'schedule') {
+    if (post.status === 'published') throw new Error(`Post déjà publié`)
+    if (!scheduledAt || typeof scheduledAt !== 'number') throw new Error('scheduledAt manquant')
+    await schedulePost(id, scheduledAt)
   } else {
     const targetStatus: PostStatus = action === 'mark-ready' ? 'ready' : 'draft'
     const allowed: PostStatus[] = action === 'mark-ready' ? ['draft', 'failed'] : ['ready']
