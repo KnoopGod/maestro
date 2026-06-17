@@ -150,6 +150,16 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4">
               <div className="text-xs font-semibold text-gray-400 mb-2">Brief original</div>
               <p className="text-sm text-gray-400 leading-relaxed">{post.brief}</p>
+              {post.reasoning && (
+                <details className="mt-3 text-xs">
+                  <summary className="cursor-pointer text-purple-400/70 hover:text-purple-300 transition-colors select-none">
+                    Raisonnement IA ▾
+                  </summary>
+                  <p className="mt-2 text-gray-400 leading-relaxed bg-purple-950/20 border border-purple-800/20 rounded-lg p-2">
+                    {post.reasoning}
+                  </p>
+                </details>
+              )}
             </div>
           )}
 

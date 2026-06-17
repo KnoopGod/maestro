@@ -9,6 +9,7 @@ import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-p
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 import { DuplicatePostButton } from '@/components/posts/DuplicatePostButton'
+import { HighlightText } from '@/components/plan/HighlightText'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,8 +44,8 @@ function formatRelative(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR')
 }
 
-export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string }> }) {
-  const { client: clientFilter, status: statusFilter, q: searchQuery } = await searchParams
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string }> }) {
+  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter } = await searchParams
 
   const showInsights = statusFilter === 'published'
   const [posts, clients] = await Promise.all([
@@ -54,11 +55,29 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       limit: 100,
       includeInsights: showInsights,
       q: searchQuery,
+      platform: platformFilter,
     }),
     listClients(),
   ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
+
+  // Build URL helper preserving all active filters
+  function planUrl(overrides: Record<string, string | undefined>) {
+    const p = new URLSearchParams()
+    const params: Record<string, string | undefined> = {
+      client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter,
+      ...overrides,
+    }
+    for (const [k, v] of Object.entries(params)) {
+      if (v) p.set(k, v)
+    }
+    const str = p.toString()
+    return `/plan${str ? `?${str}` : ''}`
+  }
+
+  // Platforms actually present in results (for chips)
+  const platformsInResults = [...new Set(posts.flatMap(p => p.platforms))]
   const totalPublished = posts.filter(p => p.status === 'published').length
   const totalScheduled = posts.filter(p => p.status === 'scheduled').length
   const totalDraft = posts.filter(p => p.status === 'draft').length
@@ -124,6 +143,23 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
               Client : {clientsMap.get(clientFilter)?.name ?? '?'} ✕
             </Link>
           )}
+          {/* Platform filter chips */}
+          {(platformsInResults.length > 1 || platformFilter) && (
+            <>
+              <span className="text-xs text-gray-700 mx-1">|</span>
+              {platformFilter && (
+                <Link href={planUrl({ platform: undefined })} title="Retirer le filtre plateforme" className="text-xs px-2 py-1 rounded bg-blue-600/20 border border-blue-600/30 text-blue-300">
+                  {PLATFORM_INFO[platformFilter]?.emoji} {PLATFORM_INFO[platformFilter]?.label} ✕
+                </Link>
+              )}
+              {!platformFilter && platformsInResults.map(p => (
+                <Link key={p} href={planUrl({ platform: p })} title={`Filtrer : ${PLATFORM_INFO[p]?.label ?? p} uniquement`}
+                  className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:border-blue-700/50 hover:text-blue-300 transition-colors">
+                  {PLATFORM_INFO[p]?.emoji} {PLATFORM_INFO[p]?.label ?? p}
+                </Link>
+              ))}
+            </>
+          )}
         </div>
         <PlanSearchInput initialQ={searchQuery} />
         {searchQuery && (
@@ -148,7 +184,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           </Link>
         </div>
       ) : (
-        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} />
+        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} />
       )}
     </div>
   )
@@ -177,7 +213,7 @@ function formatMonthLabel(key: string): string {
   })
 }
 
-function MonthGroupedPosts({ posts, clientsMap }: { posts: Post[]; clientsMap: Map<string, Client> }) {
+function MonthGroupedPosts({ posts, clientsMap, searchQuery }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string }) {
   const groups = new Map<string, Post[]>()
   for (const post of posts) {
     const key = getPostMonth(post)
@@ -241,7 +277,7 @@ function MonthGroupedPosts({ posts, clientsMap }: { posts: Post[]; clientsMap: M
             </div>
             <div className="space-y-3">
               {group.map(p => (
-                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} />
+                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} />
               ))}
             </div>
           </div>
@@ -279,7 +315,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   )
 }
 
-function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
+function PostRow({ post, client, searchQuery }: { post: Post; client: Client | undefined; searchQuery?: string }) {
   const statusCfg = STATUS_INFO[post.status]
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
@@ -328,7 +364,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
           </div>
 
           <p className="text-sm text-gray-200 line-clamp-2 leading-snug">
-            {post.caption}
+            <HighlightText text={post.caption} query={searchQuery} />
           </p>
 
           {post.hashtags.length > 0 && (

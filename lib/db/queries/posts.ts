@@ -95,6 +95,7 @@ export async function listPosts(options?: {
   orderBy?: 'created_at' | 'published_at' | 'impact_score'
   orderDir?: 'ASC' | 'DESC'
   q?: string
+  platform?: string
 }): Promise<Post[]> {
   const conditions: string[] = []
   const args: unknown[] = []
@@ -119,6 +120,11 @@ export async function listPosts(options?: {
     const like = `%${options.q}%`
     conditions.push('(caption LIKE ? OR brief LIKE ? OR hashtags LIKE ?)')
     args.push(like, like, like)
+  }
+  if (options?.platform) {
+    // platforms is stored as JSON array; use LIKE to check for the platform string
+    conditions.push(`platforms LIKE ?`)
+    args.push(`%"${options.platform}"%`)
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''

@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ShieldCheck, AlertCircle, Sparkles, X } from 'lucide-react'
 import { MarkReadyButton } from '@/components/posts/MarkReadyButton'
+import { MarkAllReadyButton } from '@/components/posts/MarkAllReadyButton'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
@@ -87,14 +88,17 @@ export default async function ValidationPage({
             File des posts à relire avant publication ou planification
           </p>
         </div>
-        <Link
-          href="/studio"
-          title="Créer un nouveau post à ajouter dans la file de validation"
-          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
-        >
-          <Sparkles className="w-4 h-4" />
-          Nouveau post
-        </Link>
+        <div className="flex items-center gap-2">
+          <MarkAllReadyButton draftIds={queue.filter(p => p.status === 'draft').map(p => p.id)} />
+          <Link
+            href="/studio"
+            title="Créer un nouveau post à ajouter dans la file de validation"
+            className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
+          >
+            <Sparkles className="w-4 h-4" />
+            Nouveau post
+          </Link>
+        </div>
       </div>
 
       <div className="bg-purple-950/20 border border-purple-700/30 rounded-2xl p-4 text-sm text-purple-200">
