@@ -17,6 +17,7 @@ import { markPostFailed, markPostPublished, setSupervisorReview } from '@/lib/db
 import { publishToFacebook, publishToInstagram } from '@/lib/agents/meta-publisher'
 import { publishToLinkedIn } from '@/lib/agents/linkedin-publisher'
 import { supervisePost } from '@/lib/agents/supervisor'
+import { notifyWebhook } from '@/lib/webhook/notify'
 
 export interface PublishOutcome {
   post: Post
@@ -52,6 +53,11 @@ export async function publishPost(
 
   if (review.verdict === 'blocked') {
     await markPostFailed(post.id, `Supervisor blocked: ${review.summary}`)
+    notifyWebhook({
+      event: 'post.failed',
+      timestamp: Date.now(),
+      post: { id: post.id, clientName: client.name, error: `Supervisor blocked: ${review.summary}` },
+    }).catch(() => undefined)
     throw new PublishBlockedError(review)
   }
 
@@ -165,6 +171,22 @@ export async function publishPost(
   }
 
   const updated = await markPostPublished(postWithReview.id, published)
+
+  // Fire webhook non-blocking — errors are swallowed inside notifyWebhook
+  notifyWebhook({
+    event: 'post.published',
+    timestamp: Date.now(),
+    post: {
+      id: updated.id,
+      clientName: client.name,
+      platforms: updated.platforms,
+      imageUrl: updated.imageUrl,
+      caption: updated.caption,
+      hashtags: updated.hashtags,
+      publishedAt: updated.publishedAt,
+      cost: updated.cost,
+    },
+  }).catch(() => undefined)
 
   return { post: updated, review, warnings, published }
 }
