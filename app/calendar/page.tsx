@@ -278,7 +278,7 @@ function TimelineRow({ post, client, now }: { post: Post; client: ClientWithStat
 
   return (
     <Link
-      href={`/posts/${post.id}`}
+      href={`/posts/${post.id}?from=calendar`}
       title="Voir le détail de ce post"
       className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
     >

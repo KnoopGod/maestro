@@ -31,8 +31,29 @@ function formatDate(ts: number) {
   })
 }
 
-export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
+type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard'
+
+const FROM_CFG: Record<FromContext, { label: string; href: string; title: string }> = {
+  validation: { label: 'Validation',       href: '/validation', title: 'Retour à la file de validation' },
+  plan:       { label: 'Plan',             href: '/plan',       title: 'Retour au plan de contenu' },
+  calendar:   { label: 'Calendrier',       href: '/calendar',   title: 'Retour au calendrier' },
+  dashboard:  { label: 'Tableau de bord',  href: '/',           title: 'Retour au tableau de bord' },
+}
+
+export default async function PostDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ from?: string }>
+}) {
   const { id } = await params
+  const { from } = await searchParams
+  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard'] as FromContext[]).includes(from as FromContext)
+    ? (from as FromContext)
+    : 'validation'
+  const breadcrumb = FROM_CFG[fromCtx]
+
   const post = await getPost(id)
   if (!post) notFound()
 
@@ -44,9 +65,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
     <div className="space-y-6 max-w-4xl">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/validation" title="Retour à la file de validation" className="hover:text-gray-300 transition-colors flex items-center gap-1">
+        <Link href={breadcrumb.href} title={breadcrumb.title} className="hover:text-gray-300 transition-colors flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" />
-          Validation
+          {breadcrumb.label}
         </Link>
         {client && (
           <>

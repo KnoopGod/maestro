@@ -55,7 +55,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const orderDir = sortOption === 'oldest' ? 'ASC' as const : 'DESC' as const
 
   const showInsights = statusFilter === 'published'
-  const [posts, clients] = await Promise.all([
+  const [posts, allPosts, clients] = await Promise.all([
     listPosts({
       clientId: clientFilter,
       status: statusFilter as PostStatus | undefined,
@@ -67,10 +67,21 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       orderBy,
       orderDir,
     }),
+    clientFilter
+      ? listPosts({ limit: 200, includeInsights: false })
+      : Promise.resolve(null as null),
     listClients(),
   ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
+
+  // Per-client counts from the unfiltered set (for chips)
+  const baseList = allPosts ?? posts
+  const countByClient = baseList.reduce<Record<string, number>>((acc, p) => {
+    acc[p.clientId] = (acc[p.clientId] ?? 0) + 1
+    return acc
+  }, {})
+  const clientsWithPosts = clients.filter(c => countByClient[c.id])
 
   // Build URL helper preserving all active filters
   function planUrl(overrides: Record<string, string | undefined>) {
@@ -158,14 +169,27 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           <FilterChip href="/plan?status=ready" label="Prêts" active={statusFilter === 'ready'} />
           <FilterChip href="/plan?status=draft" label="Brouillons" active={statusFilter === 'draft'} />
           <FilterChip href="/plan?status=failed" label="Échecs" active={statusFilter === 'failed'} />
-          {clientFilter && (
-            <Link
-              href="/plan"
-              title="Retirer le filtre client et afficher tous les posts"
-              className="text-xs px-2 py-1 rounded bg-purple-600/30 border border-purple-600/40 text-purple-300"
-            >
-              Client : {clientsMap.get(clientFilter)?.name ?? '?'} ✕
-            </Link>
+          {clientsWithPosts.length > 1 && (
+            <>
+              <span className="text-xs text-gray-700 mx-1">|</span>
+              {clientsWithPosts.map(c => {
+                const isActive = clientFilter === c.id
+                return (
+                  <Link
+                    key={c.id}
+                    href={isActive ? planUrl({ client: undefined }) : planUrl({ client: c.id })}
+                    title={isActive ? `Retirer le filtre ${c.name}` : `Filtrer : ${c.name}`}
+                    className={`text-xs px-2 py-1 rounded border transition-colors ${
+                      isActive
+                        ? 'border-purple-600/60 bg-purple-600/20 text-purple-300'
+                        : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-200'
+                    }`}
+                  >
+                    {c.emoji} {c.name} ({countByClient[c.id] ?? 0}){isActive ? ' ✕' : ''}
+                  </Link>
+                )
+              })}
+            </>
           )}
           {/* Platform filter chips */}
           {(platformsInResults.length > 1 || platformFilter) && (
@@ -504,7 +528,7 @@ function PostRow({ post, client, searchQuery }: { post: Post; client: Client | u
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
               <Link
-                href={`/posts/${post.id}`}
+                href={`/posts/${post.id}?from=plan`}
                 title="Voir le détail complet de ce post"
                 className="flex items-center gap-1 text-gray-500 hover:text-gray-300 hover:underline"
               >

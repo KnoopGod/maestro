@@ -222,7 +222,7 @@ export default function JobDetailPage() {
       {/* Post link si terminé */}
       {job.postId && job.status === 'completed' && (
         <Link
-          href={`/posts/${job.postId}`}
+          href={`/posts/${job.postId}?from=validation`}
           className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
         >
           <ExternalLink className="w-4 h-4" />

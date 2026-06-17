@@ -98,7 +98,7 @@ export function TodayScheduleWidget({
                     </div>
 
                     <Link
-                      href={`/posts/${post.id}`}
+                      href={`/posts/${post.id}?from=dashboard`}
                       title="Voir le détail de ce post"
                       className="text-[9px] text-blue-500 hover:text-blue-300 font-mono tracking-wider transition-colors flex-shrink-0"
                     >
