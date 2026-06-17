@@ -1,7 +1,7 @@
 import type React from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket, Layers } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
@@ -170,6 +170,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <div>
             <div className="text-sm font-medium text-white">Bilan mensuel</div>
             <div className="text-[11px] text-gray-500">Livrable client · PDF</div>
+          </div>
+        </Link>
+
+        <Link href={`/studio/batch?client=${client.id}`} title="Générer un plan de contenu complet (5 posts sur des piliers variés) en une seule action" className="bg-gradient-to-br from-purple-950/40 to-indigo-950/30 border border-purple-700/30 rounded-xl p-4 hover:border-purple-500/50 transition-all flex items-center gap-3 group">
+          <Layers className="w-5 h-5 text-purple-400 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-white">Plan la semaine</div>
+            <div className="text-[11px] text-gray-500">5 posts · tous piliers</div>
           </div>
         </Link>
       </div>

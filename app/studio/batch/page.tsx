@@ -6,7 +6,12 @@ import { EmptyState } from '@/components/ui/EmptyState'
 
 export const dynamic = 'force-dynamic'
 
-export default async function BatchStudioPage() {
+export default async function BatchStudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>
+}) {
+  const { client: initialClientId } = await searchParams
   const clients = await listClients()
 
   return (
@@ -48,7 +53,7 @@ export default async function BatchStudioPage() {
           cta={{ label: 'Créer un client', href: '/clients/new', icon: Sparkles }}
         />
       ) : (
-        <BatchStudioForm clients={clients} />
+        <BatchStudioForm clients={clients} initialClientId={initialClientId} />
       )}
     </div>
   )

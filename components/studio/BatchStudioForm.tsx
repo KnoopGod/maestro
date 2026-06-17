@@ -25,8 +25,8 @@ interface BatchSlot {
 
 const COUNT_OPTIONS = [3, 5, 7] as const
 
-export function BatchStudioForm({ clients }: { clients: Client[] }) {
-  const [clientId, setClientId] = useState(clients[0]?.id || '')
+export function BatchStudioForm({ clients, initialClientId }: { clients: Client[]; initialClientId?: string }) {
+  const [clientId, setClientId] = useState(initialClientId || clients[0]?.id || '')
   const [count, setCount] = useState<3 | 5 | 7>(5)
   const [platforms, setPlatforms] = useState<Platform[]>(['instagram'])
   const [contentType, setContentType] = useState<ContentType>('photo')
