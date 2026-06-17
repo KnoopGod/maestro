@@ -68,6 +68,7 @@ export function StudioForm({
 
   const [ctaType, setCtaType] = useState<string>('')
   const [ctaUrl, setCtaUrl] = useState<string>('')
+  const [selectedPillar, setSelectedPillar] = useState<string>(initialPillar ?? cloneFromPost?.pillar ?? initialPost?.pillar ?? '')
 
   const selectedClient = clients.find(c => c.id === clientId)
   const selectedDa = clientDaStatus?.[clientId]
@@ -176,6 +177,7 @@ export function StudioForm({
             imageAssetUrl: imageMode === 'library' && selectedAsset ? selectedAsset.url : undefined,
             ctaType: ctaType || undefined,
             ctaUrl: ctaUrl || undefined,
+            pillar: selectedPillar || undefined,
           }),
         })
         const data = await res.json()
@@ -274,6 +276,31 @@ export function StudioForm({
           onApplyTemplate={text => setBriefFields(prev => ({ ...prev, subject: text }))}
           onSetTemplateCategory={setTemplateCategory}
         />
+
+        {selectedClient?.strategy?.contentPillars && selectedClient.strategy.contentPillars.length > 0 && (
+          <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 space-y-2">
+            <div className="text-[10px] uppercase tracking-wider text-gray-500">
+              Pilier de contenu <span className="text-gray-600 normal-case">(optionnel — sinon auto)</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {selectedClient.strategy.contentPillars.map(pillar => (
+                <button
+                  key={pillar}
+                  type="button"
+                  onClick={() => setSelectedPillar(prev => prev === pillar ? '' : pillar)}
+                  title={selectedPillar === pillar ? `Désélectionner le pilier "${pillar}"` : `Cibler le pilier "${pillar}"`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    selectedPillar === pillar
+                      ? 'bg-purple-600 border-purple-500 text-white'
+                      : 'bg-gray-950 border-gray-700 text-gray-400 hover:border-purple-600 hover:text-purple-300'
+                  }`}
+                >
+                  {pillar}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <PlatformsCard platforms={platforms} onToggle={togglePlatform} />
 

@@ -43,10 +43,12 @@ export async function runPostPipeline(input: {
   ctaType?: string
   ctaUrl?: string
   visualPrompt?: string
+  /** User-selected pillar override — takes precedence over Account Director's choice. */
+  userPillar?: string
   /** ID du job de tracking (optionnel — pas de tracking si absent). */
   jobId?: string
 }): Promise<PipelineResult> {
-  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, visualPrompt, jobId } = input
+  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, visualPrompt, userPillar, jobId } = input
 
   // Helper : wrap avec tracking si jobId fourni, sinon appel direct
   function track<T>(
@@ -168,7 +170,7 @@ export async function runPostPipeline(input: {
     platforms,
     contentType,
     brief: effectiveBrief,
-    pillar: account.directive.priorityPillar ?? null,
+    pillar: userPillar || account.directive.priorityPillar || undefined,
     reasoning: text.reasoning,
     caption: primaryCaption.caption,
     hashtags: primaryCaption.hashtags,
