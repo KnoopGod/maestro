@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
-import { CalendarDays, ExternalLink, AlertCircle, Sparkles, Copy } from 'lucide-react'
+import { CalendarDays, ExternalLink, AlertCircle, Sparkles, Copy, Download } from 'lucide-react'
 import type { Post, PostStatus } from '@/types/post'
 import type { Client } from '@/types/client'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
@@ -75,14 +75,24 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
             Historique de tous tes posts générés et publiés
           </p>
         </div>
-        <Link
-          href="/studio"
-          title="Créer un nouveau post depuis le Studio"
-          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
-        >
-          <Sparkles className="w-4 h-4" />
-          Nouveau post
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/api/posts/export${clientFilter ? `?clientId=${clientFilter}` : ''}${statusFilter ? `${clientFilter ? '&' : '?'}status=${statusFilter}` : ''}`}
+            title="Exporter l'historique des posts en CSV"
+            className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm flex items-center gap-1.5 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            CSV
+          </Link>
+          <Link
+            href="/studio"
+            title="Créer un nouveau post depuis le Studio"
+            className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
+          >
+            <Sparkles className="w-4 h-4" />
+            Nouveau post
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
