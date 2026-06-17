@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, Clock, CheckCircle2, AlertCircle, Sparkles, Plus } from 'lucide-react'
+import { CalendarDays, Clock, CheckCircle2, AlertCircle, Sparkles, Plus, Download } from 'lucide-react'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { PublishDueButton } from '@/components/posts/PostActions'
@@ -83,7 +83,17 @@ export default async function CalendarPage() {
             Posts prêts, planifiés et dus à publier
           </p>
         </div>
-        <PublishDueButton />
+        <div className="flex gap-2">
+          <Link
+            href="/api/posts/export/ical"
+            title="Exporter les posts planifiés en fichier iCal (Google Calendar, Apple Calendar…)"
+            className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm flex items-center gap-1.5 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            iCal
+          </Link>
+          <PublishDueButton />
+        </div>
       </div>
 
       <div className="bg-blue-950/20 border border-blue-700/30 rounded-2xl p-4 text-sm text-blue-200">
