@@ -96,6 +96,7 @@ export async function listPosts(options?: {
   orderDir?: 'ASC' | 'DESC'
   q?: string
   platform?: string
+  contentType?: PostContentType
 }): Promise<Post[]> {
   const conditions: string[] = []
   const args: unknown[] = []
@@ -125,6 +126,10 @@ export async function listPosts(options?: {
     // platforms is stored as JSON array; use LIKE to check for the platform string
     conditions.push(`platforms LIKE ?`)
     args.push(`%"${options.platform}"%`)
+  }
+  if (options?.contentType) {
+    conditions.push('content_type = ?')
+    args.push(options.contentType)
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''

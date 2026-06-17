@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { CalendarDays, ExternalLink, AlertCircle, Sparkles, Copy, Download } from 'lucide-react'
-import type { Post, PostStatus } from '@/types/post'
+import type { Post, PostStatus, PostContentType } from '@/types/post'
 import type { Client } from '@/types/client'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
@@ -44,8 +44,9 @@ function formatRelative(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR')
 }
 
-export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string }> }) {
-  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter } = await searchParams
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string; type?: string }> }) {
+  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter } = await searchParams
+  const contentTypeFilter = typeFilter as PostContentType | undefined
 
   const showInsights = statusFilter === 'published'
   const [posts, clients] = await Promise.all([
@@ -56,6 +57,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       includeInsights: showInsights,
       q: searchQuery,
       platform: platformFilter,
+      contentType: contentTypeFilter,
     }),
     listClients(),
   ])
@@ -66,7 +68,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   function planUrl(overrides: Record<string, string | undefined>) {
     const p = new URLSearchParams()
     const params: Record<string, string | undefined> = {
-      client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter,
+      client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter,
       ...overrides,
     }
     for (const [k, v] of Object.entries(params)) {
@@ -78,6 +80,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   // Platforms actually present in results (for chips)
   const platformsInResults = [...new Set(posts.flatMap(p => p.platforms))]
+
+  // Content types present in results (for chips)
+  const CONTENT_TYPE_LABELS: Record<string, string> = { post: 'Post', reel: 'Reel', story: 'Story', video: 'Vidéo' }
+  const contentTypesInResults = [...new Set(posts.map(p => p.contentType))]
   const totalPublished = posts.filter(p => p.status === 'published').length
   const totalScheduled = posts.filter(p => p.status === 'scheduled').length
   const totalDraft = posts.filter(p => p.status === 'draft').length
@@ -156,6 +162,23 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 <Link key={p} href={planUrl({ platform: p })} title={`Filtrer : ${PLATFORM_INFO[p]?.label ?? p} uniquement`}
                   className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:border-blue-700/50 hover:text-blue-300 transition-colors">
                   {PLATFORM_INFO[p]?.emoji} {PLATFORM_INFO[p]?.label ?? p}
+                </Link>
+              ))}
+            </>
+          )}
+          {/* Content type filter */}
+          {(contentTypesInResults.length > 1 || typeFilter) && (
+            <>
+              <span className="text-xs text-gray-700 mx-1">|</span>
+              {typeFilter && (
+                <Link href={planUrl({ type: undefined })} title="Retirer le filtre type" className="text-xs px-2 py-1 rounded bg-indigo-600/20 border border-indigo-600/30 text-indigo-300">
+                  {CONTENT_TYPE_LABELS[typeFilter] ?? typeFilter} ✕
+                </Link>
+              )}
+              {!typeFilter && contentTypesInResults.map(ct => (
+                <Link key={ct} href={planUrl({ type: ct })} title={`Filtrer par type : ${CONTENT_TYPE_LABELS[ct] ?? ct}`}
+                  className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:border-indigo-700/50 hover:text-indigo-300 transition-colors">
+                  {CONTENT_TYPE_LABELS[ct] ?? ct}
                 </Link>
               ))}
             </>

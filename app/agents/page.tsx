@@ -218,6 +218,8 @@ export default async function AgentsPage() {
   const todayTs = new Date().setHours(0, 0, 0, 0)
   const todayJobs = allJobs.filter(j => j.status === 'completed' && j.startedAt >= todayTs)
   const recentJobs = allJobs.filter(j => j.status === 'completed' && j.startedAt < todayTs).slice(0, 6)
+  const totalCost = allJobs.reduce((sum, j) => sum + (j.totalCost ?? 0), 0)
+  const completedCount = allJobs.filter(j => j.status === 'completed').length
 
   const activeAgents = AGENTS.filter(a => a.status === 'active').sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
   const upcomingAgents = AGENTS.filter(a => a.status !== 'active')
@@ -236,6 +238,14 @@ export default async function AgentsPage() {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {activeAgents.length} agents actifs · {upcomingAgents.length} à venir
+            {totalCost > 0 && (
+              <span
+                className="ml-3 text-emerald-400"
+                title={`Coût IA cumulé des ${allJobs.length} derniers jobs`}
+              >
+                ${totalCost < 0.01 ? totalCost.toFixed(4) : totalCost.toFixed(2)} · {completedCount} jobs terminés
+              </span>
+            )}
           </p>
         </div>
         <div className="flex gap-2">

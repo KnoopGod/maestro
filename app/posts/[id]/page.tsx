@@ -110,7 +110,18 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 <FileText className="w-4 h-4 text-purple-400" />
                 Caption
               </h2>
-              <CopyCaptionButton post={post} />
+              <div className="flex items-center gap-2">
+                <span
+                  title="Nombre de caractères (limite Instagram : 2 200)"
+                  className={`text-[10px] font-mono ${
+                    post.caption.length > 2200 ? 'text-red-400' :
+                    post.caption.length > 2000 ? 'text-amber-400' : 'text-gray-500'
+                  }`}
+                >
+                  {post.caption.length} car.
+                </span>
+                <CopyCaptionButton post={post} />
+              </div>
             </div>
             <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{post.caption}</p>
 
