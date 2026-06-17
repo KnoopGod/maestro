@@ -425,3 +425,13 @@ export async function listUpcomingPosts(withinMs?: number): Promise<Post[]> {
   )
   return rows.map(mapRow)
 }
+
+/** Next N scheduled posts for a specific client (any future date). */
+export async function listClientUpcomingPosts(clientId: string, limit = 8): Promise<Post[]> {
+  const now = Date.now()
+  const rows = await query<PostRow>(
+    `SELECT ${postSelect(false)} FROM posts WHERE client_id = ? AND status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at > ? ORDER BY scheduled_at ASC LIMIT ?`,
+    [clientId, now, limit]
+  )
+  return rows.map(mapRow)
+}

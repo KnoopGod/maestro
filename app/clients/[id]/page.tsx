@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket, Layers } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
-import { listPosts, getPillarDistribution } from '@/lib/db/queries/posts'
+import { listPosts, getPillarDistribution, listClientUpcomingPosts } from '@/lib/db/queries/posts'
 import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
@@ -23,7 +23,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id)
   if (!client) notFound()
 
-  const [assetSummary, identity, aiStrategy, socialAccounts, clientPosts, clientJobs, pillarDistribution] = await Promise.all([
+  const [assetSummary, identity, aiStrategy, socialAccounts, clientPosts, clientJobs, pillarDistribution, upcomingPosts] = await Promise.all([
     getClientAssetSummary(id),
     getVisualIdentity(id),
     getAiStrategy(id),
@@ -31,6 +31,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     listPosts({ clientId: id, limit: 100, includeInsights: false }),
     listJobsByClient(id, 8),
     getPillarDistribution(id),
+    listClientUpcomingPosts(id, 6),
   ])
 
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
@@ -48,6 +49,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     : null
   const recentPosts = clientPosts.slice(0, 4)
 
+  const referenceTs = new Date().getTime()
   const typeCfg = CLIENT_TYPES[client.type]
   const statusCfg = CLIENT_STATUS[client.status]
 
@@ -406,6 +408,31 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         </div>
       ) : null}
 
+      {/* Upcoming scheduled posts */}
+      <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-blue-400" />
+            Prochains posts planifiés
+          </h2>
+          <Link href={`/plan?client=${client.id}&status=scheduled`} title="Voir tous les posts planifiés dans le calendrier" className="text-xs text-blue-400 hover:underline">
+            Calendrier →
+          </Link>
+        </div>
+        {upcomingPosts.length === 0 ? (
+          <div className="text-center py-6 text-sm text-gray-500">
+            Aucun post planifié.{' '}
+            <Link href={`/plan?client=${client.id}`} title="Planifier des posts pour ce client" className="text-blue-400 hover:underline">
+              Planifier maintenant →
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {upcomingPosts.map(p => <UpcomingPostRow key={p.id} post={p} referenceTs={referenceTs} />)}
+          </div>
+        )}
+      </div>
+
       {/* Recent activity — real posts */}
       <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
@@ -522,6 +549,43 @@ function RecentPostRow({ post }: { post: Post }) {
         <div className="text-[10px] text-gray-500">{post.platforms.join(' + ')} · {when}</div>
       </div>
       <span className={`text-[10px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
+    </Link>
+  )
+}
+
+const PLATFORM_EMOJI: Record<string, string> = {
+  instagram: '📷',
+  facebook: '👍',
+  tiktok: '🎵',
+  linkedin: '💼',
+  google_business: '📍',
+}
+
+function UpcomingPostRow({ post, referenceTs }: { post: Post; referenceTs: number }) {
+  const scheduledDate = post.scheduledAt ? new Date(post.scheduledAt) : null
+  const diffMs = scheduledDate ? scheduledDate.getTime() - referenceTs : 0
+  const diffH = Math.floor(diffMs / 3600000)
+  const diffD = Math.floor(diffMs / 86400000)
+  const countdown = diffH < 24
+    ? `Dans ${diffH}h${Math.floor((diffMs % 3600000) / 60000)}min`
+    : `Dans ${diffD}j`
+  const dateLabel = scheduledDate
+    ? scheduledDate.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : ''
+  return (
+    <Link
+      href={`/plan?client=${post.clientId}`}
+      title="Voir ce post dans le calendrier"
+      className="flex items-center gap-3 p-2.5 rounded-lg bg-blue-950/20 border border-blue-800/30 hover:border-blue-600/50 transition-colors"
+    >
+      <span className="text-base flex-shrink-0">
+        {post.platforms.map(p => PLATFORM_EMOJI[p] ?? '🌐').join('')}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm text-white truncate">{post.caption.substring(0, 60)}</div>
+        <div className="text-[10px] text-gray-500">{dateLabel}</div>
+      </div>
+      <span className="text-[10px] text-blue-300 flex-shrink-0 font-medium">{countdown}</span>
     </Link>
   )
 }
