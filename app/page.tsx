@@ -2,7 +2,7 @@ import type React from 'react'
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats, listClients } from '@/lib/db/queries/clients'
-import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts, listPostsWithRecentPortalFeedback } from '@/lib/db/queries/posts'
+import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts, listPostsWithRecentPortalFeedback, sumPostsCostThisMonth } from '@/lib/db/queries/posts'
 import { listExpiringTokens } from '@/lib/db/queries/social-accounts'
 import { SetupBanner } from '@/components/SetupBanner'
 import { TokenExpiryBanner } from '@/components/TokenExpiryBanner'
@@ -29,8 +29,9 @@ export default async function HomePage() {
   let allClients: Client[] = []
   let failedPosts: Awaited<ReturnType<typeof listRecentlyFailedPosts>> = []
   let portalFeedbackPosts: Awaited<ReturnType<typeof listPostsWithRecentPortalFeedback>> = []
+  let aiCostThisMonth = 0
   try {
-    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts, portalFeedbackPosts] = await Promise.all([
+    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts, portalFeedbackPosts, aiCostThisMonth] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
       listExpiringTokens(14),
@@ -38,6 +39,7 @@ export default async function HomePage() {
       listClients(),
       listRecentlyFailedPosts(),
       listPostsWithRecentPortalFeedback(),
+      sumPostsCostThisMonth(),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
@@ -46,9 +48,10 @@ export default async function HomePage() {
   const clientsMap = new Map<string, Client>(allClients.map(c => [c.id, c]))
   const activeClients = clients.filter(c => c.status === 'active')
   const totalPosts = clients.reduce((sum, c) => sum + c.postsThisMonth, 0)
-  const avgEngagement = clients.length
-    ? (clients.reduce((sum, c) => sum + c.engagement, 0) / clients.length).toFixed(1)
-    : '0'
+  const costDisplay = aiCostThisMonth < 0.01
+    ? `$${aiCostThisMonth.toFixed(4)}`
+    : `$${aiCostThisMonth.toFixed(2)}`
+  const costAccent = aiCostThisMonth > 20 ? 'text-red-400' : aiCostThisMonth > 5 ? 'text-amber-400' : 'text-emerald-400'
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'GOOD MORNING' : hour < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING'
@@ -88,7 +91,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
           <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
-          <StatCard label="ENGAGEMENT MOY."  value={`${avgEngagement}%`}   icon={BarChart3}   accent="text-emerald-400" sub="VS 2.1% INDUSTRIE" />
+          <StatCard label="COÛT IA CE MOIS"  value={costDisplay}           icon={BarChart3}   accent={costAccent}       sub="TOUS CLIENTS · CE MOIS" />
           <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'FILE VIDE' : `${toValidate} POST${toValidate > 1 ? 'S' : ''}`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
         </div>
       </section>

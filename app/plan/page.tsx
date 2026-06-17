@@ -147,13 +147,81 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
-          {posts.map(p => {
-            const client = clientsMap.get(p.clientId)
-            return <PostRow key={p.id} post={p} client={client} />
-          })}
-        </div>
+        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} />
       )}
+    </div>
+  )
+}
+
+const STATUS_BADGE_COLOR: Record<string, string> = {
+  published: 'bg-emerald-500/20 text-emerald-400',
+  scheduled: 'bg-blue-500/20 text-blue-400',
+  ready:     'bg-purple-500/20 text-purple-400',
+  draft:     'bg-amber-500/20 text-amber-400',
+  failed:    'bg-red-500/20 text-red-400',
+}
+
+function getPostMonth(post: Post): string {
+  const ts = post.publishedAt ?? post.scheduledAt ?? post.createdAt
+  const d = new Date(ts)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function formatMonthLabel(key: string): string {
+  if (key === 'none') return 'Sans date'
+  const [year, month] = key.split('-')
+  return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function MonthGroupedPosts({ posts, clientsMap }: { posts: Post[]; clientsMap: Map<string, Client> }) {
+  const groups = new Map<string, Post[]>()
+  for (const post of posts) {
+    const key = getPostMonth(post)
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(post)
+  }
+
+  const sortedKeys = [...groups.keys()].sort((a, b) => (a === 'none' ? 1 : b === 'none' ? -1 : b.localeCompare(a)))
+
+  return (
+    <div className="space-y-8">
+      {sortedKeys.map(key => {
+        const group = groups.get(key)!
+        const statusCounts = group.reduce<Record<string, number>>((acc, p) => {
+          acc[p.status] = (acc[p.status] ?? 0) + 1
+          return acc
+        }, {})
+        return (
+          <div key={key}>
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="text-sm font-semibold text-gray-400 capitalize">
+                {formatMonthLabel(key)}
+              </h2>
+              <span className="text-xs text-gray-600">{group.length} post{group.length > 1 ? 's' : ''}</span>
+              <div className="flex gap-1.5">
+                {Object.entries(statusCounts).map(([status, count]) => (
+                  <span
+                    key={status}
+                    title={`${STATUS_INFO[status]?.label ?? status} : ${count}`}
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${STATUS_BADGE_COLOR[status] ?? 'bg-gray-700 text-gray-400'}`}
+                  >
+                    {count} {STATUS_INFO[status]?.label ?? status}
+                  </span>
+                ))}
+              </div>
+              <div className="flex-1 h-px bg-gray-800" />
+            </div>
+            <div className="space-y-3">
+              {group.map(p => (
+                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} />
+              ))}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
