@@ -174,4 +174,6 @@ export async function initSchema() {
   await migrateClientNotes()
   const { migrateCronLog } = await import('./migrations/015-add-cron-log')
   await migrateCronLog()
+  const { migrateWebhookLog } = await import('./migrations/016-add-webhook-log')
+  await migrateWebhookLog()
 }
