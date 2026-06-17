@@ -93,6 +93,7 @@ export async function listPosts(options?: {
   includeInsights?: boolean
   publishedAfter?: number
   orderBy?: 'created_at' | 'published_at' | 'impact_score' | 'scheduled_at'
+  pillar?: string
   orderDir?: 'ASC' | 'DESC'
   q?: string
   platform?: string
@@ -130,6 +131,10 @@ export async function listPosts(options?: {
   if (options?.contentType) {
     conditions.push('content_type = ?')
     args.push(options.contentType)
+  }
+  if (options?.pillar) {
+    conditions.push('pillar = ?')
+    args.push(options.pillar)
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''

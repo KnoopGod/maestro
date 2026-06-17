@@ -46,8 +46,8 @@ function formatRelative(ts: number): string {
 
 type PlanSort = 'newest' | 'oldest' | 'impact' | 'scheduled'
 
-export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string; type?: string; sort?: string }> }) {
-  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter, sort: sortParam } = await searchParams
+export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string; type?: string; sort?: string; pillar?: string }> }) {
+  const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter, sort: sortParam, pillar: pillarFilter } = await searchParams
   const contentTypeFilter = typeFilter as PostContentType | undefined
   const sortOption: PlanSort = (['newest', 'oldest', 'impact', 'scheduled'] as PlanSort[]).includes(sortParam as PlanSort) ? sortParam as PlanSort : 'newest'
 
@@ -64,6 +64,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       q: searchQuery,
       platform: platformFilter,
       contentType: contentTypeFilter,
+      pillar: pillarFilter,
       orderBy,
       orderDir,
     }),
@@ -88,7 +89,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     const p = new URLSearchParams()
     const params: Record<string, string | undefined> = {
       client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter,
-      sort: sortOption !== 'newest' ? sortOption : undefined,
+      pillar: pillarFilter, sort: sortOption !== 'newest' ? sortOption : undefined,
       ...overrides,
     }
     for (const [k, v] of Object.entries(params)) {
@@ -104,6 +105,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   // Content types present in results (for chips)
   const CONTENT_TYPE_LABELS: Record<string, string> = { post: 'Post', reel: 'Reel', story: 'Story', video: 'Vidéo' }
   const contentTypesInResults = [...new Set(posts.map(p => p.contentType))]
+
+  // Pillars present in results (for chips) — use base list for counts when filtering
+  const pillarBaseList = allPosts ?? posts
+  const pillarsInResults = [...new Set(pillarBaseList.map(p => p.pillar).filter(Boolean) as string[])].sort()
   const totalPublished = posts.filter(p => p.status === 'published').length
   const totalScheduled = posts.filter(p => p.status === 'scheduled').length
   const totalDraft = posts.filter(p => p.status === 'draft').length
@@ -221,6 +226,23 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
                 <Link key={ct} href={planUrl({ type: ct })} title={`Filtrer par type : ${CONTENT_TYPE_LABELS[ct] ?? ct}`}
                   className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:border-indigo-700/50 hover:text-indigo-300 transition-colors">
                   {CONTENT_TYPE_LABELS[ct] ?? ct}
+                </Link>
+              ))}
+            </>
+          )}
+          {/* Pillar filter */}
+          {(pillarsInResults.length > 1 || pillarFilter) && (
+            <>
+              <span className="text-xs text-gray-700 mx-1">|</span>
+              {pillarFilter && (
+                <Link href={planUrl({ pillar: undefined })} title="Retirer le filtre pilier" className="text-xs px-2 py-1 rounded bg-violet-600/20 border border-violet-600/30 text-violet-300">
+                  {pillarFilter} ✕
+                </Link>
+              )}
+              {!pillarFilter && pillarsInResults.map(pl => (
+                <Link key={pl} href={planUrl({ pillar: pl })} title={`Filtrer par pilier : ${pl}`}
+                  className="text-xs px-2 py-1 rounded border border-gray-700 text-gray-400 hover:border-violet-700/50 hover:text-violet-300 transition-colors">
+                  {pl}
                 </Link>
               ))}
             </>

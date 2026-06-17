@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Search, X } from 'lucide-react'
 
-export function PlanSearchInput({ initialQ }: { initialQ?: string }) {
+export function PlanSearchInput({ initialQ, basePath = '/plan' }: { initialQ?: string; basePath?: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [value, setValue] = useState(initialQ ?? '')
@@ -18,9 +18,9 @@ export function PlanSearchInput({ initialQ }: { initialQ?: string }) {
       } else {
         params.delete('q')
       }
-      router.push(`/plan?${params.toString()}`)
+      router.push(`${basePath}?${params.toString()}`)
     },
-    [router, searchParams]
+    [router, searchParams, basePath]
   )
 
   useEffect(() => {

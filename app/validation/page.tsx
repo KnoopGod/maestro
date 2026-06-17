@@ -10,6 +10,7 @@ import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
 import { PostImageSwap } from '@/components/posts/PostImageSwap'
 import { BulkSelectionProvider, PostSelectCheckbox, BulkActionBar } from '@/components/posts/BulkActions'
 import { CopyCaptionButton } from '@/components/posts/CopyCaptionButton'
+import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
@@ -30,16 +31,16 @@ function buildUrl(params: Record<string, string | undefined>) {
   for (const [k, v] of Object.entries(params)) {
     if (v) p.set(k, v)
   }
-  const str = p.toString()
-  return `/validation${str ? `?${str}` : ''}`
+  const qs = p.toString()
+  return `/validation${qs ? `?${qs}` : ''}`
 }
 
 export default async function ValidationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ client?: string; sort?: string }>
+  searchParams: Promise<{ client?: string; sort?: string; q?: string }>
 }) {
-  const { client: clientFilter, sort: sortParam } = await searchParams
+  const { client: clientFilter, sort: sortParam, q: searchQuery } = await searchParams
   const sortOption: SortOption = sortParam === 'oldest' ? 'oldest' : sortParam === 'impact' ? 'impact' : 'newest'
 
   const orderBy = sortOption === 'impact' ? 'impact_score' as const : 'created_at' as const
@@ -49,6 +50,7 @@ export default async function ValidationPage({
     listPosts({
       statuses: ['draft', 'ready', 'failed'],
       clientId: clientFilter,
+      q: searchQuery,
       orderBy,
       orderDir,
       limit: 200,
@@ -113,58 +115,70 @@ export default async function ValidationPage({
       </div>
 
       {/* Filters & Sort */}
-      {clientsInQueue.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Client filter */}
-          <div className="flex flex-wrap items-center gap-1.5 mr-2">
-            <span className="text-[10px] uppercase tracking-wider text-gray-500">Client</span>
-            <Link
-              href={buildUrl({ sort: sortParam })}
-              title="Afficher tous les clients"
-              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                !clientFilter
-                  ? 'bg-purple-600 border-purple-600 text-white'
-                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
-              }`}
-            >
-              Tous
-            </Link>
-            {clientsInQueue.map(c => (
+      <div className="space-y-2">
+        {clientsInQueue.length > 1 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Client filter */}
+            <div className="flex flex-wrap items-center gap-1.5 mr-2">
+              <span className="text-[10px] uppercase tracking-wider text-gray-500">Client</span>
               <Link
-                key={c.id}
-                href={buildUrl({ client: c.id, sort: sortParam })}
-                title={`Filtrer par ${c.name} (${countByClient[c.id] ?? 0} posts)`}
+                href={buildUrl({ sort: sortParam, q: searchQuery })}
+                title="Afficher tous les clients"
                 className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                  clientFilter === c.id
+                  !clientFilter
                     ? 'bg-purple-600 border-purple-600 text-white'
                     : 'border-gray-700 text-gray-400 hover:border-gray-500'
                 }`}
               >
-                {c.emoji} {c.name} ({countByClient[c.id] ?? 0})
+                Tous
               </Link>
-            ))}
-          </div>
+              {clientsInQueue.map(c => (
+                <Link
+                  key={c.id}
+                  href={buildUrl({ client: c.id, sort: sortParam, q: searchQuery })}
+                  title={`Filtrer par ${c.name} (${countByClient[c.id] ?? 0} posts)`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    clientFilter === c.id
+                      ? 'bg-purple-600 border-purple-600 text-white'
+                      : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                  }`}
+                >
+                  {c.emoji} {c.name} ({countByClient[c.id] ?? 0})
+                </Link>
+              ))}
+            </div>
 
-          {/* Sort */}
-          <div className="flex items-center gap-1.5 ml-auto">
-            <span className="text-[10px] uppercase tracking-wider text-gray-500">Trier</span>
-            {sortOptions.map(s => (
-              <Link
-                key={s}
-                href={buildUrl({ client: clientFilter, sort: s === 'newest' ? undefined : s })}
-                title={`Trier par ${sortLabels[s]}`}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                  sortOption === s
-                    ? 'bg-gray-700 border-gray-600 text-white'
-                    : 'border-gray-700 text-gray-400 hover:border-gray-500'
-                }`}
-              >
-                {sortLabels[s]}
-              </Link>
-            ))}
+            {/* Sort */}
+            <div className="flex items-center gap-1.5 ml-auto">
+              <span className="text-[10px] uppercase tracking-wider text-gray-500">Trier</span>
+              {sortOptions.map(s => (
+                <Link
+                  key={s}
+                  href={buildUrl({ client: clientFilter, sort: s === 'newest' ? undefined : s, q: searchQuery })}
+                  title={`Trier par ${sortLabels[s]}`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    sortOption === s
+                      ? 'bg-gray-700 border-gray-600 text-white'
+                      : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                  }`}
+                >
+                  {sortLabels[s]}
+                </Link>
+              ))}
+            </div>
           </div>
+        )}
+
+        {/* Search */}
+        <div className="flex items-center gap-3">
+          <PlanSearchInput initialQ={searchQuery} basePath="/validation" />
+          {searchQuery && (
+            <p className="text-[11px] text-gray-500">
+              {queue.length} résultat{queue.length !== 1 ? 's' : ''} pour <span className="text-purple-300">&ldquo;{searchQuery}&rdquo;</span>
+            </p>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Active filter summary */}
       {clientFilter && (
@@ -174,7 +188,7 @@ export default async function ValidationPage({
             {clientsMap.get(clientFilter)?.name ?? clientFilter}
           </span>
           <span>· {queue.length} post{queue.length > 1 ? 's' : ''}</span>
-          <Link href={buildUrl({ sort: sortParam })} title="Supprimer le filtre client" className="ml-1 text-gray-600 hover:text-gray-400 transition-colors">
+          <Link href={buildUrl({ sort: sortParam, q: searchQuery })} title="Supprimer le filtre client" className="ml-1 text-gray-600 hover:text-gray-400 transition-colors">
             <X className="w-3.5 h-3.5" />
           </Link>
         </div>
