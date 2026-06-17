@@ -97,8 +97,27 @@ export default async function PostDetailPage({
                 {client.emoji} {client.name}
               </Link>
             )}
-            {post.pillar && <span className="bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 rounded-full px-2 py-0.5">{post.pillar}</span>}
-            <span>{post.platforms.map(p => PLATFORM_EMOJI[p] ?? '🌐').join(' ')}</span>
+            {post.pillar && (
+              <Link
+                href={`/plan?pillar=${encodeURIComponent(post.pillar)}`}
+                title={`Voir tous les posts du pilier "${post.pillar}"`}
+                className="bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 rounded-full px-2 py-0.5 hover:border-indigo-600/60 hover:text-indigo-200 transition-colors"
+              >
+                {post.pillar}
+              </Link>
+            )}
+            <span className="flex items-center gap-1">
+              {post.platforms.map(p => (
+                <Link
+                  key={p}
+                  href={`/plan?platform=${p}`}
+                  title={`Voir tous les posts ${p}`}
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  {PLATFORM_EMOJI[p] ?? '🌐'}
+                </Link>
+              ))}
+            </span>
             <span>Créé le {formatDate(post.createdAt)}</span>
           </div>
         </div>

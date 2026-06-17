@@ -247,6 +247,16 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
               ))}
             </>
           )}
+          {/* Reset filters — shown when ≥2 filters active */}
+          {[clientFilter, statusFilter, searchQuery, platformFilter, typeFilter, pillarFilter, sortOption !== 'newest' ? sortOption : undefined].filter(Boolean).length >= 2 && (
+            <Link
+              href="/plan"
+              title="Effacer tous les filtres actifs"
+              className="ml-auto text-xs px-2 py-1 rounded border border-red-800/40 text-red-400/60 hover:border-red-700/60 hover:text-red-400 transition-colors"
+            >
+              ✕ Effacer les filtres
+            </Link>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-gray-500">Tri :</span>
