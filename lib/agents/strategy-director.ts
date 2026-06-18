@@ -1,9 +1,7 @@
-import type { ClientStrategy, ClientType } from '@/types/client'
+import type { ClientBusinessProfile, ClientStrategy, ClientType } from '@/types/client'
+import { getPlaybookForLegacyType, getPlaybook } from '@/lib/playbooks'
 
 const sharedAvoid = ['contenu générique', 'promesses exagérées', 'ton robotique']
-
-const restaurantPillars = ['Plat signature', 'Menu du jour', 'Coulisses', 'Avis client', 'Réservation week-end']
-const hotelPillars = ['Chambres', 'Expérience locale', 'Petit-déjeuner', 'Saisonnalité', 'Avis client']
 
 interface StrategyInput {
   type: ClientType
@@ -12,65 +10,30 @@ interface StrategyInput {
   positioning: string
   tone: string
   offerFocus: string
-}
-
-interface StrategyDefaults {
-  contentPillars: string[]
-  frequency: string
-  bestTimes: string[]
-  avoid: string[]
-}
-
-const defaultsByType: Record<ClientType, StrategyDefaults> = {
-  restaurant: {
-    contentPillars: restaurantPillars,
-    frequency: '4 posts/semaine',
-    bestTimes: ['11:30', '18:30', '19:15'],
-    avoid: ['ton luxe froid', 'visuels stock photo'],
-  },
-  bar: {
-    contentPillars: ['Cocktail signature', 'Ambiance soirée', 'Happy hour', 'Événement', 'Clientèle locale'],
-    frequency: '5 posts/semaine',
-    bestTimes: ['17:30', '20:00', '21:30'],
-    avoid: ['ton institutionnel', 'visuels trop sages'],
-  },
-  hotel: {
-    contentPillars: hotelPillars,
-    frequency: '4 posts/semaine',
-    bestTimes: ['08:30', '12:15', '18:00'],
-    avoid: ['vocabulaire hôtel de chaîne', 'photos impersonnelles'],
-  },
-  bnb: {
-    contentPillars: hotelPillars,
-    frequency: '3 posts/semaine',
-    bestTimes: ['08:30', '12:15', '18:00'],
-    avoid: ['vocabulaire hôtel de chaîne', 'photos impersonnelles'],
-  },
-  restaurant_hotel: {
-    contentPillars: [...new Set([...restaurantPillars, ...hotelPillars])],
-    frequency: '4 posts/semaine',
-    bestTimes: ['11:30', '18:30', '19:15'],
-    avoid: ['ton luxe froid', 'visuels stock photo', 'vocabulaire hôtel de chaîne', 'photos impersonnelles'],
-  },
+  businessProfile?: ClientBusinessProfile | null
 }
 
 export function createClientStrategy(input: StrategyInput): ClientStrategy {
-  const defaults = defaultsByType[input.type]
+  const playbook = input.businessProfile?.vertical
+    ? getPlaybook(input.businessProfile.vertical)
+    : getPlaybookForLegacyType(input.type)
+  const defaults = playbook.strategy
   const context = [
     input.positioning.trim() ? `Positionnement : ${input.positioning.trim()}.` : '',
     input.offerFocus.trim() ? `Offre prioritaire : ${input.offerFocus.trim()}.` : '',
     input.tone.trim() ? `Ton à privilégier : ${input.tone.trim()}.` : '',
+    input.businessProfile?.priorityObjective ? `Objectif business prioritaire : ${input.businessProfile.priorityObjective}.` : '',
   ].filter(Boolean)
 
   return {
     objective: [
-      `Développer la notoriété locale de ${input.name}${input.city.trim() ? ` à ${input.city.trim()}` : ''} et transformer l'intérêt social en réservations qualifiées.`,
+      `Développer la visibilité locale de ${input.name}${input.city.trim() ? ` à ${input.city.trim()}` : ''} et transformer l'intérêt digital en actions commerciales mesurables.`,
       ...context,
     ].join(' '),
     contentPillars: defaults.contentPillars,
     platforms: ['instagram', 'facebook'],
     frequency: defaults.frequency,
     bestTimes: defaults.bestTimes,
-    avoid: [...sharedAvoid, ...defaults.avoid],
+    avoid: [...new Set([...sharedAvoid, ...defaults.avoid])],
   }
 }

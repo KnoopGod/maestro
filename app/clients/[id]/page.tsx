@@ -8,7 +8,7 @@ import { listPosts, getPillarDistribution, listClientUpcomingPosts } from '@/lib
 import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
-import { CLIENT_TYPES, CLIENT_STATUS, type Client } from '@/types/client'
+import { BUSINESS_OBJECTIVES, BUSINESS_TARGET_DELAYS, CLIENT_TYPES, CLIENT_STATUS, CONVERSION_CHANNELS, type Client } from '@/types/client'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
 import { PortalLinkCard } from '@/components/clients/PortalLinkCard'
@@ -41,6 +41,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const postsThisMonth = clientPosts.filter(p => p.createdAt >= monthStartMs).length
   const contentPillars = client.strategy?.contentPillars ?? []
   const understoodSummary = client.clientSummary || buildClientUnderstanding(client, Boolean(identity?.stylePrompt))
+  const businessProfile = client.businessProfile
   const setupComplete = Boolean(client.description && client.brandVoiceTone && contentPillars.length > 0)
   const facebookConnected = socialAccounts.some(a => a.platform === 'facebook')
   const instagramConnected = socialAccounts.some(a => a.platform === 'instagram')
@@ -219,6 +220,51 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </Link>
         </div>
         <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{understoodSummary}</p>
+      </div>
+
+      <div className="bg-gradient-to-br from-emerald-950/30 to-gray-900/40 border border-emerald-900/40 rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Euro className="w-4 h-4 text-emerald-400" />
+              Objectif business
+            </h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Base croissance utilisée pour relier les actions marketing au chiffre d&apos;affaires.
+            </p>
+          </div>
+          <Link
+            href={`/clients/${client.id}/edit`}
+            title="Modifier le profil business du client"
+            className="text-xs text-emerald-300 hover:underline flex-shrink-0"
+          >
+            Modifier →
+          </Link>
+        </div>
+
+        {businessProfile ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <BusinessInfo
+              label="Objectif"
+              value={BUSINESS_OBJECTIVES[businessProfile.priorityObjective]?.label ?? businessProfile.priorityObjective}
+              detail={BUSINESS_TARGET_DELAYS[businessProfile.targetDelay]?.label}
+            />
+            <BusinessInfo
+              label="Offres"
+              value={businessProfile.mainOffers.length ? businessProfile.mainOffers.join(', ') : 'À préciser'}
+              detail={businessProfile.avgBasketEur != null ? `Panier moyen ${businessProfile.avgBasketEur}€` : undefined}
+            />
+            <BusinessInfo
+              label="Conversion"
+              value={businessProfile.conversionChannels.map(channel => CONVERSION_CHANNELS[channel]?.label ?? channel).join(', ') || 'À préciser'}
+              detail={businessProfile.offDays.length ? `Jours creux : ${businessProfile.offDays.join(', ')}` : undefined}
+            />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-emerald-900/50 bg-gray-950/30 p-4 text-sm text-gray-400">
+            Aucun profil business renseigné. Ajoutez la verticale métier, les offres, les canaux de conversion et l&apos;objectif prioritaire pour orienter Maestro vers la croissance.
+          </div>
+        )}
       </div>
 
       {/* V1 startup checklist */}
@@ -529,6 +575,16 @@ function ClientStat({ label, value, sub, color, href }: {
     </div>
   )
   return href ? <Link href={href} title={`${label} : ${value}`}>{content}</Link> : content
+}
+
+function BusinessInfo({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return (
+    <div className="rounded-xl border border-emerald-900/30 bg-gray-950/30 p-3">
+      <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">{label}</div>
+      <div className="mt-1 text-sm font-medium leading-snug text-white">{value}</div>
+      {detail ? <div className="mt-1 text-[11px] text-gray-500">{detail}</div> : null}
+    </div>
+  )
 }
 
 function StartupStep({ done, label, detail, href }: { done: boolean; label: string; detail: string; href: string }) {

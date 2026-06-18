@@ -25,6 +25,7 @@ export async function initSchema() {
       brand_voice_avoid TEXT,
       languages TEXT DEFAULT '["fr"]',
       strategy TEXT,
+      business_profile TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
@@ -177,4 +178,6 @@ export async function initSchema() {
   await migrateCronLog()
   const { migrateWebhookLog } = await import('./migrations/016-add-webhook-log')
   await migrateWebhookLog()
+  const { migrateBusinessProfile } = await import('./migrations/017-add-business-profile')
+  await migrateBusinessProfile()
 }

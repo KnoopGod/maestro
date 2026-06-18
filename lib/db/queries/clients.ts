@@ -1,7 +1,14 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
 import { createClientStrategy } from '@/lib/agents/strategy-director'
-import type { Client, ClientStrategy, ClientType, ClientWithStats, ClientStatus } from '@/types/client'
+import type {
+  Client,
+  ClientBusinessProfile,
+  ClientStrategy,
+  ClientType,
+  ClientWithStats,
+  ClientStatus,
+} from '@/types/client'
 
 // ─── Row mapping ──────────────────────────────────────────────────────────────
 
@@ -21,6 +28,7 @@ interface ClientRow {
   brand_voice_avoid: string | null
   languages: string
   strategy: string | null
+  business_profile: string | null
   created_at: number
   updated_at: number
 }
@@ -33,13 +41,15 @@ interface ClientWithStatsRow extends ClientRow {
 }
 
 function mapRow(row: ClientRow): Client {
-  const strategy = JSON.parse(row.strategy ?? 'null') ?? createClientStrategy({
+  const businessProfile = parseBusinessProfile(row.business_profile)
+  const strategy = parseStrategy(row.strategy) ?? createClientStrategy({
     type: row.type,
     name: row.name,
     city: row.city ?? '',
     positioning: row.description ?? '',
     tone: row.brand_voice_tone ?? '',
     offerFocus: '',
+    businessProfile,
   })
 
   return {
@@ -56,8 +66,9 @@ function mapRow(row: ClientRow): Client {
     brandVoiceTone: row.brand_voice_tone,
     brandVoiceKeywords: row.brand_voice_keywords,
     brandVoiceAvoid: row.brand_voice_avoid,
-    languages: JSON.parse(row.languages || '["fr"]'),
+    languages: parseLanguages(row.languages),
     strategy,
+    businessProfile,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -167,6 +178,7 @@ export async function createClient(input: {
   brandVoiceAvoid?: string
   languages?: string[]
   strategy?: ClientStrategy
+  businessProfile?: ClientBusinessProfile | null
 }): Promise<Client> {
   const id = input.id ?? nanoid(12)
   const now = Date.now()
@@ -177,14 +189,15 @@ export async function createClient(input: {
     positioning: input.description ?? '',
     tone: input.brandVoiceTone ?? '',
     offerFocus: '',
+    businessProfile: input.businessProfile,
   })
 
   await db.execute({
     sql: `INSERT OR IGNORE INTO clients (
       id, name, type, city, status, emoji, color, description,
       client_summary, brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
-      languages, strategy, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      languages, strategy, business_profile, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       input.name,
@@ -199,6 +212,7 @@ export async function createClient(input: {
       input.brandVoiceAvoid ?? null,
       JSON.stringify(input.languages ?? ['fr']),
       JSON.stringify(strategy),
+      input.businessProfile ? JSON.stringify(input.businessProfile) : null,
       now,
       now,
     ],
@@ -249,6 +263,11 @@ export async function updateClient(
     args.push(JSON.stringify(patch.strategy))
   }
 
+  if ('businessProfile' in patch) {
+    updates.push('business_profile = ?')
+    args.push(patch.businessProfile ? JSON.stringify(patch.businessProfile) : null)
+  }
+
   if (updates.length === 0) return getClient(id)
 
   updates.push('updated_at = ?')
@@ -261,6 +280,25 @@ export async function updateClient(
   })
 
   return getClient(id)
+}
+
+function parseStrategy(raw: string | null): ClientStrategy | null {
+  if (!raw) return null
+  try { return JSON.parse(raw) as ClientStrategy } catch { return null }
+}
+
+function parseBusinessProfile(raw: string | null): ClientBusinessProfile | null {
+  if (!raw) return null
+  try { return JSON.parse(raw) as ClientBusinessProfile } catch { return null }
+}
+
+function parseLanguages(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw || '["fr"]')
+    return Array.isArray(parsed) ? parsed.map(String) : ['fr']
+  } catch {
+    return ['fr']
+  }
 }
 
 export async function searchClients(q: string): Promise<Client[]> {

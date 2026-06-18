@@ -9,7 +9,18 @@ import {
   deleteClient as dbDeleteClient,
   deleteClients as dbDeleteClients,
 } from '@/lib/db/queries/clients'
-import { CLIENT_TYPES, type ClientType } from '@/types/client'
+import {
+  BUSINESS_OBJECTIVES,
+  BUSINESS_TARGET_DELAYS,
+  CLIENT_TYPES,
+  CONVERSION_CHANNELS,
+  type BusinessObjective,
+  type BusinessTargetDelay,
+  type ClientBusinessProfile,
+  type ClientType,
+  type ConversionChannel,
+} from '@/types/client'
+import { getPlaybook } from '@/lib/playbooks'
 
 export async function createClientAction(formData: FormData) {
   const clientId = String(formData.get('clientId') ?? '').trim() || nanoid(12)
@@ -20,10 +31,12 @@ export async function createClientAction(formData: FormData) {
   const clientSummary = String(formData.get('clientSummary') ?? '').trim() || undefined
   const brandVoiceTone = String(formData.get('brandVoiceTone') ?? '').trim() || undefined
   const brandVoiceKeywords = String(formData.get('brandVoiceKeywords') ?? '').trim() || undefined
+  const businessProfile = buildBusinessProfile(formData)
 
   if (!name || !type) throw new Error('Name and type required')
   if (!(type in CLIENT_TYPES)) throw new Error('Invalid type')
 
+  const playbook = businessProfile ? getPlaybook(businessProfile.vertical) : null
   const typeConfig = CLIENT_TYPES[type]
 
   const client = await dbCreateClient({
@@ -35,8 +48,9 @@ export async function createClientAction(formData: FormData) {
     clientSummary,
     brandVoiceTone,
     brandVoiceKeywords,
-    emoji: typeConfig.emoji,
+    emoji: playbook?.emoji ?? typeConfig.emoji,
     color: typeConfig.color,
+    businessProfile,
   })
 
   revalidatePath('/clients')
@@ -65,6 +79,8 @@ export async function updateClientAction(id: string, formData: FormData) {
     }
   }
 
+  patch.businessProfile = buildBusinessProfile(formData)
+
   // Validate type if provided
   if (patch.type && !(patch.type as string in CLIENT_TYPES)) {
     throw new Error(`Type invalide : ${patch.type}`)
@@ -81,6 +97,66 @@ export async function updateClientAction(id: string, formData: FormData) {
   revalidatePath('/clients')
   revalidatePath(`/clients/${id}`)
   redirect(`/clients/${id}`)
+}
+
+function buildBusinessProfile(formData: FormData): ClientBusinessProfile | null {
+  const vertical = String(formData.get('businessVertical') ?? '').trim()
+  if (!vertical) return null
+
+  const priorityObjective = normalizeBusinessObjective(formData.get('priorityObjective'))
+  const targetDelay = normalizeTargetDelay(formData.get('targetDelay'))
+  const conversionChannels = formData
+    .getAll('conversionChannels')
+    .map(value => String(value).trim())
+    .filter(isConversionChannel)
+
+  return {
+    vertical,
+    mainOffers: splitList(formData.get('mainOffers')),
+    avgBasketEur: parseNullableNumber(formData.get('avgBasketEur')),
+    peakDays: splitList(formData.get('peakDays')),
+    offDays: splitList(formData.get('offDays')),
+    conversionChannels: conversionChannels.length ? conversionChannels : ['instagram_dm'],
+    monthlyRevenueEur: parseNullableNumber(formData.get('monthlyRevenueEur')),
+    priorityObjective,
+    targetDelay,
+    constraints: splitList(formData.get('businessConstraints')),
+    localCompetitors: splitList(formData.get('localCompetitors')),
+    seasonality: nullableString(formData.get('seasonality')),
+  }
+}
+
+function splitList(value: FormDataEntryValue | null): string[] {
+  return String(value ?? '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+}
+
+function nullableString(value: FormDataEntryValue | null): string | null {
+  const trimmed = String(value ?? '').trim()
+  return trimmed || null
+}
+
+function parseNullableNumber(value: FormDataEntryValue | null): number | null {
+  const raw = String(value ?? '').trim().replace(',', '.')
+  if (!raw) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function normalizeBusinessObjective(value: FormDataEntryValue | null): BusinessObjective {
+  const raw = String(value ?? '').trim()
+  return raw in BUSINESS_OBJECTIVES ? raw as BusinessObjective : 'attract_new_customers'
+}
+
+function normalizeTargetDelay(value: FormDataEntryValue | null): BusinessTargetDelay {
+  const raw = String(value ?? '').trim()
+  return raw in BUSINESS_TARGET_DELAYS ? raw as BusinessTargetDelay : '3m'
+}
+
+function isConversionChannel(value: string): value is ConversionChannel {
+  return value in CONVERSION_CHANNELS
 }
 
 export async function deleteClientAction(id: string) {
