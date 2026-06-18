@@ -333,7 +333,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           )}
         </div>
       ) : (
-        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} now={new Date().getTime()} activePlanStr={activePlanStr} />
+        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} now={new Date().getTime()} activePlanStr={activePlanStr} planUrl={planUrl} />
       )}
     </div>
   )
@@ -362,7 +362,7 @@ function formatMonthLabel(key: string): string {
   })
 }
 
-function MonthGroupedPosts({ posts, clientsMap, searchQuery, now, activePlanStr }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string; now: number; activePlanStr?: string }) {
+function MonthGroupedPosts({ posts, clientsMap, searchQuery, now, activePlanStr, planUrl }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string; now: number; activePlanStr?: string; planUrl: (overrides: Record<string, string | undefined>) => string }) {
   const adjacency = new Map(posts.map((p, i) => [p.id, { prevId: posts[i - 1]?.id, nextId: posts[i + 1]?.id }]))
   const groups = new Map<string, Post[]>()
   for (const post of posts) {
@@ -430,7 +430,7 @@ function MonthGroupedPosts({ posts, clientsMap, searchQuery, now, activePlanStr 
                 const prevId = adjacency.get(p.id)?.prevId
                 const nextId = adjacency.get(p.id)?.nextId
                 const detailHref = `/posts/${p.id}?from=plan${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}${activePlanStr ? '&planBack=' + encodeURIComponent(activePlanStr) : ''}`
-                return <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} detailHref={detailHref} />
+                return <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} detailHref={detailHref} planUrl={planUrl} />
               })}
             </div>
           </div>
@@ -468,7 +468,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   )
 }
 
-function PostRow({ post, client, searchQuery, now, detailHref }: { post: Post; client: Client | undefined; searchQuery?: string; now: number; detailHref: string }) {
+function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post: Post; client: Client | undefined; searchQuery?: string; now: number; detailHref: string; planUrl: (overrides: Record<string, string | undefined>) => string }) {
   const statusCfg = STATUS_INFO[post.status]
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
@@ -513,7 +513,7 @@ function PostRow({ post, client, searchQuery, now, detailHref }: { post: Post; c
             ))}
             {post.pillar && (
               <Link
-                href={`/plan?pillar=${encodeURIComponent(post.pillar)}`}
+                href={planUrl({ pillar: post.pillar })}
                 title={`Filtrer par pilier : ${post.pillar}`}
                 className="text-[10px] border rounded px-1.5 py-0.5 border-violet-700/40 text-violet-300 hover:bg-violet-900/20 transition-colors"
               >
@@ -522,7 +522,7 @@ function PostRow({ post, client, searchQuery, now, detailHref }: { post: Post; c
             )}
             {post.contentType && post.contentType !== 'photo' && (
               <Link
-                href={`/plan?type=${post.contentType}`}
+                href={planUrl({ type: post.contentType })}
                 title={`Filtrer par type : ${CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}`}
                 className="text-[10px] border rounded px-1.5 py-0.5 border-indigo-700/40 text-indigo-300 hover:bg-indigo-900/20 transition-colors"
               >
