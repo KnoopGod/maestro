@@ -160,11 +160,11 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatBox label="Total"     value={posts.length}   color="text-white"       href="/plan"                   active={!clientFilter && !statusFilter && !searchQuery} />
-        <StatBox label="Publiés"   value={totalPublished} color="text-emerald-400" href="/plan?status=published"  active={statusFilter === 'published'} />
-        <StatBox label="Planifiés" value={totalScheduled} color="text-blue-400"    href="/plan?status=scheduled"  active={statusFilter === 'scheduled'} />
-        <StatBox label="Brouillons" value={totalDraft}    color="text-amber-400"   href="/plan?status=draft"      active={statusFilter === 'draft'} />
-        <StatBox label="Échecs"    value={totalFailed}    color="text-red-400"     href="/plan?status=failed"     active={statusFilter === 'failed'} />
+        <StatBox label="Total"      value={posts.length}   color="text-white"       href={planUrl({ status: undefined })}    active={!statusFilter} />
+        <StatBox label="Publiés"    value={totalPublished} color="text-emerald-400" href={planUrl({ status: 'published' })}  active={statusFilter === 'published'} />
+        <StatBox label="Planifiés"  value={totalScheduled} color="text-blue-400"    href={planUrl({ status: 'scheduled' })}  active={statusFilter === 'scheduled'} />
+        <StatBox label="Brouillons" value={totalDraft}     color="text-amber-400"   href={planUrl({ status: 'draft' })}      active={statusFilter === 'draft'} />
+        <StatBox label="Échecs"     value={totalFailed}    color="text-red-400"     href={planUrl({ status: 'failed' })}     active={statusFilter === 'failed'} />
       </div>
 
       {/* Filters */}
