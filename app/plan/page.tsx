@@ -333,6 +333,7 @@ function formatMonthLabel(key: string): string {
 }
 
 function MonthGroupedPosts({ posts, clientsMap, searchQuery, now }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string; now: number }) {
+  const adjacency = new Map(posts.map((p, i) => [p.id, { prevId: posts[i - 1]?.id, nextId: posts[i + 1]?.id }]))
   const groups = new Map<string, Post[]>()
   for (const post of posts) {
     const key = getPostMonth(post)
@@ -396,7 +397,7 @@ function MonthGroupedPosts({ posts, clientsMap, searchQuery, now }: { posts: Pos
             </div>
             <div className="space-y-3">
               {group.map(p => (
-                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} />
+                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} prevId={adjacency.get(p.id)?.prevId} nextId={adjacency.get(p.id)?.nextId} />
               ))}
             </div>
           </div>
@@ -434,7 +435,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   )
 }
 
-function PostRow({ post, client, searchQuery, now }: { post: Post; client: Client | undefined; searchQuery?: string; now: number }) {
+function PostRow({ post, client, searchQuery, now, prevId, nextId }: { post: Post; client: Client | undefined; searchQuery?: string; now: number; prevId?: string; nextId?: string }) {
   const statusCfg = STATUS_INFO[post.status]
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
@@ -595,7 +596,7 @@ function PostRow({ post, client, searchQuery, now }: { post: Post; client: Clien
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
               <Link
-                href={`/posts/${post.id}?from=plan`}
+                href={`/posts/${post.id}?from=plan${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
                 title="Voir le détail complet de ce post"
                 className="flex items-center gap-1 text-gray-500 hover:text-gray-300 hover:underline"
               >

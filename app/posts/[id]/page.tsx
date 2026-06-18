@@ -45,10 +45,10 @@ export default async function PostDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ from?: string }>
+  searchParams: Promise<{ from?: string; prevId?: string; nextId?: string }>
 }) {
   const { id } = await params
-  const { from } = await searchParams
+  const { from, prevId, nextId } = await searchParams
   const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard'] as FromContext[]).includes(from as FromContext)
     ? (from as FromContext)
     : 'validation'
@@ -94,6 +94,32 @@ export default async function PostDetailPage({
         )}
         <span>/</span>
         <span className="text-gray-400">{post.id.slice(0, 8)}…</span>
+        {(prevId || nextId) && (
+          <div className="ml-auto flex items-center gap-1">
+            {prevId ? (
+              <Link
+                href={`/posts/${prevId}?from=${fromCtx}${nextId ? `&nextId=${id}` : ''}`}
+                title="Post précédent"
+                className="px-2 py-0.5 rounded border border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-700 transition-colors text-xs"
+              >
+                ← Préc.
+              </Link>
+            ) : (
+              <span className="px-2 py-0.5 rounded border border-gray-800 text-gray-700 text-xs cursor-default">← Préc.</span>
+            )}
+            {nextId ? (
+              <Link
+                href={`/posts/${nextId}?from=${fromCtx}${prevId ? `&prevId=${id}` : ''}`}
+                title="Post suivant"
+                className="px-2 py-0.5 rounded border border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-700 transition-colors text-xs"
+              >
+                Suiv. →
+              </Link>
+            ) : (
+              <span className="px-2 py-0.5 rounded border border-gray-800 text-gray-700 text-xs cursor-default">Suiv. →</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Header */}

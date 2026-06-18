@@ -204,8 +204,14 @@ export default async function ValidationPage({
       ) : (
         <BulkSelectionProvider>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {queue.map(post => (
-              <PostCard key={post.id} post={post} client={clientsMap.get(post.clientId)} />
+            {queue.map((post, i) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                client={clientsMap.get(post.clientId)}
+                prevId={queue[i - 1]?.id}
+                nextId={queue[i + 1]?.id}
+              />
             ))}
           </div>
           <BulkActionBar postStatuses={Object.fromEntries(queue.map(p => [p.id, p.status]))} />
@@ -224,7 +230,7 @@ function StatBox({ label, value, color, border }: { label: string; value: number
   )
 }
 
-function PostCard({ post, client }: { post: Post; client: Client | undefined }) {
+function PostCard({ post, client, prevId, nextId }: { post: Post; client: Client | undefined; prevId?: string; nextId?: string }) {
   const leftBorder = POST_STATUS_BORDER[post.status] ?? ''
   return (
     <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 transition-colors duration-200`}>
@@ -294,7 +300,11 @@ function PostCard({ post, client }: { post: Post; client: Client | undefined }) 
           <PostDeleteButton post={post} />
           <CopyCaptionButton post={post} />
           {post.status === 'draft' && <MarkReadyButton postId={post.id} />}
-          <Link href={`/posts/${post.id}`} title="Voir le détail complet de ce post" className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-gray-800 hover:border-gray-700">
+          <Link
+            href={`/posts/${post.id}?from=validation${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
+            title="Voir le détail complet de ce post"
+            className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-gray-800 hover:border-gray-700"
+          >
             Détail
           </Link>
         </div>
