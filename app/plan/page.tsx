@@ -10,6 +10,7 @@ import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 import { DuplicatePostButton } from '@/components/posts/DuplicatePostButton'
 import { MarkReadyButton } from '@/components/posts/MarkReadyButton'
+import { InlineSchedulePicker } from '@/components/plan/InlineSchedulePicker'
 import { HighlightText } from '@/components/plan/HighlightText'
 
 export const dynamic = 'force-dynamic'
@@ -583,17 +584,8 @@ function PostRow({ post, client, searchQuery, now, prevId, nextId }: { post: Pos
             <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-gray-600">
               <span>Prochaine étape : {progress.nextStep}</span>
               <span>ETA : {progress.eta}</span>
-              {post.status === 'scheduled' && post.scheduledAt ? (
-                <>
-                  <span className={`flex items-center gap-1 ${post.scheduledAt < now ? 'text-red-400' : 'text-blue-400'}`}>
-                    📅 {formatTime(post.scheduledAt)}
-                    {post.scheduledAt < now && <span className="text-[9px] px-1 rounded bg-red-900/40 border border-red-700/30">en retard</span>}
-                  </span>
-                  <span className="text-gray-700">{formatTime(post.createdAt)}</span>
-                </>
-              ) : (
-                <span>{formatTime(post.createdAt)}</span>
-              )}
+              <InlineSchedulePicker postId={post.id} status={post.status} scheduledAt={post.scheduledAt} now={now} />
+              {post.status !== 'scheduled' && <span className="text-gray-700">{formatTime(post.createdAt)}</span>}
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
               {post.status === 'draft' && (
