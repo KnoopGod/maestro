@@ -55,14 +55,14 @@ export default async function ClientAgentsPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="bg-purple-950/20 border border-purple-700/30 rounded-2xl p-4 text-sm text-gray-300">
-        💡 Tous les agents actifs sont automatiquement utilisés quand tu crées un post pour ce client dans le <Link href="/studio" className="text-purple-400 hover:underline">Studio</Link>.
+        💡 Tous les agents actifs sont automatiquement utilisés quand tu crées un post pour ce client dans le <Link href={`/studio?client=${id}`} className="text-purple-400 hover:underline">Studio</Link>.
       </div>
 
       <Link
-        href="/agents"
+        href={`/agents?client=${id}`}
         className="text-sm text-purple-400 hover:underline"
       >
-        Voir tous les agents disponibles →
+        Voir l&apos;activité agents pour {client.name} →
       </Link>
     </div>
   )
