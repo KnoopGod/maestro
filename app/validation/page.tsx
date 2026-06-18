@@ -144,7 +144,7 @@ export default async function ValidationPage({
             <div className="flex flex-wrap items-center gap-1.5 mr-2">
               <span className="text-[10px] uppercase tracking-wider text-gray-500">Client</span>
               <Link
-                href={buildUrl({ sort: sortParam, q: searchQuery })}
+                href={buildUrl({ sort: sortParam, q: searchQuery, status: statusFilter })}
                 title="Afficher tous les clients"
                 className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                   !clientFilter
@@ -157,7 +157,7 @@ export default async function ValidationPage({
               {clientsInQueue.map(c => (
                 <Link
                   key={c.id}
-                  href={buildUrl({ client: c.id, sort: sortParam, q: searchQuery })}
+                  href={buildUrl({ client: c.id, sort: sortParam, q: searchQuery, status: statusFilter })}
                   title={`Filtrer par ${c.name} (${countByClient[c.id] ?? 0} posts)`}
                   className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                     clientFilter === c.id
@@ -176,7 +176,7 @@ export default async function ValidationPage({
               {sortOptions.map(s => (
                 <Link
                   key={s}
-                  href={buildUrl({ client: clientFilter, sort: s === 'newest' ? undefined : s, q: searchQuery })}
+                  href={buildUrl({ client: clientFilter, sort: s === 'newest' ? undefined : s, q: searchQuery, status: statusFilter })}
                   title={`Trier par ${sortLabels[s]}`}
                   className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
                     sortOption === s
@@ -210,7 +210,7 @@ export default async function ValidationPage({
             {clientsMap.get(clientFilter)?.name ?? clientFilter}
           </span>
           <span>· {queue.length} post{queue.length > 1 ? 's' : ''}</span>
-          <Link href={buildUrl({ sort: sortParam, q: searchQuery })} title="Supprimer le filtre client" className="ml-1 text-gray-600 hover:text-gray-400 transition-colors">
+          <Link href={buildUrl({ sort: sortParam, q: searchQuery, status: statusFilter })} title="Supprimer le filtre client" className="ml-1 text-gray-600 hover:text-gray-400 transition-colors">
             <X className="w-3.5 h-3.5" />
           </Link>
         </div>
