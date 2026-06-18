@@ -5,6 +5,7 @@ import { listClients } from '@/lib/db/queries/clients'
 import { CalendarDays, ExternalLink, AlertCircle, Sparkles, Copy, Download } from 'lucide-react'
 import type { Post, PostStatus, PostContentType } from '@/types/post'
 import type { Client } from '@/types/client'
+import { buildFilterUrl } from '@/lib/utils'
 import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-progress'
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
@@ -110,18 +111,14 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   // Build URL helper preserving all active filters
   function planUrl(overrides: Record<string, string | undefined>) {
-    const p = new URLSearchParams()
-    const params: Record<string, string | undefined> = {
+    return buildFilterUrl('/plan', {
       client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter,
       pillar: pillarFilter, sort: sortOption !== 'newest' ? sortOption : undefined,
       ...overrides,
-    }
-    for (const [k, v] of Object.entries(params)) {
-      if (v) p.set(k, v)
-    }
-    const str = p.toString()
-    return `/plan${str ? `?${str}` : ''}`
+    })
   }
+
+  const hasActiveFilters = [clientFilter, statusFilter, searchQuery, platformFilter, typeFilter, pillarFilter].some(Boolean)
 
   // Platforms actually present in results (for chips)
   const platformsInResults = [...new Set(posts.flatMap(p => p.platforms))]
@@ -192,12 +189,21 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs text-gray-500">Filtres :</span>
-          <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter && !searchQuery && !platformFilter && !typeFilter && !pillarFilter} />
-          <FilterChip href={planUrl({ status: statusFilter === 'scheduled' ? undefined : 'scheduled' })} label="Planifiés" active={statusFilter === 'scheduled'} />
-          <FilterChip href={planUrl({ status: statusFilter === 'published' ? undefined : 'published' })} label="Publiés" active={statusFilter === 'published'} />
-          <FilterChip href={planUrl({ status: statusFilter === 'ready' ? undefined : 'ready' })} label="Prêts" active={statusFilter === 'ready'} />
-          <FilterChip href={planUrl({ status: statusFilter === 'draft' ? undefined : 'draft' })} label="Brouillons" active={statusFilter === 'draft'} />
-          <FilterChip href={planUrl({ status: statusFilter === 'failed' ? undefined : 'failed' })} label="Échecs" active={statusFilter === 'failed'} />
+          <FilterChip href="/plan" label="Tous" active={!hasActiveFilters} />
+          {([
+            ['scheduled', 'Planifiés'],
+            ['published', 'Publiés'],
+            ['ready',     'Prêts'],
+            ['draft',     'Brouillons'],
+            ['failed',    'Échecs'],
+          ] as [string, string][]).map(([val, label]) => (
+            <FilterChip
+              key={val}
+              href={planUrl({ status: statusFilter === val ? undefined : val })}
+              label={label}
+              active={statusFilter === val}
+            />
+          ))}
           {clientsWithPosts.length > 1 && (
             <>
               <span className="text-xs text-gray-700 mx-1">|</span>

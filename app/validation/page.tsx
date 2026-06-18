@@ -12,6 +12,7 @@ import { BulkSelectionProvider, PostSelectCheckbox, BulkActionBar } from '@/comp
 import { CopyCaptionButton } from '@/components/posts/CopyCaptionButton'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { buildFilterUrl } from '@/lib/utils'
 import type { Post } from '@/types/post'
 import type { Client } from '@/types/client'
 
@@ -27,15 +28,9 @@ const POST_STATUS_BORDER: Record<string, string> = {
 type SortOption = 'newest' | 'oldest' | 'impact'
 
 function buildUrl(params: Record<string, string | undefined>) {
-  const p = new URLSearchParams()
-  for (const [k, v] of Object.entries(params)) {
-    if (v) p.set(k, v)
-  }
-  const qs = p.toString()
-  return `/validation${qs ? `?${qs}` : ''}`
+  return buildFilterUrl('/validation', params)
 }
 
-// Helper used inside the async page function — defined here to avoid closure issues
 function makeValidationUrl(base: { client?: string; sort?: string; q?: string; status?: string }, overrides: Record<string, string | undefined>) {
   return buildUrl({ ...base, ...overrides })
 }

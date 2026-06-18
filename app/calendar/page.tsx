@@ -3,6 +3,7 @@ import { CalendarDays, Clock, CheckCircle2, AlertCircle, Sparkles, Plus, Downloa
 import { listPosts } from '@/lib/db/queries/posts'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { PublishDueButton } from '@/components/posts/PostActions'
+import { buildFilterUrl } from '@/lib/utils'
 import type { Post } from '@/types/post'
 import type { ClientWithStats } from '@/types/client'
 
@@ -88,17 +89,11 @@ export default async function CalendarPage({
   const todayIndex = weekOffset === 0 ? (today.getDay() + 6) % 7 : -1
 
   function calUrl(overrides: Record<string, string | undefined>) {
-    const p = new URLSearchParams()
-    const params: Record<string, string | undefined> = {
+    return buildFilterUrl('/calendar', {
       week: weekOffset !== 0 ? String(weekOffset) : undefined,
       client: clientFilter,
       ...overrides,
-    }
-    for (const [k, v] of Object.entries(params)) {
-      if (v) p.set(k, v)
-    }
-    const qs = p.toString()
-    return `/calendar${qs ? `?${qs}` : ''}`
+    })
   }
 
   const prevWeekHref = calUrl({ week: String(weekOffset - 1) })
