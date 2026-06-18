@@ -59,7 +59,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const orderDir = sortOption === 'oldest' ? 'ASC' as const : 'DESC' as const
 
   const showInsights = statusFilter === 'published'
-  const [posts, allPosts, clients] = await Promise.all([
+  const [posts, allPosts, clients, countBaseList] = await Promise.all([
     listPosts({
       clientId: clientFilter,
       status: statusFilter as PostStatus | undefined,
@@ -76,6 +76,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       ? listPosts({ limit: 200, includeInsights: false })
       : Promise.resolve(null as null),
     listClients(),
+    // Stat box counts must ignore the status filter but keep all other active filters
+    statusFilter
+      ? listPosts({ clientId: clientFilter, limit: 200, includeInsights: false, q: searchQuery, platform: platformFilter, contentType: contentTypeFilter, pillar: pillarFilter })
+      : Promise.resolve(null as null),
   ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
@@ -87,6 +91,9 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     return acc
   }, {})
   const clientsWithPosts = clients.filter(c => countByClient[c.id])
+
+  // Stat counts: use countBaseList when status filter is active to show real totals
+  const statBase = countBaseList ?? posts
 
   // Build URL helper preserving all active filters
   function planUrl(overrides: Record<string, string | undefined>) {
@@ -112,10 +119,10 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   // Pillars present in results (for chips) — use base list for counts when filtering
   const pillarBaseList = allPosts ?? posts
   const pillarsInResults = [...new Set(pillarBaseList.map(p => p.pillar).filter(Boolean) as string[])].sort()
-  const totalPublished = posts.filter(p => p.status === 'published').length
-  const totalScheduled = posts.filter(p => p.status === 'scheduled').length
-  const totalDraft = posts.filter(p => p.status === 'draft').length
-  const totalFailed = posts.filter(p => p.status === 'failed').length
+  const totalPublished = statBase.filter(p => p.status === 'published').length
+  const totalScheduled = statBase.filter(p => p.status === 'scheduled').length
+  const totalDraft = statBase.filter(p => p.status === 'draft').length
+  const totalFailed = statBase.filter(p => p.status === 'failed').length
 
   return (
     <div className="space-y-6">
