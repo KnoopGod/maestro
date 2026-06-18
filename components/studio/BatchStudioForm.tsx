@@ -275,7 +275,7 @@ export function BatchStudioForm({ clients, initialClientId }: { clients: Client[
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {slots.map((slot, i) => (
-              <BatchSlotCard key={slot.jobId} slot={slot} index={i} />
+              <BatchSlotCard key={slot.jobId} slot={slot} index={i} clientId={clientId} />
             ))}
           </div>
 
@@ -288,7 +288,7 @@ export function BatchStudioForm({ clients, initialClientId }: { clients: Client[
                 </p>
               </div>
               <Link
-                href="/validation"
+                href={clientId ? `/validation?client=${clientId}` : '/validation'}
                 className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-colors"
               >
                 <ShieldCheck className="w-4 h-4" />
@@ -302,7 +302,7 @@ export function BatchStudioForm({ clients, initialClientId }: { clients: Client[
   )
 }
 
-function BatchSlotCard({ slot, index }: { slot: BatchSlot; index: number }) {
+function BatchSlotCard({ slot, index, clientId }: { slot: BatchSlot; index: number; clientId: string }) {
   const { idea, progress, error, done } = slot
   const status = progress?.status ?? 'running'
   const isRunning = !done
@@ -369,7 +369,7 @@ function BatchSlotCard({ slot, index }: { slot: BatchSlot; index: number }) {
 
       {isSuccess && progress?.postId && (
         <Link
-          href={`/validation`}
+          href={clientId ? `/validation?client=${clientId}` : '/validation'}
           className="text-xs text-emerald-400 hover:underline"
         >
           Voir dans Validation →
