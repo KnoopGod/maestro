@@ -23,6 +23,7 @@ export interface UsageStats {
   recentPosts: Array<{
     id: string
     clientId: string
+    brief: string
     caption: string
     cost: number
     tokensUsed: number
@@ -110,12 +111,13 @@ export async function getUsageStats(): Promise<UsageStats> {
   const recentRows = await query<{
     id: string
     client_id: string
+    brief: string
     caption: string
     cost: number
     tokens_used: number
     created_at: number
   }>(
-    `SELECT id, client_id, caption, cost, tokens_used, created_at
+    `SELECT id, client_id, brief, caption, cost, tokens_used, created_at
      FROM posts
      ORDER BY created_at DESC
      LIMIT 10`
@@ -124,6 +126,7 @@ export async function getUsageStats(): Promise<UsageStats> {
   const recentPosts = recentRows.map(r => ({
     id: r.id,
     clientId: r.client_id,
+    brief: r.brief ?? '',
     caption: r.caption,
     cost: r.cost,
     tokensUsed: r.tokens_used,

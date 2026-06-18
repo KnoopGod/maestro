@@ -215,7 +215,7 @@ export default async function UsagePage() {
             {stats.recentPosts.map(p => (
               <Link key={p.id} href={`/posts/${p.id}?from=usage`} title="Voir le détail de ce post" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-gray-300 truncate">{p.caption}</div>
+                  <div className="text-xs text-gray-300 truncate">{p.brief || p.caption}</div>
                   <div className="text-[10px] text-gray-600 mt-0.5">
                     {formatRelative(p.createdAt)} · {p.tokensUsed.toLocaleString()} tokens
                   </div>
