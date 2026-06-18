@@ -31,7 +31,7 @@ function formatDate(ts: number) {
   })
 }
 
-type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard' | 'client' | 'search'
+type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard' | 'client' | 'search' | 'usage'
 
 const FROM_CFG: Record<Exclude<FromContext, 'client'>, { label: string; href: string; title: string }> = {
   validation: { label: 'Validation',       href: '/validation', title: 'Retour à la file de validation' },
@@ -39,6 +39,7 @@ const FROM_CFG: Record<Exclude<FromContext, 'client'>, { label: string; href: st
   calendar:   { label: 'Calendrier',       href: '/calendar',   title: 'Retour au calendrier' },
   dashboard:  { label: 'Tableau de bord',  href: '/',           title: 'Retour au tableau de bord' },
   search:     { label: 'Recherche',        href: '/search',     title: 'Retour à la recherche' },
+  usage:      { label: 'Usage & Coûts',    href: '/usage',      title: 'Retour aux statistiques d\'usage' },
 }
 
 export default async function PostDetailPage({
@@ -50,7 +51,7 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params
   const { from, prevId, nextId } = await searchParams
-  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard', 'client', 'search'] as FromContext[]).includes(from as FromContext)
+  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard', 'client', 'search', 'usage'] as FromContext[]).includes(from as FromContext)
     ? (from as FromContext)
     : 'validation'
 
