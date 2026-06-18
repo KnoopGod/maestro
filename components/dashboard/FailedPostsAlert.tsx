@@ -48,7 +48,8 @@ export function FailedPostsAlert({ posts }: { posts: FailedPostSummary[] }) {
                   {fmtRelative(p.updatedAt)}
                 </span>
                 <Link
-                  href={`/plan?status=failed&client=${p.clientId}`}
+                  href={`/posts/${p.id}?from=dashboard`}
+                  title="Voir le détail de ce post en échec"
                   className="text-[10px] text-red-400 hover:text-red-300 flex-shrink-0"
                 >
                   Voir →

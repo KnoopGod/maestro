@@ -40,8 +40,8 @@ export function PortalFeedbackAlert({ posts }: { posts: PortalFeedbackSummary[] 
         {posts.slice(0, 4).map(post => (
           <Link
             key={post.id}
-            href="/validation"
-            title="Traiter ce retour client dans la file de validation"
+            href={`/posts/${post.id}?from=dashboard`}
+            title="Voir le détail de ce post et traiter le retour client"
             className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-cyan-900/20 transition-colors"
           >
             {post.feedbackAction === 'approved' ? (
