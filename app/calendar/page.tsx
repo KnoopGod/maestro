@@ -144,8 +144,8 @@ export default async function CalendarPage({
             </Link>
           )}
           <Link
-            href="/api/posts/export/ical"
-            title="Exporter les posts planifiés en fichier iCal (Google Calendar, Apple Calendar…)"
+            href={`/api/posts/export/ical${clientFilter ? `?clientId=${clientFilter}` : ''}`}
+            title={clientFilter ? `Exporter les posts planifiés de ce client en iCal` : `Exporter tous les posts planifiés en iCal (Google Calendar, Apple Calendar…)`}
             className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm flex items-center gap-1.5 transition-colors"
           >
             <Download className="w-4 h-4" />
