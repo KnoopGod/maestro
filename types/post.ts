@@ -8,6 +8,12 @@ export interface PortalFeedback {
 export type PostPlatform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 export type PostContentType = 'photo' | 'reel' | 'story'
 
+export interface PortalFeedback {
+  action: 'approved' | 'changes_requested'
+  comment: string
+  reviewedAt: number
+}
+
 export interface Post {
   id: string
   clientId: string

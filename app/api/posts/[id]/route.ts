@@ -56,3 +56,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const post = await getPost(id)
+    if (!post) return NextResponse.json({ error: 'Post introuvable' }, { status: 404 })
+    if (post.status === 'published') {
+      return NextResponse.json({ error: 'Un post publié ne peut pas être supprimé depuis la validation.' }, { status: 400 })
+    }
+
+    await deletePost(id)
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Erreur suppression post'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

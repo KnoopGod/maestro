@@ -189,6 +189,18 @@ export async function deletePost(id: string): Promise<void> {
   await queryOne(`DELETE FROM posts WHERE id = ?`, [id])
 }
 
+export async function deletePosts(ids: string[]): Promise<number> {
+  const uniqueIds = [...new Set(ids.map(id => id.trim()).filter(Boolean))]
+  if (uniqueIds.length === 0) return 0
+
+  const placeholders = uniqueIds.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `DELETE FROM posts WHERE id IN (${placeholders}) AND status != 'published'`,
+    args: uniqueIds,
+  })
+  return result.rowsAffected
+}
+
 export async function createPost(input: {
   clientId: string
   platforms: PostPlatform[]
@@ -354,6 +366,22 @@ export async function setSupervisorReview(id: string, review: SupervisorReview):
     [JSON.stringify(review), now, id]
   )
   if (!row) throw new Error('Post not found')
+  return mapRow(row)
+}
+
+export async function setPortalFeedback(id: string, feedback: PortalFeedback): Promise<Post> {
+  const now = Date.now()
+  const newStatus = feedback.action === 'changes_requested' ? 'draft' : undefined
+
+  const row = await queryOne<PostRow>(
+    newStatus
+      ? `UPDATE posts SET portal_feedback = ?, status = ?, updated_at = ? WHERE id = ? RETURNING *`
+      : `UPDATE posts SET portal_feedback = ?, updated_at = ? WHERE id = ? RETURNING *`,
+    newStatus
+      ? [JSON.stringify(feedback), newStatus, now, id]
+      : [JSON.stringify(feedback), now, id]
+  )
+  if (!row) throw new Error('Post introuvable')
   return mapRow(row)
 }
 

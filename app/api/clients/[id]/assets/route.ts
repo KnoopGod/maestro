@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { unlink } from 'node:fs/promises'
 import { getClient } from '@/lib/db/queries/clients'
-import { createAsset, listClientAssets } from '@/lib/db/queries/assets'
+import { createAsset, deleteAsset, getAsset, listClientAssets } from '@/lib/db/queries/assets'
 import { saveClientFile } from '@/lib/storage/local'
 import { extractTextFromFile, getAbsolutePath } from '@/lib/storage/extract-text'
 import { detectAssetType, type AssetCategory } from '@/types/asset'
@@ -14,6 +15,41 @@ export async function GET(
   const { id } = await params
   const assets = await listClientAssets(id)
   return NextResponse.json({ assets })
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: clientId } = await params
+  const body = await req.json().catch(() => ({}))
+  const rawIds: unknown[] = Array.isArray((body as { ids?: unknown }).ids)
+    ? (body as { ids: unknown[] }).ids
+    : []
+  const ids = [...new Set(rawIds
+    .map(id => String(id).trim())
+    .filter(id => id.length > 0))]
+
+  if (ids.length === 0) {
+    return NextResponse.json({ error: 'Aucun média sélectionné.' }, { status: 400 })
+  }
+
+  let deleted = 0
+  for (const assetId of ids) {
+    const asset = await getAsset(assetId)
+    if (!asset || asset.clientId !== clientId) continue
+
+    try {
+      await unlink(getAbsolutePath(asset.url))
+    } catch {
+      // ignore — file might be already gone or stored remotely
+    }
+
+    await deleteAsset(assetId)
+    deleted += 1
+  }
+
+  return NextResponse.json({ success: true, deleted })
 }
 
 export async function POST(

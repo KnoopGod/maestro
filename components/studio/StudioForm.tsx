@@ -20,6 +20,11 @@ import { StudioResultPanel } from './StudioResultPanel'
 
 interface ClientDaStatus { active: boolean; summary?: string }
 
+interface StudioCapabilities {
+  lumaEnabled: boolean
+  imageModel: string
+}
+
 export function StudioForm({
   clients,
   initialClientId,
@@ -57,10 +62,11 @@ export function StudioForm({
   const [jobProgress, setJobProgress] = useState<JobProgress | null>(null)
   const pollAbortRef = useRef<AbortController | null>(null)
 
-  const [imageMode, setImageMode] = useState<'generate' | 'library'>(initialContentType === 'reel' ? 'library' : 'generate')
+  const [imageMode, setImageMode] = useState<'generate' | 'library'>('generate')
   const [selectedAsset, setSelectedAsset] = useState<ClientAsset | null>(null)
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
+  const [capabilities, setCapabilities] = useState<StudioCapabilities | null>(null)
 
   const [aiDirective, setAiDirective] = useState<GenerationResult['directive'] | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -80,6 +86,13 @@ export function StudioForm({
   }
 
   useEffect(() => () => pollAbortRef.current?.abort(), [])
+
+  useEffect(() => {
+    fetch('/api/studio/capabilities')
+      .then(r => r.json())
+      .then((data: StudioCapabilities) => setCapabilities(data))
+      .catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     if (!clientId || imageMode !== 'library') return
@@ -128,10 +141,6 @@ export function StudioForm({
   const selectContentType = (type: ContentType) => {
     setContentType(type)
     setSelectedAsset(null)
-    if (type === 'reel') {
-      setImageMode('library')
-      if (clientId) setAssetsLoading(true)
-    }
   }
 
   function handleClientChange(id: string) {
@@ -331,7 +340,7 @@ export function StudioForm({
 
         <button
           onClick={handleGenerate}
-          disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && !selectedAsset) || (contentType === 'reel' && selectedAsset?.type !== 'video')}
+          disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && (!selectedAsset || (contentType === 'reel' && selectedAsset.type !== 'video')))}
           title="Lancer la chaîne d'agents : analyse client, stratégie, rédaction, visuel, scoring puis draft prêt à valider"
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >

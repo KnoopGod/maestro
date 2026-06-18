@@ -123,6 +123,7 @@ export async function initSchema() {
       impact_score INTEGER DEFAULT 0,
       impact_analysis TEXT,
       supervisor_review TEXT,
+      portal_feedback TEXT,
       meta_post_ids TEXT,
       scheduled_at INTEGER,
       published_at INTEGER,

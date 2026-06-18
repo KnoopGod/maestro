@@ -15,6 +15,7 @@ export default async function ClientConnectionsPage({ params }: { params: Promis
   if (!client) notFound()
 
   const accounts = await listClientSocialAccounts(id)
+  const linkedInAccount = accounts.find(account => account.platform === 'linkedin')
   const metaConfig = {
     appIdConfigured: Boolean(process.env.META_APP_ID),
     appSecretConfigured: Boolean(process.env.META_APP_SECRET),

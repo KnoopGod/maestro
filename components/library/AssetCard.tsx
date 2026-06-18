@@ -7,7 +7,17 @@ import { formatFileSize, ASSET_CATEGORIES, type ClientAsset } from '@/types/asse
 
 type AnimateStatus = 'idle' | 'starting' | 'pending' | 'dreaming' | 'saving' | 'done' | 'error'
 
-export function AssetCard({ asset }: { asset: ClientAsset }) {
+export function AssetCard({
+  asset,
+  selectionMode = false,
+  selected = false,
+  onSelectedChange,
+}: {
+  asset: ClientAsset
+  selectionMode?: boolean
+  selected?: boolean
+  onSelectedChange?: (selected: boolean) => void
+}) {
   const [isPending, startTransition] = useTransition()
   const [showPreview, setShowPreview] = useState(false)
   const router = useRouter()
@@ -126,7 +136,19 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
 
   return (
     <>
-      <div className="group relative bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden hover:border-purple-700/50 transition-all">
+      <div className={`group relative bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden hover:border-purple-700/50 transition-all ${selected ? 'ring-2 ring-purple-500/60' : ''}`}>
+        {selectionMode && (
+          <label className="absolute left-2 top-2 z-20 inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-gray-950/90 px-2 py-1 text-[11px] text-white shadow-lg">
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={event => onSelectedChange?.(event.target.checked)}
+              className="h-4 w-4 rounded border-gray-600 bg-gray-900 text-purple-500 focus:ring-purple-500"
+            />
+            Sélectionner
+          </label>
+        )}
+
         {/* Visual */}
         <div
           className="aspect-square relative cursor-pointer"
@@ -159,14 +181,16 @@ export function AssetCard({ asset }: { asset: ClientAsset }) {
             <button onClick={e => { e.stopPropagation(); toggleStar() }} title={asset.starred ? 'Retirer cette ressource des favoris DA' : 'Marquer cette ressource comme référence importante de la DA'} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-black/80">
               <Star className={`w-3.5 h-3.5 ${asset.starred ? 'text-yellow-400 fill-yellow-400' : 'text-white'}`} />
             </button>
-            <button onClick={e => { e.stopPropagation(); handleDelete() }} disabled={isPending} title={`Supprimer ${asset.originalName} de la Library`} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-red-600">
-              {isPending ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Trash2 className="w-3.5 h-3.5 text-white" />}
-            </button>
+            {!selectionMode && (
+              <button onClick={e => { e.stopPropagation(); handleDelete() }} disabled={isPending} title={`Supprimer ${asset.originalName} de la Library`} className="p-1.5 rounded-lg bg-black/60 backdrop-blur hover:bg-red-600">
+                {isPending ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Trash2 className="w-3.5 h-3.5 text-white" />}
+              </button>
+            )}
           </div>
 
           {/* Top left badge */}
           {categoryCfg && (
-            <div className="absolute top-2 left-2 text-[10px] bg-black/60 backdrop-blur px-1.5 py-0.5 rounded text-white">
+            <div className={`absolute left-2 text-[10px] bg-black/60 backdrop-blur px-1.5 py-0.5 rounded text-white ${selectionMode ? 'top-11' : 'top-2'}`}>
               {categoryCfg.emoji} {categoryCfg.label}
             </div>
           )}

@@ -225,6 +225,10 @@ export async function runPostPipeline(input: {
   const finalPost = await getPost(post.id)
   if (!finalPost) throw new Error('Post créé introuvable après supervision')
 
+  const visualModel = image.assetId
+    ? (contentType === 'reel' ? 'luma-dream-machine' : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'))
+    : 'visual-skipped'
+
   return {
     post: finalPost,
     directive: account.directive,
