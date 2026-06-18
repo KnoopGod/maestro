@@ -31,9 +31,9 @@ function formatDate(ts: number) {
   })
 }
 
-type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard'
+type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard' | 'client'
 
-const FROM_CFG: Record<FromContext, { label: string; href: string; title: string }> = {
+const FROM_CFG: Record<Exclude<FromContext, 'client'>, { label: string; href: string; title: string }> = {
   validation: { label: 'Validation',       href: '/validation', title: 'Retour à la file de validation' },
   plan:       { label: 'Plan',             href: '/plan',       title: 'Retour au plan de contenu' },
   calendar:   { label: 'Calendrier',       href: '/calendar',   title: 'Retour au calendrier' },
@@ -49,15 +49,17 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params
   const { from, prevId, nextId } = await searchParams
-  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard'] as FromContext[]).includes(from as FromContext)
+  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard', 'client'] as FromContext[]).includes(from as FromContext)
     ? (from as FromContext)
     : 'validation'
-  const breadcrumb = FROM_CFG[fromCtx]
 
   const post = await getPost(id)
   if (!post) notFound()
 
   const client = await getClient(post.clientId)
+  const breadcrumb = fromCtx === 'client' && client
+    ? { label: client.name, href: `/clients/${client.id}`, title: `Retour à la fiche ${client.name}` }
+    : FROM_CFG[fromCtx as Exclude<FromContext, 'client'>]
   const cfg = STATUS_CFG[post.status] ?? STATUS_CFG.draft
   const StatusIcon = cfg.icon
 
