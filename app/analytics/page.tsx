@@ -31,6 +31,21 @@ export default async function AnalyticsPage() {
     .map(([pillar, count]) => ({ pillar, count }))
     .sort((a, b) => b.count - a.count)
 
+  // Platform breakdown
+  const PLATFORM_EMOJI: Record<string, string> = {
+    instagram: '📷 Instagram', facebook: '👍 Facebook',
+    tiktok: '🎵 TikTok', linkedin: '💼 LinkedIn',
+  }
+  const platformMap = new Map<string, number>()
+  for (const p of published) {
+    for (const pl of p.platforms) {
+      platformMap.set(pl, (platformMap.get(pl) ?? 0) + 1)
+    }
+  }
+  const platformBreakdown = Array.from(platformMap.entries())
+    .map(([platform, count]) => ({ platform, count }))
+    .sort((a, b) => b.count - a.count)
+
   const clientsWithPublished = clients.filter(c =>
     published.some(p => p.clientId === c.id)
   )
@@ -76,6 +91,37 @@ export default async function AnalyticsPage() {
                   </div>
                   <span className="text-xs font-bold text-white w-8 text-right">{count}</span>
                 </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Platform breakdown */}
+      {platformBreakdown.length > 0 && (
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Posts par plateforme</h2>
+          <div className="space-y-2">
+            {platformBreakdown.map(({ platform, count }) => {
+              const max = Math.max(...platformBreakdown.map(x => x.count), 1)
+              return (
+                <Link
+                  key={platform}
+                  href={`/plan?platform=${platform}`}
+                  title={`Voir les posts ${PLATFORM_EMOJI[platform] ?? platform}`}
+                  className="flex items-center gap-4 hover:bg-gray-800/30 rounded-lg px-2 py-1.5 transition-colors group"
+                >
+                  <span className="text-xs text-gray-300 w-40 truncate flex-shrink-0 group-hover:text-white transition-colors">
+                    {PLATFORM_EMOJI[platform] ?? platform}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-300"
+                      style={{ width: `${(count / max) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-white w-8 text-right">{count}</span>
+                </Link>
               )
             })}
           </div>
