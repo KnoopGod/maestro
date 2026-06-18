@@ -141,9 +141,13 @@ export async function listPosts(options?: {
   const limit = options?.limit ? `LIMIT ${options.limit}` : ''
   const orderBy = options?.orderBy ?? 'created_at'
   const orderDir = options?.orderDir ?? 'DESC'
+  // Put NULLs last when sorting by nullable columns (scheduled_at, impact_score)
+  const orderClause = (orderBy === 'scheduled_at' || orderBy === 'impact_score')
+    ? `${orderBy} IS NULL, ${orderBy} ${orderDir}`
+    : `${orderBy} ${orderDir}`
 
   const rows = await query<PostRow>(
-    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY ${orderBy} ${orderDir} ${limit}`,
+    `SELECT ${postSelect(includeInsights)} FROM posts ${where} ORDER BY ${orderClause} ${limit}`,
     args
   )
   return rows.map(mapRow)
