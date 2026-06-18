@@ -8,6 +8,7 @@
  *  - Mood (cozy, elegant, rustic, etc.)
  */
 import Anthropic from '@anthropic-ai/sdk'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 import { readFile } from 'node:fs/promises'
 import { getAbsolutePath } from '@/lib/storage/extract-text'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
@@ -67,7 +68,7 @@ Rien d'autre dans ta réponse que le JSON.`
     : 'image/jpeg'
 
   const message = await claude.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: AGENT_MODELS.sonnet,
     max_tokens: 1024,
     system: systemPrompt,
     messages: [{
@@ -102,14 +103,14 @@ Rien d'autre dans ta réponse que le JSON.`
 
   const inputTokens = message.usage.input_tokens
   const outputTokens = message.usage.output_tokens
-  const cost = (inputTokens * 3 + outputTokens * 15) / 1_000_000
+  const cost = calcCost('sonnet', inputTokens, outputTokens)
 
   return {
     description: parsed.description,
     tags: parsed.tags,
     dominantColors: parsed.dominantColors,
     mood: parsed.mood,
-    cost: parseFloat(cost.toFixed(6)),
+    cost,
     tokensUsed: inputTokens + outputTokens,
   }
 }

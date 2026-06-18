@@ -46,7 +46,7 @@ export const CONNECTIONS: ConnectionStep[] = [
     guide: [
       'Créer une clé sur console.anthropic.com → API Keys.',
       'Ajouter ANTHROPIC_API_KEY=sk-ant-... dans .env.local.',
-      'Modèle par défaut : claude-opus-4-7 (adaptive thinking activé).',
+      'Modèle par défaut : claude-opus-4-8 (adaptive thinking activé).',
     ],
     test: 'Générer un post dans Studio. Sans clé, CODEXRS bascule sur un fallback déterministe.',
     isConfigured: () => Boolean(process.env.ANTHROPIC_API_KEY),

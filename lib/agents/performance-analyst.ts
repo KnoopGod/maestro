@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { PostInsights } from '@/types/post'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 const GRAPH_API = 'https://graph.facebook.com/v23.0'
 
@@ -180,7 +181,7 @@ Réponds en JSON strict, sans backticks, exactement ce format :
   try {
     const claude = new Anthropic({ apiKey })
     const message = await claude.messages.create({
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
       max_tokens: 2048,
       thinking: { type: 'adaptive' },
       output_config: { effort: 'high' },
@@ -203,13 +204,13 @@ Réponds en JSON strict, sans backticks, exactement ce format :
 
     const inputTokens = message.usage.input_tokens
     const outputTokens = message.usage.output_tokens
-    const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
+    const cost = calcCost('opus', inputTokens, outputTokens)
 
     return {
       analysis: normalizeAnalysis(parsed),
-      cost: parseFloat(cost.toFixed(6)),
+      cost,
       tokensUsed: inputTokens + outputTokens,
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
     }
   } catch {
     return { analysis: fallbackAnalysis(posts), cost: 0, tokensUsed: 0, model: 'fallback' }

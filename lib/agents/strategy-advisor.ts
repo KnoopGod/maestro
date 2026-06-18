@@ -4,6 +4,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface StrategyAdvice {
   positioning: string
@@ -99,7 +100,7 @@ Réponds en JSON strict sans markdown, avec cette structure exacte :
 }`
 
   const response = await anthropic.messages.create({
-    model: 'claude-opus-4-7',
+    model: AGENT_MODELS.opus,
     max_tokens: 4000,
     thinking: { type: 'enabled', budget_tokens: 2000 },
     messages: [{ role: 'user', content: prompt }],
@@ -108,7 +109,7 @@ Réponds en JSON strict sans markdown, avec cette structure exacte :
   const textBlock = response.content.find(b => b.type === 'text')
   const raw = textBlock?.type === 'text' ? textBlock.text : ''
 
-  const cost = (response.usage.input_tokens * 5 + response.usage.output_tokens * 25) / 1_000_000
+  const cost = calcCost('opus', response.usage.input_tokens, response.usage.output_tokens)
 
   try {
     const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
