@@ -46,6 +46,24 @@ export default async function AnalyticsPage() {
     .map(([platform, count]) => ({ platform, count }))
     .sort((a, b) => b.count - a.count)
 
+  // Monthly trend (last 6 months)
+  const MONTH_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc']
+  const nowDate = new Date()
+  const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(nowDate.getFullYear(), nowDate.getMonth() - (5 - i), 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const label = `${MONTH_FR[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`
+    const count = published.filter(p => {
+      if (!p.publishedAt) return false
+      const pd = new Date(p.publishedAt)
+      return pd.getFullYear() === d.getFullYear() && pd.getMonth() === d.getMonth()
+    }).length
+    const isCurrent = i === 5
+    return { key, label, count, isCurrent }
+  })
+  const maxMonthCount = Math.max(...monthlyTrend.map(m => m.count), 1)
+  const hasMonthlyData = monthlyTrend.some(m => m.count > 0) && monthlyTrend.filter(m => m.count > 0).length >= 2
+
   const clientsWithPublished = clients.filter(c =>
     published.some(p => p.clientId === c.id)
   )
@@ -69,6 +87,27 @@ export default async function AnalyticsPage() {
         <Card label="Échecs"         value={failed.length}    icon={Eye}        color="text-red-400"    grad="from-red-950/40"    border="border-red-800/30" />
         <Card label="Clients actifs" value={clients.filter(c => c.status === 'active').length} icon={Users} color="text-purple-400" grad="from-purple-950/40" border="border-purple-800/30" />
       </div>
+
+      {/* Monthly trend */}
+      {hasMonthlyData && (
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Tendance mensuelle</h2>
+          <div className="flex items-end gap-2">
+            {monthlyTrend.map(({ key, label, count, isCurrent }) => (
+              <div key={key} className="flex-1 flex flex-col items-center gap-1.5">
+                <span className={`text-[10px] font-bold ${isCurrent ? 'text-emerald-400' : 'text-gray-400'}`}>{count || ''}</span>
+                <div className="w-full flex items-end justify-center" style={{ height: '60px' }}>
+                  <div
+                    className={`w-full rounded-t transition-all duration-300 ${isCurrent ? 'bg-emerald-600/80' : 'bg-indigo-600/50'}`}
+                    style={{ height: `${Math.max((count / maxMonthCount) * 60, count > 0 ? 4 : 0)}px` }}
+                  />
+                </div>
+                <span className={`text-[9px] font-mono ${isCurrent ? 'text-emerald-400' : 'text-gray-600'}`}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Performance Analyst */}
       <PerformancePanel clients={clientsWithPublished} />
