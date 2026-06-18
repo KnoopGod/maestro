@@ -46,6 +46,8 @@ function formatRelative(ts: number): string {
 
 type PlanSort = 'newest' | 'oldest' | 'impact' | 'scheduled'
 
+const CONTENT_TYPE_LABELS: Record<string, string> = { photo: 'Photo', reel: 'Reel', story: 'Story' }
+
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string; q?: string; platform?: string; type?: string; sort?: string; pillar?: string }> }) {
   const { client: clientFilter, status: statusFilter, q: searchQuery, platform: platformFilter, type: typeFilter, sort: sortParam, pillar: pillarFilter } = await searchParams
   const contentTypeFilter = typeFilter as PostContentType | undefined
@@ -103,7 +105,6 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const platformsInResults = [...new Set(posts.flatMap(p => p.platforms))]
 
   // Content types present in results (for chips)
-  const CONTENT_TYPE_LABELS: Record<string, string> = { post: 'Post', reel: 'Reel', story: 'Story', video: 'Vidéo' }
   const contentTypesInResults = [...new Set(posts.map(p => p.contentType))]
 
   // Pillars present in results (for chips) — use base list for counts when filtering
@@ -476,10 +477,34 @@ function PostRow({ post, client, searchQuery, now }: { post: Post; client: Clien
                 {PLATFORM_INFO[p]?.emoji} {PLATFORM_INFO[p]?.label}
               </span>
             ))}
+            {post.pillar && (
+              <Link
+                href={`/plan?pillar=${encodeURIComponent(post.pillar)}`}
+                title={`Filtrer par pilier : ${post.pillar}`}
+                className="text-[10px] border rounded px-1.5 py-0.5 border-violet-700/40 text-violet-300 hover:bg-violet-900/20 transition-colors"
+              >
+                {post.pillar}
+              </Link>
+            )}
+            {post.contentType && post.contentType !== 'photo' && (
+              <Link
+                href={`/plan?type=${post.contentType}`}
+                title={`Filtrer par type : ${CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}`}
+                className="text-[10px] border rounded px-1.5 py-0.5 border-indigo-700/40 text-indigo-300 hover:bg-indigo-900/20 transition-colors"
+              >
+                {CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}
+              </Link>
+            )}
             <span className="text-[11px] text-gray-500 ml-auto">
               {post.publishedAt ? `Publié ${formatRelative(post.publishedAt)}` : `Créé ${formatRelative(post.createdAt)}`}
             </span>
           </div>
+
+          {post.brief && (
+            <p className="text-[11px] text-gray-400 line-clamp-1 mb-0.5 italic">
+              {post.brief}
+            </p>
+          )}
 
           <p className="text-sm text-gray-200 line-clamp-2 leading-snug">
             <HighlightText text={post.caption} query={searchQuery} />
