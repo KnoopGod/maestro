@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireOwnerIfMultiUser } from '@/lib/auth/guards'
 import { getUserById, updateUser } from '@/lib/db/queries/users'
 import type { UserRole } from '@/lib/db/queries/users'
 
@@ -8,6 +9,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireOwnerIfMultiUser()
+  if (guard.response) return guard.response
+
   const { id } = await params
   const user = await getUserById(id)
   if (!user) return NextResponse.json({ error: 'Utilisateur introuvable' }, { status: 404 })

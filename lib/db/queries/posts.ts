@@ -58,7 +58,7 @@ function mapRow(row: PostRow): Post {
     impactAnalysis: row.impact_analysis,
     metaPostIds: row.meta_post_ids ? JSON.parse(row.meta_post_ids) : {},
     metaInsights: (() => { try { return row.meta_insights ? JSON.parse(row.meta_insights) as PostInsights[] : [] } catch { return [] } })(),
-    supervisorReview: row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null,
+    supervisorReview: (() => { try { return row.supervisor_review ? JSON.parse(row.supervisor_review) as SupervisorReview : null } catch { return null } })(),
     portalFeedback: (() => { try { return row.portal_feedback ? JSON.parse(row.portal_feedback) as PortalFeedback : null } catch { return null } })(),
     scheduledAt: row.scheduled_at,
     publishedAt: row.published_at,

@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser, listUsers } from '@/lib/db/queries/users'
 import { hashPassword } from '@/lib/auth/password'
+import { requireOwnerIfMultiUser } from '@/lib/auth/guards'
 import type { UserRole } from '@/lib/db/queries/users'
 
 const ALLOWED_ROLES: UserRole[] = ['owner', 'editor']
 
 export async function GET() {
+  const guard = await requireOwnerIfMultiUser()
+  if (guard.response) return guard.response
+
   const users = await listUsers()
   return NextResponse.json({ users })
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requireOwnerIfMultiUser()
+  if (guard.response) return guard.response
+
   let body: { email?: unknown; name?: unknown; role?: unknown; password?: unknown }
   try {
     body = await req.json()

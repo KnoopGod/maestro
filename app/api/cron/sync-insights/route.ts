@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { listPosts, savePostInsights } from '@/lib/db/queries/posts'
 import { getSocialAccount } from '@/lib/db/queries/social-accounts'
 import { fetchFacebookInsights, fetchInstagramInsights } from '@/lib/agents/performance-analyst'
+import { timingSafeEqual } from '@/lib/auth/session'
 import type { PostInsights } from '@/types/post'
 
 export const dynamic = 'force-dynamic'
@@ -12,13 +13,14 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000
 
 export async function POST(req: NextRequest) {
-  // Verify Vercel cron secret when set
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret) {
-    const authHeader = req.headers.get('authorization')
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  if (!cronSecret) {
+    return NextResponse.json({ error: 'CRON_SECRET manquant' }, { status: 500 })
+  }
+
+  const authHeader = req.headers.get('authorization') || ''
+  if (!timingSafeEqual(authHeader, `Bearer ${cronSecret}`)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const cutoff = Date.now() - THIRTY_DAYS_MS

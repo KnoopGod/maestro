@@ -1,4 +1,7 @@
+import { nanoid } from 'nanoid'
 import { db } from '../index'
+import { hashPassword } from '../../auth/password'
+import { isMultiUserMode } from '../../auth/mode'
 
 export async function migrateMultiUsersFoundation() {
   // ─── Users ────────────────────────────────────────────────────────────────
@@ -49,4 +52,39 @@ export async function migrateMultiUsersFoundation() {
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action)`)
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)`)
+
+  await bootstrapOwnerIfNeeded()
+}
+
+async function bootstrapOwnerIfNeeded() {
+  if (!isMultiUserMode()) return
+
+  const password = getBootstrapPassword()
+  if (!password) return
+
+  const countResult = await db.execute('SELECT COUNT(*) AS count FROM users')
+  const count = Number(countResult.rows[0]?.count ?? 0)
+  if (count > 0) return
+
+  const now = Date.now()
+  const email = (process.env.CODEXRS_ADMIN_EMAIL || 'owner@agent-rs.local').trim().toLowerCase()
+  const name = (process.env.CODEXRS_ADMIN_NAME || 'Owner AGENT RS').trim()
+  const passwordHash = await hashPassword(password)
+
+  await db.execute({
+    sql: `
+      INSERT INTO users (id, email, name, role, password_hash, active, created_at)
+      VALUES (?, ?, ?, 'owner', ?, 1, ?)
+    `,
+    args: [nanoid(), email, name, passwordHash, now],
+  })
+}
+
+function getBootstrapPassword() {
+  return (
+    process.env.CODEXRS_INITIAL_OWNER_PASSWORD ||
+    process.env.CODEXRS_PASSWORD ||
+    process.env.MAESTRO_PASSWORD ||
+    ''
+  )
 }

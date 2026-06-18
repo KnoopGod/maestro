@@ -236,7 +236,7 @@ function WizardModal({
     setTesting(true)
     setTestResult(null)
     await new Promise(r => setTimeout(r, 1800))
-    // Simulated test — replace with real API ping
+    // Client-side format check only. Secrets must be stored in Vercel/server env.
     setTestResult(apiKey.length > 10 ? 'success' : 'error')
     setTesting(false)
   }
@@ -385,7 +385,7 @@ function WizardModal({
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : <RefreshCw className="w-4 h-4" />
                       }
-                      Tester la connexion
+                      Vérifier le format
                     </button>
 
                     <AnimatePresence>
@@ -405,8 +405,8 @@ function WizardModal({
                             : <AlertCircle className="w-4 h-4" />
                           }
                           {testResult === 'success'
-                            ? '✓ Connexion réussie — clé valide'
-                            : '✗ Clé invalide ou insuffisante'
+                            ? 'Format accepté — ajoute la clé côté serveur/Vercel si nécessaire'
+                            : 'Format trop court ou incomplet'
                           }
                         </motion.div>
                       )}
@@ -434,7 +434,7 @@ function WizardModal({
               className="flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
             >
               <CheckCircle2 className="w-4 h-4" />
-              Enregistrer
+              Marquer comme guidé
             </button>
           ) : (
             <button
@@ -480,7 +480,7 @@ function IntegrationCard({
           {isConnected && (
             <span className="flex items-center gap-1 text-[10px] bg-green-950/60 text-green-400 border border-green-700/30 rounded-full px-2 py-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              Connecté
+              Guide fait
             </span>
           )}
         </div>
@@ -493,7 +493,7 @@ function IntegrationCard({
             onClick={onDisconnect}
             className="text-xs px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:border-red-700/50 hover:text-red-400 transition-all"
           >
-            Déconnecter
+            Réinitialiser
           </button>
         ) : (
           <button
@@ -563,7 +563,7 @@ export default function ConnectionsPage() {
         {/* Global status */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl px-5 py-3 text-center min-w-[120px]">
           <div className="text-2xl font-bold text-purple-400">{connectedCount}/{totalCount}</div>
-          <div className="text-[11px] text-gray-500">connectées</div>
+          <div className="text-[11px] text-gray-500">guidées</div>
           <div className="w-full h-1.5 bg-gray-800 rounded-full mt-2 overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-purple-600 to-pink-500 rounded-full"

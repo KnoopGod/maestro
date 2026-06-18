@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import LoginFormV2 from '@/components/auth/LoginFormV2'
-
-const isV2 = process.env.NEXT_PUBLIC_MULTI_USER_MODE === 'true'
+import { isMultiUserMode } from '@/lib/auth/mode'
 
 export default async function LoginPage({
   searchParams,
@@ -9,6 +8,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; next?: string }>
 }) {
   const { error, next } = await searchParams
+  const isV2 = isMultiUserMode()
 
   return (
     <main className="min-h-screen bg-[#07080d] text-white flex items-center justify-center px-4">

@@ -15,11 +15,13 @@ import { timingSafeEqual } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET
-  if (secret) {
-    const auth = req.headers.get('authorization') || ''
-    if (!timingSafeEqual(auth, `Bearer ${secret}`)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  if (!secret) {
+    return NextResponse.json({ error: 'CRON_SECRET manquant' }, { status: 500 })
+  }
+
+  const auth = req.headers.get('authorization') || ''
+  if (!timingSafeEqual(auth, `Bearer ${secret}`)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const exec = await startCronExecution('cleanup-jobs').catch(() => null)

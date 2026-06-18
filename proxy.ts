@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SESSION_COOKIE, isAuthEnabled, isValidSessionToken } from '@/lib/auth/session'
+import { isMultiUserMode } from '@/lib/auth/mode'
 
 const PUBLIC_PATHS = [
   '/login',
@@ -11,6 +12,7 @@ const PUBLIC_PATHS = [
   '/api/admin/migrate',
   '/api/cron/publish-due',
   '/api/cron/sync-insights',
+  '/api/cron/cleanup-jobs',
   '/privacy',
   '/data-deletion',
 ]
@@ -33,7 +35,7 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  if (process.env.MULTI_USER_MODE === 'true') {
+  if (isMultiUserMode()) {
     const sessionCookie = req.cookies.get('maestro_session_v2')?.value
     if (sessionCookie) {
       // Verify session against /api/auth/me (DB lookup not available in Edge runtime)

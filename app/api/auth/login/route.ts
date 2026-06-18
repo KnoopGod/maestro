@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { LEGACY_SESSION_COOKIE, SESSION_COOKIE, getAuthPassword, signSessionToken } from '@/lib/auth/session'
+import { isMultiUserMode } from '@/lib/auth/mode'
 
 export async function POST(req: NextRequest) {
   // In V2 mode the login page posts to /api/auth/login-v2 directly, but handle
   // accidental hits to this legacy route gracefully.
-  if (process.env.MULTI_USER_MODE === 'true') {
+  if (isMultiUserMode()) {
     return NextResponse.redirect(new URL('/login', req.url), 303)
   }
 

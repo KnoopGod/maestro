@@ -1,21 +1,27 @@
 import Link from 'next/link'
 import { Settings, User, CreditCard, Users, Palette, Shield, Code, Plug, DollarSign } from 'lucide-react'
 import { WipOverlay } from '@/components/ui/WipTag'
+import { isMultiUserMode } from '@/lib/auth/mode'
 
 export const dynamic = 'force-dynamic'
 
-const SECTIONS = [
+function getSections() {
+  const multiUser = isMultiUserMode()
+  return [
   { icon: Plug,       title: 'Connexions API',  desc: 'Anthropic, OpenAI, Meta...',          color: 'text-purple-400',  href: '/social/settings/connections', wip: false },
   { icon: DollarSign, title: 'Usage & Coûts',   desc: 'Tokens, coûts par client, par mois',  color: 'text-emerald-400', href: '/usage',                       wip: false },
-  { icon: User,       title: 'Profil & compte', desc: 'Email, mot de passe, préférences',    color: 'text-blue-400',    href: process.env.NEXT_PUBLIC_MULTI_USER_MODE === 'true' ? '/settings/profile' : '#', wip: process.env.NEXT_PUBLIC_MULTI_USER_MODE !== 'true' },
+  { icon: User,       title: 'Profil & compte', desc: 'Email, mot de passe, préférences',    color: 'text-blue-400',    href: multiUser ? '/settings/profile' : '#', wip: !multiUser },
   { icon: CreditCard, title: 'Facturation',     desc: 'Plan, paiement, factures',            color: 'text-emerald-400', href: '#',                            wip: true  },
   { icon: Users,      title: 'Équipe',          desc: 'Inviter collaborateurs, permissions', color: 'text-amber-400',   href: '/settings/team',               wip: false },
   { icon: Palette,    title: 'Apparence',       desc: 'Thème, langue, notifications',        color: 'text-pink-400',    href: '#',                            wip: true  },
   { icon: Shield,     title: 'Sécurité',        desc: 'Sessions actives, audit log',         color: 'text-red-400',     href: '/settings/audit',              wip: false },
   { icon: Code,       title: 'API & Webhooks',  desc: 'Livraisons webhook, intégrations',    color: 'text-cyan-400',    href: '/settings/webhooks',           wip: false },
-]
+  ]
+}
 
-function SectionCard({ icon: Icon, title, desc, color, href }: Omit<typeof SECTIONS[0], 'wip'>) {
+type Section = ReturnType<typeof getSections>[number]
+
+function SectionCard({ icon: Icon, title, desc, color, href }: Omit<Section, 'wip'>) {
   return (
     <Link
       href={href}
@@ -29,6 +35,8 @@ function SectionCard({ icon: Icon, title, desc, color, href }: Omit<typeof SECTI
 }
 
 export default function SettingsPage() {
+  const sections = getSections()
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="border-b border-indigo-950/60 pb-5">
@@ -41,7 +49,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {SECTIONS.map(({ wip, ...s }) =>
+        {sections.map(({ wip, ...s }) =>
           wip
             ? <WipOverlay key={s.title}><SectionCard {...s} /></WipOverlay>
             : <SectionCard key={s.title} {...s} />
