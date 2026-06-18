@@ -312,15 +312,22 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       {posts.length === 0 ? (
         <div className="bg-gray-900/20 border border-dashed border-gray-700 rounded-2xl p-12 text-center">
           <Sparkles className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-400">Aucun post pour le moment.</p>
-          <Link
-            href="/studio"
-            title="Ouvrir le Studio pour générer le premier post"
-            className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3"
-          >
-            <Sparkles className="w-4 h-4" />
-            Créer le premier post
-          </Link>
+          {(clientFilter || statusFilter || searchQuery || platformFilter || typeFilter || pillarFilter) ? (
+            <>
+              <p className="text-gray-400">Aucun post ne correspond à ces filtres.</p>
+              <Link href="/plan" title="Effacer tous les filtres" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3">
+                Effacer les filtres →
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-400">Aucun post pour le moment.</p>
+              <Link href="/studio" title="Ouvrir le Studio pour générer le premier post" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3">
+                <Sparkles className="w-4 h-4" />
+                Créer le premier post
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} now={new Date().getTime()} activePlanStr={activePlanStr} />
