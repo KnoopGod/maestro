@@ -236,16 +236,9 @@ export default async function CalendarPage({
                         const status = dayMap.get(i)
                         return (
                           <td key={i} className={`text-center py-2.5 px-2 ${i === todayIndex ? 'bg-indigo-950/20' : ''}`}>
-                            {status === 'published' && (
-                              <span title="Publié" className="inline-block w-3 h-3 rounded-full bg-emerald-500 mx-auto" />
-                            )}
-                            {status === 'scheduled' && (
-                              <span title="Planifié" className="inline-block w-3 h-3 rounded-full bg-blue-400 mx-auto" />
-                            )}
-                            {status === 'draft' && (
-                              <span title="Brouillon" className="inline-block w-3 h-3 rounded-full bg-amber-400/60 mx-auto" />
-                            )}
-                            {!status && (
+                            {status ? (
+                              <CalendarDot clientId={c.id} status={status} />
+                            ) : (
                               <Link
                                 href={`/studio?client=${c.id}`}
                                 title={`Créer un post pour ${c.name} ce jour`}
@@ -317,6 +310,23 @@ function Section({ title, emptyLabel, children }: { title: string; emptyLabel: s
         <p className="text-sm text-gray-500 italic">{emptyLabel}</p>
       )}
     </section>
+  )
+}
+
+const CALENDAR_DOT_CFG: Record<'published' | 'scheduled' | 'draft', { cls: string; title: string; planStatus: string }> = {
+  published: { cls: 'bg-emerald-500 hover:bg-emerald-400',    title: 'Publié — voir dans le plan',    planStatus: 'published' },
+  scheduled: { cls: 'bg-blue-400 hover:bg-blue-300',          title: 'Planifié — voir dans le plan',  planStatus: 'scheduled' },
+  draft:     { cls: 'bg-amber-400/60 hover:bg-amber-400/90',  title: 'Brouillon — voir dans le plan', planStatus: 'draft' },
+}
+
+function CalendarDot({ clientId, status }: { clientId: string; status: 'published' | 'scheduled' | 'draft' }) {
+  const cfg = CALENDAR_DOT_CFG[status]
+  return (
+    <Link
+      href={`/plan?client=${clientId}&status=${cfg.planStatus}`}
+      title={cfg.title}
+      className={`inline-block w-3 h-3 rounded-full mx-auto transition-colors ${cfg.cls}`}
+    />
   )
 }
 
