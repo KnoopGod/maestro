@@ -193,11 +193,11 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs text-gray-500">Filtres :</span>
           <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter && !searchQuery} />
-          <FilterChip href="/plan?status=scheduled" label="Planifiés" active={statusFilter === 'scheduled'} />
-          <FilterChip href="/plan?status=published" label="Publiés" active={statusFilter === 'published'} />
-          <FilterChip href="/plan?status=ready" label="Prêts" active={statusFilter === 'ready'} />
-          <FilterChip href="/plan?status=draft" label="Brouillons" active={statusFilter === 'draft'} />
-          <FilterChip href="/plan?status=failed" label="Échecs" active={statusFilter === 'failed'} />
+          <FilterChip href={planUrl({ status: statusFilter === 'scheduled' ? undefined : 'scheduled' })} label="Planifiés" active={statusFilter === 'scheduled'} />
+          <FilterChip href={planUrl({ status: statusFilter === 'published' ? undefined : 'published' })} label="Publiés" active={statusFilter === 'published'} />
+          <FilterChip href={planUrl({ status: statusFilter === 'ready' ? undefined : 'ready' })} label="Prêts" active={statusFilter === 'ready'} />
+          <FilterChip href={planUrl({ status: statusFilter === 'draft' ? undefined : 'draft' })} label="Brouillons" active={statusFilter === 'draft'} />
+          <FilterChip href={planUrl({ status: statusFilter === 'failed' ? undefined : 'failed' })} label="Échecs" active={statusFilter === 'failed'} />
           {clientsWithPosts.length > 1 && (
             <>
               <span className="text-xs text-gray-700 mx-1">|</span>
