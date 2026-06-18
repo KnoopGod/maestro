@@ -83,10 +83,10 @@ export default async function SearchPage({
             Posts · {posts.length}
           </h2>
           <div className="space-y-2">
-            {posts.map(p => (
+            {posts.map((p, i) => (
               <Link
                 key={p.id}
-                href={`/posts/${p.id}?from=search&searchBack=${encodeURIComponent(query)}`}
+                href={`/posts/${p.id}?from=search&searchBack=${encodeURIComponent(query)}${posts[i - 1] ? `&prevId=${posts[i - 1].id}` : ''}${posts[i + 1] ? `&nextId=${posts[i + 1].id}` : ''}`}
                 className="block p-3 rounded-xl bg-gray-900/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -94,8 +94,15 @@ export default async function SearchPage({
                   <span className={`text-[10px] border rounded-full px-2 py-0.5 ml-auto ${
                     p.status === 'published' ? 'text-emerald-300 border-emerald-700/40 bg-emerald-950/20' :
                     p.status === 'failed'    ? 'text-red-300 border-red-700/40 bg-red-950/20' :
-                    'text-gray-400 border-gray-700 bg-gray-800/20'
-                  }`}>{p.status}</span>
+                    p.status === 'scheduled' ? 'text-blue-300 border-blue-700/40 bg-blue-950/20' :
+                    p.status === 'ready'     ? 'text-purple-300 border-purple-700/40 bg-purple-950/20' :
+                    'text-amber-300 border-amber-700/40 bg-amber-950/20'
+                  }`}>{
+                    p.status === 'published' ? 'Publié' :
+                    p.status === 'failed'    ? 'Échec' :
+                    p.status === 'scheduled' ? 'Planifié' :
+                    p.status === 'ready'     ? 'Prêt' : 'Brouillon'
+                  }</span>
                 </div>
                 <div className="text-sm text-white line-clamp-1">{p.brief || p.caption.substring(0, 80)}</div>
                 {p.caption && p.brief && (
