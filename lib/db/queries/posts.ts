@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { query, queryOne } from '../index'
+import { db, query, queryOne } from '../index'
 import type { Post, PostContentType, PostInsights, PostPlatform, PostStatus, SupervisorReview, PortalFeedback } from '@/types/post'
 
 interface PostRow {
@@ -366,22 +366,6 @@ export async function setSupervisorReview(id: string, review: SupervisorReview):
     [JSON.stringify(review), now, id]
   )
   if (!row) throw new Error('Post not found')
-  return mapRow(row)
-}
-
-export async function setPortalFeedback(id: string, feedback: PortalFeedback): Promise<Post> {
-  const now = Date.now()
-  const newStatus = feedback.action === 'changes_requested' ? 'draft' : undefined
-
-  const row = await queryOne<PostRow>(
-    newStatus
-      ? `UPDATE posts SET portal_feedback = ?, status = ?, updated_at = ? WHERE id = ? RETURNING *`
-      : `UPDATE posts SET portal_feedback = ?, updated_at = ? WHERE id = ? RETURNING *`,
-    newStatus
-      ? [JSON.stringify(feedback), newStatus, now, id]
-      : [JSON.stringify(feedback), now, id]
-  )
-  if (!row) throw new Error('Post introuvable')
   return mapRow(row)
 }
 

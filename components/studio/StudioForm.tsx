@@ -20,11 +20,6 @@ import { StudioResultPanel } from './StudioResultPanel'
 
 interface ClientDaStatus { active: boolean; summary?: string }
 
-interface StudioCapabilities {
-  lumaEnabled: boolean
-  imageModel: string
-}
-
 export function StudioForm({
   clients,
   initialClientId,
@@ -66,7 +61,6 @@ export function StudioForm({
   const [selectedAsset, setSelectedAsset] = useState<ClientAsset | null>(null)
   const [clientAssets, setClientAssets] = useState<ClientAsset[]>([])
   const [assetsLoading, setAssetsLoading] = useState(false)
-  const [capabilities, setCapabilities] = useState<StudioCapabilities | null>(null)
 
   const [aiDirective, setAiDirective] = useState<GenerationResult['directive'] | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -86,13 +80,6 @@ export function StudioForm({
   }
 
   useEffect(() => () => pollAbortRef.current?.abort(), [])
-
-  useEffect(() => {
-    fetch('/api/studio/capabilities')
-      .then(r => r.json())
-      .then((data: StudioCapabilities) => setCapabilities(data))
-      .catch(() => undefined)
-  }, [])
 
   useEffect(() => {
     if (!clientId || imageMode !== 'library') return

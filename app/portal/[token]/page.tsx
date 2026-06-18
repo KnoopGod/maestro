@@ -6,7 +6,6 @@ import { listPosts } from '@/lib/db/queries/posts'
 import { PortalReviewCard } from '@/components/portal/PortalReviewCard'
 import { CLIENT_TYPES } from '@/types/client'
 import type { Post } from '@/types/post'
-import { PortalReviewCard } from '@/components/portal/PortalReviewCard'
 import { PortalPrintButton } from '@/components/portal/PortalPrintButton'
 
 // Page publique : jamais mise en cache, jamais indexée.

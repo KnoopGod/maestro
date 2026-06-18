@@ -12,6 +12,8 @@ import { BulkSelectionProvider, PostSelectCheckbox, BulkActionBar } from '@/comp
 import { CopyCaptionButton } from '@/components/posts/CopyCaptionButton'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 import { EmptyState } from '@/components/ui/EmptyState'
+import type { Client } from '@/types/client'
+import type { Post } from '@/types/post'
 
 export const dynamic = 'force-dynamic'
 

@@ -237,7 +237,7 @@ export async function runPostPipeline(input: {
     reasoning: text.reasoning,
     totalCost: parseFloat((account.cost + text.cost + image.cost + supervisorCost).toFixed(6)),
     totalTokens: account.tokensUsed + text.tokensUsed + supervisorTokens,
-    models: [account.model, text.model, image.assetId ? (contentType === 'reel' ? 'luma-dream-machine' : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1')) : 'visual-skipped', supervisorModel].filter(Boolean) as string[],
+    models: [account.model, text.model, visualModel, supervisorModel].filter(Boolean) as string[],
     imageError,
   }
 }
