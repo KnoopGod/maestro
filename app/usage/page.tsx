@@ -212,8 +212,8 @@ export default async function UsagePage() {
           </h2>
 
           <div className="space-y-2">
-            {stats.recentPosts.map(p => (
-              <Link key={p.id} href={`/posts/${p.id}?from=usage`} title="Voir le détail de ce post" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
+            {stats.recentPosts.map((p, i) => (
+              <Link key={p.id} href={`/posts/${p.id}?from=usage${stats.recentPosts[i - 1] ? `&prevId=${stats.recentPosts[i - 1].id}` : ''}${stats.recentPosts[i + 1] ? `&nextId=${stats.recentPosts[i + 1].id}` : ''}`} title="Voir le détail de ce post" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-gray-300 truncate">{p.brief || p.caption}</div>
                   <div className="text-[10px] text-gray-600 mt-0.5">

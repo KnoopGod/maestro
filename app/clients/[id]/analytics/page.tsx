@@ -43,14 +43,14 @@ export default async function ClientAnalyticsPage({ params }: { params: Promise<
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map(post => <AnalyticsPostRow key={post.id} post={post} />)}
+          {posts.map((post, i) => <AnalyticsPostRow key={post.id} post={post} prevId={posts[i - 1]?.id} nextId={posts[i + 1]?.id} />)}
         </div>
       )}
     </div>
   )
 }
 
-function AnalyticsPostRow({ post }: { post: Post }) {
+function AnalyticsPostRow({ post, prevId, nextId }: { post: Post; prevId?: string; nextId?: string }) {
   return (
     <article title="Post publié avec identifiants Meta et métriques récupérables" className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-4">
       <div className="flex items-start gap-4">
@@ -73,7 +73,7 @@ function AnalyticsPostRow({ post }: { post: Post }) {
               </span>
             )}
             <Link
-              href={`/posts/${post.id}?from=client-analytics`}
+              href={`/posts/${post.id}?from=client-analytics${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
               title="Voir le détail complet de ce post"
               className="ml-auto text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
             >
