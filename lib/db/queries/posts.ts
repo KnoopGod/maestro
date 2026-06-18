@@ -436,6 +436,7 @@ export interface PortalFeedbackSummary {
   clientId: string
   clientName: string
   clientEmoji: string
+  brief: string
   caption: string
   feedbackAction: 'approved' | 'changes_requested'
   feedbackComment: string | null
@@ -450,10 +451,10 @@ export async function listPostsWithRecentPortalFeedback(
   const since = Date.now() - withinMs
   const rows = await query<{
     id: string; client_id: string; client_name: string; client_emoji: string;
-    caption: string; portal_feedback: string; status: string; updated_at: number;
+    brief: string; caption: string; portal_feedback: string; status: string; updated_at: number;
   }>(
     `SELECT p.id, p.client_id, c.name AS client_name, c.emoji AS client_emoji,
-            p.caption, p.portal_feedback, p.status, p.updated_at
+            p.brief, p.caption, p.portal_feedback, p.status, p.updated_at
      FROM posts p
      JOIN clients c ON c.id = p.client_id
      WHERE p.portal_feedback IS NOT NULL AND p.updated_at > ?
@@ -470,6 +471,7 @@ export async function listPostsWithRecentPortalFeedback(
         clientId: r.client_id,
         clientName: r.client_name,
         clientEmoji: r.client_emoji,
+        brief: r.brief ?? '',
         caption: r.caption,
         feedbackAction: fb.action as 'approved' | 'changes_requested',
         feedbackComment: fb.comment ?? null,

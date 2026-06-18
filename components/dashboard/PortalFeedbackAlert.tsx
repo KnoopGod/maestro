@@ -52,7 +52,7 @@ export function PortalFeedbackAlert({ posts }: { posts: PortalFeedbackSummary[] 
             <span className="text-sm text-cyan-100/80 flex-shrink-0 font-medium">
               {post.clientEmoji} {post.clientName}
             </span>
-            <span className="text-xs text-gray-500 flex-1 truncate">{post.caption.substring(0, 50)}</span>
+            <span className="text-xs text-gray-500 flex-1 truncate">{(post.brief || post.caption).substring(0, 50)}</span>
             <span className="text-[10px] text-gray-600 flex-shrink-0">{since(post.reviewedAt)}</span>
           </Link>
         ))}
