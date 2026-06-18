@@ -114,23 +114,30 @@ export default async function HomePage() {
           ) : (
             <div className="space-y-2">
               {urgentClients.map(c => (
-                <Link
-                  key={c.id}
-                  href={`/clients/${c.id}`}
-                  title={`Ouvrir ${c.name} : client prioritaire à relancer`}
-                  className="flex items-center gap-3 p-3 bg-amber-950/20 border border-amber-900/30 hover:border-amber-600/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.08)] transition-all group"
-                >
-                  <div className={`w-8 h-8 bg-gradient-to-br ${c.color} flex items-center justify-center text-sm flex-shrink-0`}>
-                    {c.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-medium text-[#E0E3FF] truncate font-mono tracking-wide uppercase">{c.name}</div>
-                    <div className="text-[9px] text-amber-400/70 font-mono mt-0.5">
-                      {c.daysSincePost === null ? '⚑ Jamais publié' : `⚑ ${c.daysSincePost}j sans post`}
+                <div key={c.id} className="flex items-center gap-3 p-3 bg-amber-950/20 border border-amber-900/30 hover:border-amber-600/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.08)] transition-all">
+                  <Link
+                    href={`/clients/${c.id}`}
+                    title={`Ouvrir la fiche de ${c.name}`}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                  >
+                    <div className={`w-8 h-8 bg-gradient-to-br ${c.color} flex items-center justify-center text-sm flex-shrink-0`}>
+                      {c.emoji}
                     </div>
-                  </div>
-                  <span className="text-[9px] text-amber-700/60 font-mono group-hover:text-amber-400 transition-colors flex-shrink-0">CRÉER →</span>
-                </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[11px] font-medium text-[#E0E3FF] truncate font-mono tracking-wide uppercase">{c.name}</div>
+                      <div className="text-[9px] text-amber-400/70 font-mono mt-0.5">
+                        {c.daysSincePost === null ? '⚑ Jamais publié' : `⚑ ${c.daysSincePost}j sans post`}
+                      </div>
+                    </div>
+                  </Link>
+                  <Link
+                    href={`/studio?client=${c.id}`}
+                    title={`Créer un post pour ${c.name}`}
+                    className="text-[9px] text-amber-700/60 font-mono hover:text-amber-400 transition-colors flex-shrink-0"
+                  >
+                    CRÉER →
+                  </Link>
+                </div>
               ))}
             </div>
           )}

@@ -93,7 +93,7 @@ export function TodayScheduleWidget({
                       <div className="text-[9px] text-gray-500 font-mono flex items-center gap-1.5 mt-0.5">
                         {post.platforms.map(p => PLATFORM_EMOJI[p] ?? p).join(' ')}
                         <span className="text-gray-600">·</span>
-                        <span className="truncate">{post.caption.substring(0, 40)}</span>
+                        <span className="truncate">{(post.brief || post.caption).substring(0, 40)}</span>
                       </div>
                     </div>
 
