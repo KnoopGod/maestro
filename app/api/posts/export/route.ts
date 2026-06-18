@@ -50,7 +50,8 @@ export async function GET(req: NextRequest) {
   const headers = [
     'id', 'client', 'statut', 'plateformes', 'type', 'pilier',
     'brief', 'caption', 'hashtags', 'hook', 'cta',
-    'impact', 'coût', 'créé le', 'planifié le', 'publié le',
+    'impact', 'supervisor', 'coût', 'créé le', 'planifié le', 'publié le',
+    'raisonnement',
   ]
 
   const rows = posts.map(p => [
@@ -66,10 +67,12 @@ export async function GET(req: NextRequest) {
     p.hook ?? '',
     p.cta ?? '',
     p.impactScore,
+    p.supervisorReview ? `${p.supervisorReview.verdict} (${p.supervisorReview.score}/100)` : '',
     p.cost.toFixed(4),
     fmtDate(p.createdAt),
     fmtDate(p.scheduledAt),
     fmtDate(p.publishedAt),
+    p.reasoning ?? '',
   ])
 
   const csv = [headers, ...rows].map(r => r.map(escapeCsv).join(',')).join('\n')
