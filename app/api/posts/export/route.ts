@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get('q') ?? undefined
   const platform = searchParams.get('platform') ?? undefined
   const contentType = (searchParams.get('contentType') as import('@/types/post').PostContentType | null) ?? undefined
+  const pillar = searchParams.get('pillar') ?? undefined
 
   const posts = await listPosts({
     clientId,
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) {
     q,
     platform,
     contentType,
+    pillar,
     limit: 500,
     includeInsights: false,
   })

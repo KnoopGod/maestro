@@ -156,6 +156,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
               if (searchQuery) p.set('q', searchQuery)
               if (platformFilter) p.set('platform', platformFilter)
               if (typeFilter) p.set('contentType', typeFilter)
+              if (pillarFilter) p.set('pillar', pillarFilter)
               const str = p.toString()
               return `/api/posts/export${str ? `?${str}` : ''}`
             })()}
