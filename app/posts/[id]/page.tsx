@@ -32,9 +32,9 @@ function formatDate(ts: number) {
   })
 }
 
-type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard' | 'client' | 'search' | 'usage' | 'agents'
+type FromContext = 'validation' | 'plan' | 'calendar' | 'dashboard' | 'client' | 'client-analytics' | 'search' | 'usage' | 'agents'
 
-const FROM_CFG: Record<Exclude<FromContext, 'client'>, { label: string; href: string; title: string }> = {
+const FROM_CFG: Record<Exclude<FromContext, 'client' | 'client-analytics'>, { label: string; href: string; title: string }> = {
   validation: { label: 'Validation',       href: '/validation', title: 'Retour à la file de validation' },
   plan:       { label: 'Plan',             href: '/plan',       title: 'Retour au plan de contenu' },
   calendar:   { label: 'Calendrier',       href: '/calendar',   title: 'Retour au calendrier' },
@@ -53,7 +53,7 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params
   const { from, prevId, nextId } = await searchParams
-  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard', 'client', 'search', 'usage', 'agents'] as FromContext[]).includes(from as FromContext)
+  const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard', 'client', 'client-analytics', 'search', 'usage', 'agents'] as FromContext[]).includes(from as FromContext)
     ? (from as FromContext)
     : 'validation'
 
@@ -63,7 +63,9 @@ export default async function PostDetailPage({
   const client = await getClient(post.clientId)
   const breadcrumb = fromCtx === 'client' && client
     ? { label: client.name, href: `/clients/${client.id}`, title: `Retour à la fiche ${client.name}` }
-    : FROM_CFG[fromCtx as Exclude<FromContext, 'client'>]
+    : fromCtx === 'client-analytics' && client
+    ? { label: `Analytics · ${client.name}`, href: `/clients/${client.id}/analytics`, title: `Retour aux analytics de ${client.name}` }
+    : FROM_CFG[fromCtx as Exclude<FromContext, 'client' | 'client-analytics'>]
   const cfg = STATUS_CFG[post.status] ?? STATUS_CFG.draft
   const StatusIcon = cfg.icon
 

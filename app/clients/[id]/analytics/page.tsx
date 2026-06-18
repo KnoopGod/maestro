@@ -73,7 +73,7 @@ function AnalyticsPostRow({ post }: { post: Post }) {
               </span>
             )}
             <Link
-              href={`/posts/${post.id}?from=client`}
+              href={`/posts/${post.id}?from=client-analytics`}
               title="Voir le détail complet de ce post"
               className="ml-auto text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
             >
