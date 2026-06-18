@@ -49,10 +49,10 @@ export default async function PostDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ from?: string; prevId?: string; nextId?: string; calBack?: string; planBack?: string; validationBack?: string }>
+  searchParams: Promise<{ from?: string; prevId?: string; nextId?: string; calBack?: string; planBack?: string; validationBack?: string; searchBack?: string }>
 }) {
   const { id } = await params
-  const { from, prevId, nextId, calBack, planBack, validationBack } = await searchParams
+  const { from, prevId, nextId, calBack, planBack, validationBack, searchBack } = await searchParams
   const fromCtx: FromContext = (['validation', 'plan', 'calendar', 'dashboard', 'client', 'client-analytics', 'search', 'usage', 'agents'] as FromContext[]).includes(from as FromContext)
     ? (from as FromContext)
     : 'validation'
@@ -64,6 +64,7 @@ export default async function PostDetailPage({
   const calendarHref = calBack ? `/calendar?${decodeURIComponent(calBack)}` : '/calendar'
   const planHref = planBack ? `/plan?${decodeURIComponent(planBack)}` : '/plan'
   const validationHref = validationBack ? `/validation?${decodeURIComponent(validationBack)}` : '/validation'
+  const searchHref = searchBack ? `/search?q=${decodeURIComponent(searchBack)}` : '/search'
   const breadcrumb = fromCtx === 'client' && client
     ? { label: client.name, href: `/clients/${client.id}`, title: `Retour à la fiche ${client.name}` }
     : fromCtx === 'client-analytics' && client
@@ -74,6 +75,8 @@ export default async function PostDetailPage({
     ? { ...FROM_CFG.plan, href: planHref }
     : fromCtx === 'validation'
     ? { ...FROM_CFG.validation, href: validationHref }
+    : fromCtx === 'search'
+    ? { ...FROM_CFG.search, href: searchHref }
     : FROM_CFG[fromCtx as Exclude<FromContext, 'client' | 'client-analytics'>]
   const cfg = STATUS_CFG[post.status] ?? STATUS_CFG.draft
   const StatusIcon = cfg.icon
@@ -115,7 +118,7 @@ export default async function PostDetailPage({
           <div className="ml-auto flex items-center gap-1">
             {prevId ? (
               <Link
-                href={`/posts/${prevId}?from=${fromCtx}${nextId ? `&nextId=${id}` : ''}${calBack ? `&calBack=${encodeURIComponent(calBack)}` : ''}${planBack ? `&planBack=${encodeURIComponent(planBack)}` : ''}${validationBack ? `&validationBack=${encodeURIComponent(validationBack)}` : ''}`}
+                href={`/posts/${prevId}?from=${fromCtx}${nextId ? `&nextId=${id}` : ''}${calBack ? `&calBack=${encodeURIComponent(calBack)}` : ''}${planBack ? `&planBack=${encodeURIComponent(planBack)}` : ''}${validationBack ? `&validationBack=${encodeURIComponent(validationBack)}` : ''}${searchBack ? `&searchBack=${encodeURIComponent(searchBack)}` : ''}`}
                 title="Post précédent"
                 className="px-2 py-0.5 rounded border border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-700 transition-colors text-xs"
               >
@@ -126,7 +129,7 @@ export default async function PostDetailPage({
             )}
             {nextId ? (
               <Link
-                href={`/posts/${nextId}?from=${fromCtx}${prevId ? `&prevId=${id}` : ''}${calBack ? `&calBack=${encodeURIComponent(calBack)}` : ''}${planBack ? `&planBack=${encodeURIComponent(planBack)}` : ''}${validationBack ? `&validationBack=${encodeURIComponent(validationBack)}` : ''}`}
+                href={`/posts/${nextId}?from=${fromCtx}${prevId ? `&prevId=${id}` : ''}${calBack ? `&calBack=${encodeURIComponent(calBack)}` : ''}${planBack ? `&planBack=${encodeURIComponent(planBack)}` : ''}${validationBack ? `&validationBack=${encodeURIComponent(validationBack)}` : ''}${searchBack ? `&searchBack=${encodeURIComponent(searchBack)}` : ''}`}
                 title="Post suivant"
                 className="px-2 py-0.5 rounded border border-gray-800 text-gray-500 hover:text-gray-300 hover:border-gray-700 transition-colors text-xs"
               >

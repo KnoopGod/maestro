@@ -77,6 +77,10 @@ export default async function CalendarPage({
     }
   }
 
+  const buildAdjacency = (list: Post[]) => new Map(list.map((p, i) => [p.id, { prevId: list[i - 1]?.id, nextId: list[i + 1]?.id }]))
+  const plannedAdj = buildAdjacency(planned)
+  const inProgressAdj = buildAdjacency(inProgress)
+
   const activeClients = clients.filter(c => c.status === 'active')
   const displayedClients = clientFilter
     ? activeClients.filter(c => c.id === clientFilter)
@@ -280,14 +284,14 @@ export default async function CalendarPage({
       {/* Planifiés */}
       <Section title="🗓 Planifiés" emptyLabel="Aucun post planifié.">
         {planned.map(p => (
-          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} weekOffset={weekOffset} clientFilter={clientFilter} />
+          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} weekOffset={weekOffset} clientFilter={clientFilter} prevId={plannedAdj.get(p.id)?.prevId} nextId={plannedAdj.get(p.id)?.nextId} />
         ))}
       </Section>
 
       {/* Brouillons / prêts */}
       <Section title="📝 En préparation" emptyLabel="Aucun brouillon en cours.">
         {inProgress.map(p => (
-          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} weekOffset={weekOffset} clientFilter={clientFilter} />
+          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} weekOffset={weekOffset} clientFilter={clientFilter} prevId={inProgressAdj.get(p.id)?.prevId} nextId={inProgressAdj.get(p.id)?.nextId} />
         ))}
       </Section>
     </div>
@@ -334,7 +338,7 @@ function CalendarDot({ clientId, status }: { clientId: string; status: 'publishe
   )
 }
 
-function TimelineRow({ post, client, now, weekOffset, clientFilter }: { post: Post; client: ClientWithStats | undefined; now: number; weekOffset: number; clientFilter: string | undefined }) {
+function TimelineRow({ post, client, now, weekOffset, clientFilter, prevId, nextId }: { post: Post; client: ClientWithStats | undefined; now: number; weekOffset: number; clientFilter: string | undefined; prevId?: string; nextId?: string }) {
   const cfg = STATUS_INFO[post.status] ?? STATUS_INFO.draft
   const Icon = cfg.icon
   const when = post.scheduledAt
@@ -349,7 +353,7 @@ function TimelineRow({ post, client, now, weekOffset, clientFilter }: { post: Po
 
   return (
     <Link
-      href={`/posts/${post.id}?from=calendar${calBack}`}
+      href={`/posts/${post.id}?from=calendar${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}${calBack}`}
       title="Voir le détail de ce post"
       className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
     >

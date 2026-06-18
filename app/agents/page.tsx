@@ -237,6 +237,7 @@ export default async function AgentsPage({
   const clientIdsInJobs = new Set(allJobsUnfiltered.map(j => j.clientId).filter(Boolean))
   const clientsWithJobs = clients.filter(c => clientIdsInJobs.has(c.id))
 
+  const filteredClient = clientFilter ? clients.find(c => c.id === clientFilter) : undefined
   const activeAgents = AGENTS.filter(a => a.status === 'active').sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
   const upcomingAgents = AGENTS.filter(a => a.status !== 'active')
 
@@ -351,12 +352,21 @@ export default async function AgentsPage({
         )}
 
         {allJobs.length === 0 && (
-          <EmptyState
-            icon={Bot}
-            title="Aucune activité enregistrée"
-            description="Les activités apparaîtront ici dès que tu génères un post dans le Studio."
-            cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
-          />
+          clientFilter ? (
+            <EmptyState
+              icon={Bot}
+              title={filteredClient ? `Aucun job pour ${filteredClient.name}` : 'Aucun job pour ce client'}
+              description="Supprime le filtre client pour voir tous les jobs."
+              cta={{ label: 'Voir tous les jobs', href: '/agents', icon: Bot }}
+            />
+          ) : (
+            <EmptyState
+              icon={Bot}
+              title="Aucune activité enregistrée"
+              description="Les activités apparaîtront ici dès que tu génères un post dans le Studio."
+              cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
+            />
+          )
         )}
       </section>
 
