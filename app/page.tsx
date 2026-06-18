@@ -35,7 +35,7 @@ export default async function HomePage() {
   try {
     ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts, portalFeedbackPosts, aiCostThisMonth, overduePosts] = await Promise.all([
       listClientsWithStats(),
-      countPostsByStatus(['draft', 'ready']),
+      countPostsByStatus(['draft', 'ready', 'failed']),
       listExpiringTokens(14),
       listUpcomingPosts(7 * 24 * 60 * 60 * 1000),
       listClients(),
