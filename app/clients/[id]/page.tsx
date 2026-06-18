@@ -36,7 +36,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const scheduledCount = clientPosts.filter(p => p.status === 'scheduled').length
   const publishedPosts = clientPosts.filter(p => p.status === 'published')
-  const draftCount = clientPosts.filter(p => p.status === 'draft' || p.status === 'ready').length
+  const draftCount = clientPosts.filter(p => p.status === 'draft' || p.status === 'ready' || p.status === 'failed').length
   const monthStartMs = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()
   const postsThisMonth = clientPosts.filter(p => p.createdAt >= monthStartMs).length
   const contentPillars = client.strategy?.contentPillars ?? []
