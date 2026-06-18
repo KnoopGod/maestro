@@ -211,6 +211,9 @@ export function ClientGridWithFilters({
       {filtered.length === 0 ? (
         <div className="text-center py-12 bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl">
           <p className="text-gray-500">Aucun client dans cette catégorie.</p>
+          <Link href="/clients" title="Effacer tous les filtres" className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-2">
+            Voir tous les clients →
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
