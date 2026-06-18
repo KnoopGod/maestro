@@ -2,12 +2,13 @@ import type React from 'react'
 import Link from 'next/link'
 import { Users, Sparkles, CalendarDays, BarChart3, ArrowRight } from 'lucide-react'
 import { listClientsWithStats, listClients } from '@/lib/db/queries/clients'
-import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts, listPostsWithRecentPortalFeedback, sumPostsCostThisMonth } from '@/lib/db/queries/posts'
+import { countPostsByStatus, listUpcomingPosts, listRecentlyFailedPosts, listPostsWithRecentPortalFeedback, sumPostsCostThisMonth, listOverduePosts } from '@/lib/db/queries/posts'
 import { listExpiringTokens } from '@/lib/db/queries/social-accounts'
 import { SetupBanner } from '@/components/SetupBanner'
 import { TokenExpiryBanner } from '@/components/TokenExpiryBanner'
 import { FailedPostsAlert } from '@/components/dashboard/FailedPostsAlert'
 import { PortalFeedbackAlert } from '@/components/dashboard/PortalFeedbackAlert'
+import { OverduePostsAlert } from '@/components/dashboard/OverduePostsAlert'
 import { TodayScheduleWidget } from '@/components/dashboard/TodayScheduleWidget'
 import { CLIENT_TYPES } from '@/types/client'
 import type { Client } from '@/types/client'
@@ -29,9 +30,10 @@ export default async function HomePage() {
   let allClients: Client[] = []
   let failedPosts: Awaited<ReturnType<typeof listRecentlyFailedPosts>> = []
   let portalFeedbackPosts: Awaited<ReturnType<typeof listPostsWithRecentPortalFeedback>> = []
+  let overduePosts: Awaited<ReturnType<typeof listOverduePosts>> = []
   let aiCostThisMonth = 0
   try {
-    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts, portalFeedbackPosts, aiCostThisMonth] = await Promise.all([
+    ;[clients, toValidate, expiringTokens, todayPosts, allClients, failedPosts, portalFeedbackPosts, aiCostThisMonth, overduePosts] = await Promise.all([
       listClientsWithStats(),
       countPostsByStatus(['draft', 'ready']),
       listExpiringTokens(14),
@@ -40,6 +42,7 @@ export default async function HomePage() {
       listRecentlyFailedPosts(),
       listPostsWithRecentPortalFeedback(),
       sumPostsCostThisMonth(),
+      listOverduePosts(),
     ])
   } catch (err) {
     console.error('[HomePage] DB error:', err)
@@ -69,6 +72,7 @@ export default async function HomePage() {
     <div className="space-y-8">
       <SetupBanner />
       <TokenExpiryBanner tokens={expiringTokens} />
+      <OverduePostsAlert posts={overduePosts} now={new Date().getTime()} />
       <FailedPostsAlert posts={failedPosts} />
       <PortalFeedbackAlert posts={portalFeedbackPosts} />
 

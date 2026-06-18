@@ -503,6 +503,16 @@ export async function listClientUpcomingPosts(clientId: string, limit = 8): Prom
   return rows.map(mapRow)
 }
 
+/** Scheduled posts whose scheduled_at is in the past — the cron missed them. */
+export async function listOverduePosts(): Promise<Post[]> {
+  const now = Date.now()
+  const rows = await query<PostRow>(
+    `SELECT ${postSelect(false)} FROM posts WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ? ORDER BY scheduled_at ASC LIMIT 20`,
+    [now]
+  )
+  return rows.map(mapRow)
+}
+
 /** Sum of AI cost for all posts created since the start of the current month. */
 export async function sumPostsCostThisMonth(): Promise<number> {
   const now = new Date()
