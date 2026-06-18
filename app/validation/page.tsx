@@ -109,7 +109,7 @@ export default async function ValidationPage({
         <div className="flex items-center gap-2">
           <MarkAllReadyButton draftIds={queue.filter(p => p.status === 'draft').map(p => p.id)} />
           <Link
-            href="/studio"
+            href={clientFilter ? `/studio?client=${clientFilter}` : '/studio'}
             title="Créer un nouveau post à ajouter dans la file de validation"
             className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
           >

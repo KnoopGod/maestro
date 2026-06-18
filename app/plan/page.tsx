@@ -169,7 +169,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
             CSV
           </Link>
           <Link
-            href="/studio"
+            href={clientFilter ? `/studio?client=${clientFilter}` : '/studio'}
             title="Créer un nouveau post depuis le Studio"
             className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
           >
