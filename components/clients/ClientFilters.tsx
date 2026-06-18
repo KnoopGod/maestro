@@ -3,18 +3,21 @@
 import Link from 'next/link'
 import { CheckSquare, Plus, Trash2, X } from 'lucide-react'
 import { useMemo, useState, useTransition } from 'react'
-import { CLIENT_TYPES, type ClientType, type ClientWithStats } from '@/types/client'
+import { CLIENT_TYPES, CLIENT_STATUS, type ClientType, type ClientStatus, type ClientWithStats } from '@/types/client'
 import { ClientCard } from './ClientCard'
 import { deleteClientsAction } from '@/lib/actions/clients'
 
 type Filter = 'all' | ClientType
+type StatusFilter = 'all' | ClientStatus
 
 export function ClientGridWithFilters({
   clients,
   filter = 'all',
+  statusFilter = 'all',
 }: {
   clients: ClientWithStats[]
   filter?: Filter
+  statusFilter?: StatusFilter
 }) {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -30,9 +33,18 @@ export function ClientGridWithFilters({
     restaurant_hotel: clients.filter(c => c.type === 'restaurant_hotel').length,
   }
 
+  const statusCounts: Record<StatusFilter, number> = {
+    all: clients.length,
+    active: clients.filter(c => c.status === 'active').length,
+    paused: clients.filter(c => c.status === 'paused').length,
+    archived: clients.filter(c => c.status === 'archived').length,
+  }
+
   const filtered = useMemo(
-    () => filter === 'all' ? clients : clients.filter(c => c.type === filter),
-    [clients, filter]
+    () => clients
+      .filter(c => filter === 'all' || c.type === filter)
+      .filter(c => statusFilter === 'all' || c.status === statusFilter),
+    [clients, filter, statusFilter]
   )
   const selectedClients = clients.filter(c => selectedIds.includes(c.id))
 
@@ -86,11 +98,12 @@ export function ClientGridWithFilters({
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Link
-            href="/clients"
-            title="Afficher tous les clients sans filtre"
+            href={statusFilter === 'all' ? '/clients' : `/clients?status=${statusFilter}`}
+            title="Afficher tous les types de clients"
             className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all ${
               filter === 'all'
                 ? 'bg-purple-600 text-white'
@@ -102,10 +115,11 @@ export function ClientGridWithFilters({
           {(Object.keys(CLIENT_TYPES) as ClientType[]).filter(t => counts[t] > 0).map(t => {
             const cfg = CLIENT_TYPES[t]
             const active = filter === t
+            const href = ['/clients', new URLSearchParams({ type: t, ...(statusFilter !== 'all' ? { status: statusFilter } : {}) }).toString()].filter(Boolean).join('?')
             return (
               <Link
                 key={t}
-                href={`/clients?type=${t}`}
+                href={href}
                 title={`Afficher uniquement les clients de type ${cfg.label}`}
                 className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                   active
@@ -155,6 +169,43 @@ export function ClientGridWithFilters({
             {selectionMode ? 'Annuler' : 'Sélection multiple'}
           </button>
         </div>
+        </div>
+
+        {/* Status filter */}
+        {Object.values(statusCounts).some((n, i) => i > 0 && n > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Statut</span>
+            <Link
+              href={filter === 'all' ? '/clients' : `/clients?type=${filter}`}
+              title="Afficher tous les statuts"
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                statusFilter === 'all'
+                  ? 'bg-purple-600 border-purple-600 text-white'
+                  : 'border-gray-700 text-gray-400 hover:border-gray-500'
+              }`}
+            >
+              Tous ({statusCounts.all})
+            </Link>
+            {(Object.keys(CLIENT_STATUS) as ClientStatus[]).filter(s => statusCounts[s] > 0).map(s => {
+              const cfg = CLIENT_STATUS[s]
+              const href = ['/clients', new URLSearchParams({ status: s, ...(filter !== 'all' ? { type: filter } : {}) }).toString()].filter(Boolean).join('?')
+              return (
+                <Link
+                  key={s}
+                  href={href}
+                  title={`Filtrer les clients ${cfg.label.toLowerCase()}`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    statusFilter === s
+                      ? 'bg-purple-600 border-purple-600 text-white'
+                      : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                  }`}
+                >
+                  {cfg.label} ({statusCounts[s]})
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {filtered.length === 0 ? (

@@ -213,7 +213,7 @@ export default async function UsagePage() {
 
           <div className="space-y-2">
             {stats.recentPosts.map(p => (
-              <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30">
+              <Link key={p.id} href={`/posts/${p.id}`} title="Voir le détail de ce post" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-gray-300 truncate">{p.caption}</div>
                   <div className="text-[10px] text-gray-600 mt-0.5">
@@ -223,7 +223,7 @@ export default async function UsagePage() {
                 <div className="text-sm font-mono text-emerald-400 flex-shrink-0">
                   ${p.cost.toFixed(4)}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

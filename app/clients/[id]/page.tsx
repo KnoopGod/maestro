@@ -563,8 +563,8 @@ function RecentPostRow({ post }: { post: Post }) {
   const when = new Date(post.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
   return (
     <Link
-      href={`/validation#${post.id}`}
-      title="Ouvrir ce post récent dans la file de validation"
+      href={`/posts/${post.id}?from=client`}
+      title="Voir le détail de ce post"
       className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/40 transition-colors"
     >
       <Icon className={`w-4 h-4 flex-shrink-0 ${cfg.color}`} />
@@ -598,8 +598,8 @@ function UpcomingPostRow({ post, referenceTs }: { post: Post; referenceTs: numbe
     : ''
   return (
     <Link
-      href={`/plan?client=${post.clientId}`}
-      title="Voir ce post dans le calendrier"
+      href={`/posts/${post.id}?from=client`}
+      title="Voir le détail de ce post planifié"
       className="flex items-center gap-3 p-2.5 rounded-lg bg-blue-950/20 border border-blue-800/30 hover:border-blue-600/50 transition-colors"
     >
       <span className="text-base flex-shrink-0">
