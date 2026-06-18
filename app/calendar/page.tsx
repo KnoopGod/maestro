@@ -280,14 +280,14 @@ export default async function CalendarPage({
       {/* Planifiés */}
       <Section title="🗓 Planifiés" emptyLabel="Aucun post planifié.">
         {planned.map(p => (
-          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} />
+          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} weekOffset={weekOffset} clientFilter={clientFilter} />
         ))}
       </Section>
 
       {/* Brouillons / prêts */}
       <Section title="📝 En préparation" emptyLabel="Aucun brouillon en cours.">
         {inProgress.map(p => (
-          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} />
+          <TimelineRow key={p.id} post={p} client={clientsMap.get(p.clientId)} now={now} weekOffset={weekOffset} clientFilter={clientFilter} />
         ))}
       </Section>
     </div>
@@ -334,7 +334,7 @@ function CalendarDot({ clientId, status }: { clientId: string; status: 'publishe
   )
 }
 
-function TimelineRow({ post, client, now }: { post: Post; client: ClientWithStats | undefined; now: number }) {
+function TimelineRow({ post, client, now, weekOffset, clientFilter }: { post: Post; client: ClientWithStats | undefined; now: number; weekOffset: number; clientFilter: string | undefined }) {
   const cfg = STATUS_INFO[post.status] ?? STATUS_INFO.draft
   const Icon = cfg.icon
   const when = post.scheduledAt
@@ -342,10 +342,14 @@ function TimelineRow({ post, client, now }: { post: Post; client: ClientWithStat
     : 'non planifié'
 
   const overdue = post.status === 'scheduled' && post.scheduledAt && post.scheduledAt < now
+  const calParams = new URLSearchParams()
+  if (weekOffset !== 0) calParams.set('week', String(weekOffset))
+  if (clientFilter) calParams.set('client', clientFilter)
+  const calBack = calParams.toString() ? `&calBack=${encodeURIComponent(calParams.toString())}` : ''
 
   return (
     <Link
-      href={`/posts/${post.id}?from=calendar`}
+      href={`/posts/${post.id}?from=calendar${calBack}`}
       title="Voir le détail de ce post"
       className="flex items-center gap-3 p-3 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
     >
