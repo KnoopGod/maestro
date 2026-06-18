@@ -29,10 +29,10 @@ export function OverduePostsAlert({ posts, now }: { posts: Post[]; now: number }
             Le plus ancien est en retard de {delay}h. Le cron de publication est peut-être inactif.
           </p>
           <div className="space-y-1.5">
-            {shown.map(p => (
+            {shown.map((p, i) => (
               <Link
                 key={p.id}
-                href={`/posts/${p.id}?from=dashboard`}
+                href={`/posts/${p.id}?from=dashboard${posts[i - 1] ? `&prevId=${posts[i - 1].id}` : ''}${posts[i + 1] ? `&nextId=${posts[i + 1].id}` : ''}`}
                 title="Voir le détail de ce post en retard"
                 className="flex items-center gap-2 text-[11px] rounded-lg bg-orange-950/30 border border-orange-700/20 px-2.5 py-1.5 hover:border-orange-600/40 transition-colors"
               >

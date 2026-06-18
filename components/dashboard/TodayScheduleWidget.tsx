@@ -44,6 +44,9 @@ export function TodayScheduleWidget({
     )
   }
 
+  // Index map for prev/next navigation across all posts
+  const postIndex = new Map(posts.map((p, i) => [p.id, i]))
+
   // Group posts by day (using scheduledAt)
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0)).getTime()
   const groups = new Map<number, Post[]>()
@@ -69,6 +72,7 @@ export function TodayScheduleWidget({
               {dayPosts.map(post => {
                 const client = clientsMap.get(post.clientId)
                 const scheduledTime = post.scheduledAt ? fmtTime(post.scheduledAt) : '??:??'
+                const idx = postIndex.get(post.id) ?? 0
                 return (
                   <div
                     key={post.id}
@@ -98,7 +102,7 @@ export function TodayScheduleWidget({
                     </div>
 
                     <Link
-                      href={`/posts/${post.id}?from=dashboard`}
+                      href={`/posts/${post.id}?from=dashboard${posts[idx - 1] ? `&prevId=${posts[idx - 1].id}` : ''}${posts[idx + 1] ? `&nextId=${posts[idx + 1].id}` : ''}`}
                       title="Voir le détail de ce post"
                       className="text-[9px] text-blue-500 hover:text-blue-300 font-mono tracking-wider transition-colors flex-shrink-0"
                     >

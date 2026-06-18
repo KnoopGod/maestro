@@ -37,10 +37,10 @@ export function PortalFeedbackAlert({ posts }: { posts: PortalFeedbackSummary[] 
         </div>
       </div>
       <div className="space-y-1.5">
-        {posts.slice(0, 4).map(post => (
+        {posts.slice(0, 4).map((post, i) => (
           <Link
             key={post.id}
-            href={`/posts/${post.id}?from=dashboard`}
+            href={`/posts/${post.id}?from=dashboard${posts[i - 1] ? `&prevId=${posts[i - 1].id}` : ''}${posts[i + 1] ? `&nextId=${posts[i + 1].id}` : ''}`}
             title="Voir le détail de ce post et traiter le retour client"
             className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-cyan-900/20 transition-colors"
           >

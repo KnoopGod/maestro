@@ -31,7 +31,7 @@ export function FailedPostsAlert({ posts }: { posts: FailedPostSummary[] }) {
               : `${posts.length} publications ont échoué dans les dernières 48h`}
           </div>
           <div className="space-y-2">
-            {posts.map(p => (
+            {posts.map((p, i) => (
               <div key={p.id} className="flex items-start gap-2 text-xs">
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-gray-300">{p.clientName}</span>
@@ -48,7 +48,7 @@ export function FailedPostsAlert({ posts }: { posts: FailedPostSummary[] }) {
                   {fmtRelative(p.updatedAt)}
                 </span>
                 <Link
-                  href={`/posts/${p.id}?from=dashboard`}
+                  href={`/posts/${p.id}?from=dashboard${posts[i - 1] ? `&prevId=${posts[i - 1].id}` : ''}${posts[i + 1] ? `&nextId=${posts[i + 1].id}` : ''}`}
                   title="Voir le détail de ce post en échec"
                   className="text-[10px] text-red-400 hover:text-red-300 flex-shrink-0"
                 >
