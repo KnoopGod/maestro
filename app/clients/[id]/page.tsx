@@ -439,7 +439,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         ) : (
           <div className="space-y-2">
-            {upcomingPosts.map(p => <UpcomingPostRow key={p.id} post={p} referenceTs={referenceTs} />)}
+            {upcomingPosts.map((p, i) => <UpcomingPostRow key={p.id} post={p} referenceTs={referenceTs} prevId={upcomingPosts[i - 1]?.id} nextId={upcomingPosts[i + 1]?.id} />)}
           </div>
         )}
       </div>
@@ -466,7 +466,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         ) : (
           <div className="space-y-2">
-            {recentPosts.map(p => <RecentPostRow key={p.id} post={p} />)}
+            {recentPosts.map((p, i) => <RecentPostRow key={p.id} post={p} prevId={recentPosts[i - 1]?.id} nextId={recentPosts[i + 1]?.id} />)}
           </div>
         )}
       </div>
@@ -557,13 +557,13 @@ function StartupStep({ done, label, detail, href }: { done: boolean; label: stri
   )
 }
 
-function RecentPostRow({ post }: { post: Post }) {
+function RecentPostRow({ post, prevId, nextId }: { post: Post; prevId?: string; nextId?: string }) {
   const cfg = POST_STATUS_CFG[post.status] ?? POST_STATUS_CFG.draft
   const Icon = cfg.icon
   const when = new Date(post.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
   return (
     <Link
-      href={`/posts/${post.id}?from=client`}
+      href={`/posts/${post.id}?from=client${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
       title="Voir le détail de ce post"
       className="flex items-center gap-3 p-2.5 rounded-lg bg-gray-950/40 border border-gray-800 hover:border-purple-700/40 transition-colors"
     >
@@ -585,7 +585,7 @@ const PLATFORM_EMOJI: Record<string, string> = {
   google_business: '📍',
 }
 
-function UpcomingPostRow({ post, referenceTs }: { post: Post; referenceTs: number }) {
+function UpcomingPostRow({ post, referenceTs, prevId, nextId }: { post: Post; referenceTs: number; prevId?: string; nextId?: string }) {
   const scheduledDate = post.scheduledAt ? new Date(post.scheduledAt) : null
   const diffMs = scheduledDate ? scheduledDate.getTime() - referenceTs : 0
   const diffH = Math.floor(diffMs / 3600000)
@@ -598,7 +598,7 @@ function UpcomingPostRow({ post, referenceTs }: { post: Post; referenceTs: numbe
     : ''
   return (
     <Link
-      href={`/posts/${post.id}?from=client`}
+      href={`/posts/${post.id}?from=client${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
       title="Voir le détail de ce post planifié"
       className="flex items-center gap-3 p-2.5 rounded-lg bg-blue-950/20 border border-blue-800/30 hover:border-blue-600/50 transition-colors"
     >

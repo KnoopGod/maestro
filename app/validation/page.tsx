@@ -217,12 +217,21 @@ export default async function ValidationPage({
       )}
 
       {queue.length === 0 ? (
-        <EmptyState
-          icon={ShieldCheck}
-          title={clientFilter ? `Aucun post en attente pour ${clientsMap.get(clientFilter)?.name ?? 'ce client'}` : 'Aucun post en attente de validation'}
-          description="Les posts générés dans le Studio apparaîtront ici pour relecture avant publication."
-          cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
-        />
+        (clientFilter || statusF || searchQuery) ? (
+          <EmptyState
+            icon={ShieldCheck}
+            title="Aucun post ne correspond à ces filtres"
+            description="Essaie de modifier ou supprimer les filtres actifs."
+            cta={{ label: 'Effacer les filtres', href: '/validation', icon: X }}
+          />
+        ) : (
+          <EmptyState
+            icon={ShieldCheck}
+            title="Aucun post en attente de validation"
+            description="Les posts générés dans le Studio apparaîtront ici pour relecture avant publication."
+            cta={{ label: 'Créer un post', href: '/studio', icon: Sparkles }}
+          />
+        )
       ) : (
         <BulkSelectionProvider>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
