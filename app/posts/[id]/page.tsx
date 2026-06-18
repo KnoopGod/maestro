@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, CalendarDays, CheckCircle2, AlertCircle, Clock, Sparkles, DollarSign, Hash, FileText, ExternalLink } from 'lucide-react'
+import { ArrowLeft, CalendarDays, CheckCircle2, AlertCircle, Clock, Sparkles, DollarSign, Hash, FileText, ExternalLink, ShieldCheck } from 'lucide-react'
 import { getPost } from '@/lib/db/queries/posts'
 import { getClient } from '@/lib/db/queries/clients'
 import { PostActions, PostSupervisor, PostDeleteButton } from '@/components/posts/PostActions'
@@ -395,6 +395,11 @@ export default async function PostDetailPage({
             <Link href={`/plan?client=${post.clientId}`} className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors p-2 rounded-lg hover:bg-gray-800/40">
               <CalendarDays className="w-3.5 h-3.5" /> Plan client
             </Link>
+            {(post.status === 'draft' || post.status === 'ready' || post.status === 'failed') && (
+              <Link href={`/validation?client=${post.clientId}`} className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors p-2 rounded-lg hover:bg-gray-800/40">
+                <ShieldCheck className="w-3.5 h-3.5" /> File de validation
+              </Link>
+            )}
             <div className="p-2">
               <DuplicatePostButton postId={post.id} className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors" />
             </div>
