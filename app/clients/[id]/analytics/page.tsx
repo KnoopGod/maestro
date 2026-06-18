@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, BarChart3, ExternalLink } from 'lucide-react'
+import { ArrowLeft, BarChart3, ExternalLink, ArrowRight } from 'lucide-react'
 import { getClient } from '@/lib/db/queries/clients'
 import { listPosts } from '@/lib/db/queries/posts'
 import { FetchInsightsButton } from '@/components/analytics/FetchInsightsButton'
@@ -72,8 +72,15 @@ function AnalyticsPostRow({ post }: { post: Post }) {
                 {new Date(post.publishedAt).toLocaleString('fr-FR')}
               </span>
             )}
+            <Link
+              href={`/posts/${post.id}?from=client`}
+              title="Voir le détail complet de ce post"
+              className="ml-auto text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+            >
+              Détail <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
-          <p className="text-sm text-gray-200 line-clamp-2">{post.caption}</p>
+          <p className="text-sm text-gray-200 line-clamp-2">{post.brief || post.caption}</p>
           <div className="flex flex-wrap gap-2 mt-3">
             {Object.entries(post.metaPostIds).map(([platform, id]) => (
               <span key={`${platform}-${id}`} title={`Identifiant Meta utilisé pour récupérer les insights ${platform}`} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-950/50 px-2 py-1 text-[11px] text-gray-300">
