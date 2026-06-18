@@ -9,6 +9,7 @@ import { getPostWorkflowProgress, progressBarClass } from '@/lib/workflow/post-p
 import { PublishErrorHint } from '@/components/posts/PublishErrorHint'
 import { PlanSearchInput } from '@/components/plan/PlanSearchInput'
 import { DuplicatePostButton } from '@/components/posts/DuplicatePostButton'
+import { MarkReadyButton } from '@/components/posts/MarkReadyButton'
 import { HighlightText } from '@/components/plan/HighlightText'
 
 export const dynamic = 'force-dynamic'
@@ -595,6 +596,9 @@ function PostRow({ post, client, searchQuery, now, prevId, nextId }: { post: Pos
               )}
               {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
               {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
+              {post.status === 'draft' && (
+                <MarkReadyButton postId={post.id} />
+              )}
               <Link
                 href={`/posts/${post.id}?from=plan${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
                 title="Voir le détail complet de ce post"
