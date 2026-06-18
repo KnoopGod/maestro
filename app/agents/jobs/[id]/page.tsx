@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, RefreshCw, ExternalLink } from 'lucide-react'
 import { AGENTS } from '@/lib/agent-registry'
@@ -120,6 +120,9 @@ function EventRow({ event, isLast }: { event: AgentEvent; isLast: boolean }) {
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const searchParams = useSearchParams()
+  const clientFilter = searchParams.get('client')
+  const agentsHref = clientFilter ? `/agents?client=${clientFilter}` : '/agents'
   const [job, setJob] = useState<JobWithEvents | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(0)
@@ -163,7 +166,7 @@ export default function JobDetailPage() {
     return (
       <div className="text-center py-24 text-gray-500">
         Job introuvable.
-        <div className="mt-2"><Link href="/agents" className="text-purple-400 hover:underline">← Retour aux agents</Link></div>
+        <div className="mt-2"><Link href={agentsHref} className="text-purple-400 hover:underline">← Retour aux agents</Link></div>
       </div>
     )
   }
@@ -175,7 +178,7 @@ export default function JobDetailPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Breadcrumb */}
-      <Link href="/agents" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+      <Link href={agentsHref} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Activité agents
       </Link>

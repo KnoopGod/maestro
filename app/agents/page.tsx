@@ -49,14 +49,15 @@ function agentEmoji(id: string) {
 
 // ─── Job Card ─────────────────────────────────────────────────────────────────
 
-function JobCard({ job, referenceTs }: { job: AgentJob; referenceTs: number }) {
+function JobCard({ job, referenceTs, clientFilter }: { job: AgentJob; referenceTs: number; clientFilter?: string }) {
   const cfg = JOB_STATUS_CFG[job.status]
   const duration = job.completedAt
     ? job.completedAt - job.startedAt
     : referenceTs - job.startedAt
+  const backParam = clientFilter ? `?client=${clientFilter}` : ''
 
   return (
-    <Link href={`/agents/jobs/${job.id}`} className="block group">
+    <Link href={`/agents/jobs/${job.id}${backParam}`} className="block group">
       <div className={`bg-gray-900/40 border rounded-xl p-4 hover:border-purple-700/50 transition-all ${
         job.status === 'running' ? 'border-purple-700/40 shadow-sm shadow-purple-900/20' :
         job.status === 'failed' ? 'border-red-800/40' :
@@ -317,7 +318,7 @@ export default async function AgentsPage({
         {runningJobs.length > 0 && (
           <div className="mb-4 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">En cours</p>
-            {runningJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
+            {runningJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} clientFilter={clientFilter} />)}
           </div>
         )}
 
@@ -325,7 +326,7 @@ export default async function AgentsPage({
         {errorJobs.length > 0 && (
           <div className="mb-4 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">Attention requise</p>
-            {errorJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
+            {errorJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} clientFilter={clientFilter} />)}
           </div>
         )}
 
@@ -334,7 +335,7 @@ export default async function AgentsPage({
           <div className="mb-4 space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">Terminé aujourd&apos;hui ({todayJobs.length})</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {todayJobs.slice(0, 6).map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
+              {todayJobs.slice(0, 6).map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} clientFilter={clientFilter} />)}
             </div>
           </div>
         )}
@@ -344,7 +345,7 @@ export default async function AgentsPage({
           <div className="space-y-2">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 px-1">Historique récent</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {recentJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} />)}
+              {recentJobs.map(j => <JobCard key={j.id} job={j} referenceTs={referenceTs} clientFilter={clientFilter} />)}
             </div>
           </div>
         )}
