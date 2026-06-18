@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect, useTransition } from 'react'
 import { Sparkles, Loader2, ImageIcon, Wand2, BrainCircuit, ChevronDown, Film, Check } from 'lucide-react'
-import type { Client } from '@/types/client'
+import type { Client, BusinessObjective } from '@/types/client'
+import { BUSINESS_OBJECTIVE_LABELS } from '@/types/client'
 import type { Post } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
 import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
@@ -25,12 +26,14 @@ export function StudioForm({
   initialClientId,
   initialPost,
   initialPillar,
+  initialObjective,
   clientDaStatus,
 }: {
   clients: Client[]
   initialClientId?: string
   initialPost?: Post
   initialPillar?: string
+  initialObjective?: string
   clientDaStatus?: Record<string, ClientDaStatus>
 }) {
   const [clientId, setClientId] = useState(initialClientId || clients[0]?.id || '')
@@ -60,6 +63,9 @@ export function StudioForm({
 
   const [ctaType, setCtaType] = useState<string>('')
   const [ctaUrl, setCtaUrl] = useState<string>('')
+  const [businessObjective, setBusinessObjective] = useState<BusinessObjective | null>(
+    (initialObjective && initialObjective in BUSINESS_OBJECTIVE_LABELS) ? (initialObjective as BusinessObjective) : null
+  )
 
   const selectedClient = clients.find(c => c.id === clientId)
   const selectedDa = clientDaStatus?.[clientId]
@@ -141,6 +147,7 @@ export function StudioForm({
             imageAssetUrl: imageMode === 'library' && selectedAsset ? selectedAsset.url : undefined,
             ctaType: ctaType || undefined,
             ctaUrl: ctaUrl || undefined,
+            businessObjective: businessObjective || undefined,
           }),
         })
         const data = await res.json()
@@ -257,6 +264,45 @@ export function StudioForm({
 
         {/* Strategy Director — post ideas */}
         <PostIdeasPanel clientId={clientId || null} onPick={applyIdea} />
+
+        {/* Business objective */}
+        <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-semibold text-white">🎯 Objectif business</label>
+            {businessObjective && (
+              <button
+                type="button"
+                onClick={() => setBusinessObjective(null)}
+                className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Effacer
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(Object.entries(BUSINESS_OBJECTIVE_LABELS) as [BusinessObjective, { label: string; emoji: string; description: string }][]).map(([key, { label, emoji }]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setBusinessObjective(businessObjective === key ? null : key)}
+                title={BUSINESS_OBJECTIVE_LABELS[key].description}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                  businessObjective === key
+                    ? 'bg-purple-700/60 border-purple-500 text-white'
+                    : 'bg-gray-900/60 border-gray-700/60 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                }`}
+              >
+                <span>{emoji}</span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          {businessObjective && (
+            <p className="mt-2 text-[11px] text-purple-300/80">
+              Les agents vont orienter leur analyse et le CTA vers : <strong>{BUSINESS_OBJECTIVE_LABELS[businessObjective].description}</strong>
+            </p>
+          )}
+        </div>
 
         {/* Brief */}
         <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">

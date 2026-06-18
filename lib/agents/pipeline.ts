@@ -40,10 +40,12 @@ export async function runPostPipeline(input: {
   existingAsset?: { id: string; url: string }
   ctaType?: string
   ctaUrl?: string
+  /** Objectif business explicite pour ce post (remplir jours creux, avis Google, etc.) */
+  businessObjective?: import('@/types/client').BusinessObjective
   /** ID du job de tracking (optionnel — pas de tracking si absent). */
   jobId?: string
 }): Promise<PipelineResult> {
-  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, jobId } = input
+  const { client, userBrief, platforms, contentType = 'photo', skipImage = false, existingAsset, ctaType, ctaUrl, businessObjective, jobId } = input
 
   // Helper : wrap avec tracking si jobId fourni, sinon appel direct
   function track<T>(
@@ -67,7 +69,7 @@ export async function runPostPipeline(input: {
 
   // ── Étape 1 : Account Director ─────────────────────────────────────────────
   const account = await track(
-    () => runAccountDirector({ client, userBrief, recentPosts: allRecentForAD, topPosts, runAt: new Date().toISOString() }),
+    () => runAccountDirector({ client, userBrief, recentPosts: allRecentForAD, topPosts, runAt: new Date().toISOString(), businessObjective }),
     { agent: 'account-director', sequence: 1, taskLabel: 'Analyse du profil client et préparation du brief' },
     {
       onComplete: r => ({

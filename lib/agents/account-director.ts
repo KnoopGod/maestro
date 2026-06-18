@@ -1,10 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { Client } from '@/types/client'
+import type { Client, BusinessObjective } from '@/types/client'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybook } from '@/lib/playbooks'
 
 export interface AccountDirective {
   /** Pilier prioritaire à traiter ensuite (issu de client.strategy.contentPillars). */
@@ -41,14 +42,17 @@ export async function runAccountDirector(input: {
   topPosts?: Post[]
   /** ISO datetime du run, ex. "2026-06-09T14:23:00Z". Injecte le contexte temporel dans le prompt. */
   runAt?: string
+  /** Objectif business explicite — surpasse le contexte temporel dans le choix du pilier. */
+  businessObjective?: BusinessObjective
 }): Promise<{
   directive: AccountDirective
   cost: number
   tokensUsed: number
   model: string
 }> {
-  const { client, userBrief } = input
+  const { client, userBrief, businessObjective } = input
   const topPosts = input.topPosts ?? []
+  const playbook = getPlaybook(client.businessProfile?.vertical ?? client.type)
   // includeInsights reste actif : le learning loop lit metaInsights des posts récents
   const recentPosts = input.recentPosts ?? await listPosts({ clientId: client.id, limit: 10 })
 
@@ -68,53 +72,62 @@ export async function runAccountDirector(input: {
   }
 
   const identity = await getVisualIdentity(client.id)
-  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Account Director**, chef de dossier senior pour une agence HORECA avec 10 ans d'expérience.
-Tu as géré des portefeuilles de 20-30 établissements simultanément. Tu connais les piliers de contenu qui fonctionnent par type d'établissement, les saisons HORECA, les erreurs de répétition qui fatiguent les abonnés.
+  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Business Growth Director**, directeur de croissance digitale senior pour des commerces physiques.
+Tu gères des portefeuilles de 20-30 établissements simultanément : restaurants, hôtels, bars, coiffeurs, salles de sport, clubs de padel, boutiques.
+Tu ne crées pas du contenu pour faire joli — tu crées du contenu pour générer des résultats business mesurables.
 
 ## Ton rôle précis
-Avant chaque post, tu lis la stratégie du client, l'historique récent, et la DA disponible.
-Tu choisis le pilier le plus pertinent MAINTENANT (pas celui qu'on a déjà fait cette semaine).
-Tu enrichis le brief utilisateur sans l'écraser — tu ajoutes l'angle stratégique, le hook, le CTA suggéré.
+Avant chaque post, tu lis l'objectif business du client, son profil, l'historique récent, et la DA disponible.
+Tu choisis le pilier le plus pertinent MAINTENANT — celui qui sert l'objectif business prioritaire, pas celui déjà couvert cette semaine.
+Tu enrichis le brief utilisateur sans l'écraser — tu ajoutes l'angle business, le hook, le CTA qui convertit.
 
-## Ce que tu sais par type d'établissement
+## Expertise métier pour ce client
+${playbook.promptContext}
 
-### Restaurant
-Piliers qui alternent bien : Plat signature → Coulisses → Menu du jour → Avis client → Réservation événement → Origine produit → L'équipe
-Piliers à espacer (max 1x/semaine) : Menu du jour, promotion
-Piliers à alterner toujours : au moins 1 humain/coulisses pour 2 posts produits
-
-### Hôtel
-Piliers : Chambre lifestyle (avec personnes, pas vide) → Vue / environnement → Activités locales → Petit-déjeuner → Expérience client → Événement / saison
-Le piège hôtel : trop de photos de chambres vides. Toujours préférer une chambre avec ambiance (plateau petit-déj, valise ouverte, couple en arrière-plan flou).
-
-### Bar / Cocktail
-Piliers : Cocktail signature → Happy hour → Behind the bar → Ambiance soirée → Cocktail du mois → Accord mets-cocktail
-Timing critique : jeudi-vendredi pour générer du trafic week-end. Lundi-mardi = contenu engagement (devinettes, photos artisanales, coulisses).
-
-### Chambre d'hôtes / B&B
-Piliers : Vue / cadre naturel → Petit-déjeuner fait maison → Activités locales → Chambre mise en scène → Témoignage client → Disponibilités (directement convertisseur)
-Le B&B doit créer du rêve d'abord, de la réservation directe ensuite. Ne jamais commencer par le prix.
-
-## Règles d'alternance
+## Règles universelles d'alternance
 1. Jamais 2 posts "produit" de suite sans post "humain/coulisses"
-2. Jamais 2 promotions / CTAs commerciaux de suite
+2. Jamais 2 CTAs commerciaux de suite — varier : engagement, éducation, conversion
 3. Si les 3 derniers posts couvrent le même pilier → changer absolument
-4. Après un post très performant (si insight disponible) → analyser l'angle et le reproduire avec variation
+4. Après un post très performant → analyser l'angle et le reproduire avec variation
 
 ## Ce que tu livres au Social Expert
 Un brief enrichi en 2-4 phrases, prêt à copier-coller. Pas d'instructions méta ("tu devrais..."), des formulations directes.
-Exemple de bon enrichedBrief : "Le tartare de bœuf du chef Marco, préparé devant le client avec huile de truffe noire du Périgord et câpres de Pantelleria. Mettre en avant le geste du chef et l'ingrédient d'exception. CTA : réserver pour ce soir, X couverts restants."
-Exemple de mauvais enrichedBrief : "Parler du tartare et mettre en avant la qualité."
+Exemple bon brief : "Le tartare de bœuf du chef Marco, préparé devant le client avec huile de truffe noire. Geste artisanal et ingrédient d'exception. CTA : réserver ce soir, X couverts restants."
+Exemple mauvais brief : "Parler du tartare et mettre en avant la qualité."
 
 Réponds en français, en JSON strict, sans markdown.`)
+
+  const bp = client.businessProfile
+  const objectiveLabel = businessObjective
+    ? (({ fill_slow_days: 'Remplir les jours creux', increase_bookings: 'Augmenter les réservations', sell_offer: 'Vendre une offre', sell_membership: 'Vendre des abonnements', promote_event: 'Promouvoir un événement', get_google_reviews: 'Obtenir des avis Google', increase_dms: 'Augmenter les DMs', increase_calls: 'Augmenter les appels', reduce_platform_dependency: 'Réduire dépendance plateformes', attract_new_customers: 'Attirer de nouveaux clients', increase_visibility: 'Augmenter la visibilité', increase_revenue_period: 'Booster le CA' } as Record<string, string>)[businessObjective] ?? businessObjective)
+    : (bp?.priorityObjective ?? null)
 
   const userPrompt = `# CLIENT
 
 **Établissement :** ${client.name}
-**Type :** ${client.type}
+**Secteur :** ${bp?.vertical ?? client.type}
 **Ville :** ${client.city || 'non renseignée'}
 **Description :** ${client.description || 'non renseignée'}
 
+${bp ? `# PROFIL BUSINESS
+
+**Offres principales :** ${bp.mainOffers.length ? bp.mainOffers.join(', ') : 'non renseignées'}
+**Panier moyen :** ${bp.avgBasketEur ? `${bp.avgBasketEur}€` : 'non renseigné'}
+**Jours forts :** ${bp.peakDays.length ? bp.peakDays.join(', ') : 'non renseignés'}
+**Jours creux :** ${bp.offDays.length ? bp.offDays.join(', ') : 'non renseignés'}
+**Canal de conversion principal :** ${bp.conversionChannels[0] ?? 'non renseigné'}
+**Contraintes :** ${bp.constraints.length ? bp.constraints.join(', ') : 'aucune'}
+` : ''}
+${objectiveLabel ? `# OBJECTIF BUSINESS PRIORITAIRE
+
+⚠️ **Ce post doit servir l'objectif : ${objectiveLabel}**
+Chaque décision (pilier, hook, CTA) doit maximiser les chances d'atteindre cet objectif.
+${businessObjective === 'fill_slow_days' && bp?.offDays.length ? `Jours à remplir : ${bp.offDays.join(', ')}` : ''}
+${businessObjective === 'get_google_reviews' ? 'Le CTA doit inviter naturellement à laisser un avis Google (sans mendier).' : ''}
+${businessObjective === 'increase_dms' ? 'La caption doit créer une question qui pousse à répondre en DM.' : ''}
+${businessObjective === 'reduce_platform_dependency' ? 'Pousser la réservation directe (site, téléphone) et ses avantages concrets.' : ''}
+
+` : ''}
 # VOIX DE MARQUE
 
 **Ton :** ${client.brandVoiceTone || 'non renseigné'}

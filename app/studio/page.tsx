@@ -9,9 +9,9 @@ export const dynamic = 'force-dynamic'
 export default async function StudioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ client?: string; postId?: string; pillar?: string }>
+  searchParams: Promise<{ client?: string; postId?: string; pillar?: string; objective?: string }>
 }) {
-  const { client: initialClientId, postId, pillar } = await searchParams
+  const { client: initialClientId, postId, pillar, objective: initialObjective } = await searchParams
   const [clients, initialPost] = await Promise.all([
     listClients(),
     postId ? getPost(postId) : Promise.resolve(null),
@@ -81,6 +81,7 @@ export default async function StudioPage({
         initialClientId={initialPost?.clientId ?? initialClientId}
         initialPost={initialPost ?? undefined}
         initialPillar={pillar}
+        initialObjective={initialObjective}
         clientDaStatus={clientDaStatus}
       />
     </div>

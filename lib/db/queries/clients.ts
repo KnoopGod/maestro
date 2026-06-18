@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
 import { db, query, queryOne } from '../index'
 import { createClientStrategy } from '@/lib/agents/strategy-director'
-import type { Client, ClientStrategy, ClientType, ClientWithStats, ClientStatus } from '@/types/client'
+import type { Client, ClientStrategy, ClientType, ClientWithStats, ClientStatus, ClientBusinessProfile } from '@/types/client'
 
 // ─── Row mapping ──────────────────────────────────────────────────────────────
 
@@ -19,6 +19,7 @@ interface ClientRow {
   brand_voice_avoid: string | null
   languages: string
   strategy: string | null
+  business_profile: string | null
   created_at: number
   updated_at: number
 }
@@ -40,6 +41,13 @@ function mapRow(row: ClientRow): Client {
     offerFocus: '',
   })
 
+  let businessProfile: ClientBusinessProfile | null = null
+  try {
+    businessProfile = row.business_profile ? (JSON.parse(row.business_profile) as ClientBusinessProfile) : null
+  } catch {
+    businessProfile = null
+  }
+
   return {
     id: row.id,
     name: row.name,
@@ -54,6 +62,7 @@ function mapRow(row: ClientRow): Client {
     brandVoiceAvoid: row.brand_voice_avoid,
     languages: JSON.parse(row.languages || '["fr"]'),
     strategy,
+    businessProfile,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -160,6 +169,7 @@ export async function createClient(input: {
   brandVoiceAvoid?: string
   languages?: string[]
   strategy?: ClientStrategy
+  businessProfile?: ClientBusinessProfile
 }): Promise<Client> {
   const id = input.id ?? nanoid(12)
   const now = Date.now()
@@ -170,14 +180,15 @@ export async function createClient(input: {
     positioning: input.description ?? '',
     tone: input.brandVoiceTone ?? '',
     offerFocus: '',
+    businessProfile: input.businessProfile,
   })
 
   await db.execute({
     sql: `INSERT OR IGNORE INTO clients (
       id, name, type, city, status, emoji, color, description,
       brand_voice_tone, brand_voice_keywords, brand_voice_avoid,
-      languages, strategy, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      languages, strategy, business_profile, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       input.name,
@@ -191,6 +202,7 @@ export async function createClient(input: {
       input.brandVoiceAvoid ?? null,
       JSON.stringify(input.languages ?? ['fr']),
       JSON.stringify(strategy),
+      input.businessProfile ? JSON.stringify(input.businessProfile) : null,
       now,
       now,
     ],
@@ -237,6 +249,11 @@ export async function updateClient(
   if (patch.strategy) {
     updates.push('strategy = ?')
     args.push(JSON.stringify(patch.strategy))
+  }
+
+  if ('businessProfile' in patch) {
+    updates.push('business_profile = ?')
+    args.push(patch.businessProfile ? JSON.stringify(patch.businessProfile) : null)
   }
 
   if (updates.length === 0) return getClient(id)

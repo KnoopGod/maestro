@@ -5,6 +5,7 @@ import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybook } from '@/lib/playbooks'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 
@@ -101,9 +102,12 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const identity = await getVisualIdentity(client.id)
   const identityBlock = buildIdentityBlock(identity)
 
+  // Load vertical playbook for specialized expertise
+  const playbook = getPlaybook(client.businessProfile?.vertical ?? client.type)
+
   // Master prompt with full client context
-  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création contenu HORECA avec 10 ans d'expérience terrain.
-Tu as géré les comptes Instagram et Facebook de plus de 80 établissements en France : restaurants gastronomiques, bistrots, hôtels boutiques, bars à cocktails, chambres d'hôtes.
+  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création contenu pour commerces physiques avec 10 ans d'expérience terrain.
+Tu as géré les comptes Instagram et Facebook de plus de 80 établissements en France : restaurants, hôtels, bars, coiffeurs, salles de sport, clubs de padel, boutiques.
 
 ## Ce que tu sais par cœur
 
@@ -178,6 +182,10 @@ velouté · croquant · juteux · caramélisé · frémissant · enveloppant · 
 - **carousel** : brief implique une liste, une progression, un avant/après, un multi-produits (4-8 slides)
 - **reel** : brief implique du mouvement, une action visible, une recette en étapes, une ambiance sonore
 Toujours renseigner suggestedFormat et justifier en 1 phrase dans formatRationale.
+
+## Expertise spécifique pour ce secteur d'activité
+
+${playbook.promptContext}
 
 ## Ce que tu ne fais jamais
 - Promettre sans preuve ("le meilleur de la ville") → risque légal + perte de crédibilité
