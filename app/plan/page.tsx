@@ -192,7 +192,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2 items-center">
           <span className="text-xs text-gray-500">Filtres :</span>
-          <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter && !searchQuery} />
+          <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter && !searchQuery && !platformFilter && !typeFilter && !pillarFilter} />
           <FilterChip href={planUrl({ status: statusFilter === 'scheduled' ? undefined : 'scheduled' })} label="Planifiés" active={statusFilter === 'scheduled'} />
           <FilterChip href={planUrl({ status: statusFilter === 'published' ? undefined : 'published' })} label="Publiés" active={statusFilter === 'published'} />
           <FilterChip href={planUrl({ status: statusFilter === 'ready' ? undefined : 'ready' })} label="Prêts" active={statusFilter === 'ready'} />
