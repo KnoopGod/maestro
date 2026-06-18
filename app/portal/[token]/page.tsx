@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getClientByPortalToken } from '@/lib/db/queries/portal'
 import { listPosts } from '@/lib/db/queries/posts'
@@ -87,6 +88,17 @@ export default async function ClientPortalPage({
   const typeCfg = CLIENT_TYPES[client.type]
   const periodLabel = `${MONTH_NAMES[month]} ${year}`
 
+  // Month navigation
+  const prevM = month === 0 ? 11 : month - 1
+  const prevY = month === 0 ? year - 1 : year
+  const prevParam = `${prevY}-${String(prevM + 1).padStart(2, '0')}`
+  const nowY = now.getFullYear(), nowM = now.getMonth()
+  const isCurrentMonth = year === nowY && month === nowM
+  const nextM = month === 11 ? 0 : month + 1
+  const nextY = month === 11 ? year + 1 : year
+  const nextParam = `${nextY}-${String(nextM + 1).padStart(2, '0')}`
+  const isFutureMonth = year > nowY || (year === nowY && month >= nowM)
+
   return (
     <main className="min-h-screen bg-[#07080d] text-white px-4 py-8 sm:py-14 print:bg-white print:p-0 print:m-0">
       <style>{`
@@ -112,8 +124,34 @@ export default async function ClientPortalPage({
                 </p>
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-lg sm:text-xl font-bold">{periodLabel}</div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1">Espace client</p>
+                <div className="flex items-center justify-end gap-1 mb-1 print:hidden">
+                  <Link
+                    href={`/portal/${token}?month=${prevParam}`}
+                    title="Mois précédent"
+                    className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:border-gray-700 hover:text-gray-900 transition-colors text-sm"
+                  >
+                    ←
+                  </Link>
+                  <span className="text-lg sm:text-xl font-bold px-1">{periodLabel}</span>
+                  {!isFutureMonth ? (
+                    <Link
+                      href={`/portal/${token}?month=${nextParam}`}
+                      title="Mois suivant"
+                      className="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:border-gray-700 hover:text-gray-900 transition-colors text-sm"
+                    >
+                      →
+                    </Link>
+                  ) : (
+                    <span className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 text-gray-300 cursor-default text-sm">→</span>
+                  )}
+                </div>
+                <div className="hidden print:block text-lg sm:text-xl font-bold">{periodLabel}</div>
+                {!isCurrentMonth && (
+                  <Link href={`/portal/${token}`} className="print:hidden text-[10px] text-blue-600 hover:underline">
+                    Mois actuel
+                  </Link>
+                )}
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1 print:block">Espace client</p>
               </div>
             </div>
           </header>
