@@ -317,6 +317,16 @@ export default async function PostDetailPage({
                 </p>
               </details>
             )}
+            {post.imagePrompt && (
+              <details className="text-xs">
+                <summary className="cursor-pointer text-gray-500 hover:text-gray-300 transition-colors select-none">
+                  Prompt image ▾
+                </summary>
+                <p className="mt-2 text-gray-400 leading-relaxed bg-gray-950/40 border border-gray-800 rounded-lg p-2 font-mono text-[11px]">
+                  {post.imagePrompt}
+                </p>
+              </details>
+            )}
             {post.cost > 0 && (
               <MetaRow label="Coût IA" value={`$${post.cost.toFixed(4)}`} icon={DollarSign} />
             )}

@@ -246,7 +246,13 @@ export default async function CalendarPage({
                               <span title="Brouillon" className="inline-block w-3 h-3 rounded-full bg-amber-400/60 mx-auto" />
                             )}
                             {!status && (
-                              <span title="Aucun post prévu pour ce client ce jour-là" className="inline-block w-2 h-px bg-gray-800 mx-auto" />
+                              <Link
+                                href={`/studio?client=${c.id}`}
+                                title={`Créer un post pour ${c.name} ce jour`}
+                                className="inline-flex items-center justify-center w-5 h-5 rounded text-gray-800 hover:text-indigo-400 hover:bg-indigo-950/30 transition-colors mx-auto"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Link>
                             )}
                           </td>
                         )
