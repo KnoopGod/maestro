@@ -227,10 +227,14 @@ export default async function CalendarPage({
                   return (
                     <tr key={c.id} className={`border-b border-gray-800/50 ${idx % 2 === 1 ? 'bg-gray-900/20' : ''}`}>
                       <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
+                        <Link
+                          href={`/clients/${c.id}`}
+                          title={`Voir la fiche de ${c.name}`}
+                          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                        >
                           <span className="text-base">{c.emoji}</span>
                           <span className="text-[11px] text-gray-300 truncate max-w-[90px]">{c.name}</span>
-                        </div>
+                        </Link>
                       </td>
                       {weekDays.map((_, i) => {
                         const status = dayMap.get(i)

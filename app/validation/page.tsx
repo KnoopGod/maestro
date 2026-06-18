@@ -35,12 +35,21 @@ function buildUrl(params: Record<string, string | undefined>) {
   return `/validation${qs ? `?${qs}` : ''}`
 }
 
+// Helper used inside the async page function — defined here to avoid closure issues
+function makeValidationUrl(base: { client?: string; sort?: string; q?: string; status?: string }, overrides: Record<string, string | undefined>) {
+  return buildUrl({ ...base, ...overrides })
+}
+
 export default async function ValidationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ client?: string; sort?: string; q?: string }>
+  searchParams: Promise<{ client?: string; sort?: string; q?: string; status?: string }>
 }) {
-  const { client: clientFilter, sort: sortParam, q: searchQuery } = await searchParams
+  const { client: clientFilter, sort: sortParam, q: searchQuery, status: statusFilter } = await searchParams
+  const validStatuses = ['draft', 'ready', 'failed'] as const
+  type ValidationStatus = typeof validStatuses[number]
+  const statusF: ValidationStatus | undefined = validStatuses.includes(statusFilter as ValidationStatus) ? statusFilter as ValidationStatus : undefined
+
   const sortOption: SortOption = sortParam === 'oldest' ? 'oldest' : sortParam === 'impact' ? 'impact' : 'newest'
 
   const orderBy = sortOption === 'impact' ? 'impact_score' as const : 'created_at' as const
@@ -48,7 +57,7 @@ export default async function ValidationPage({
 
   const [queue, clients] = await Promise.all([
     listPosts({
-      statuses: ['draft', 'ready', 'failed'],
+      ...(statusF ? { status: statusF } : { statuses: ['draft', 'ready', 'failed'] }),
       clientId: clientFilter,
       q: searchQuery,
       orderBy,
@@ -61,19 +70,19 @@ export default async function ValidationPage({
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
 
-  // Clients that actually have posts in the unfiltered queue for the chips
-  const [allQueue] = clientFilter
-    ? [await listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false })]
-    : [queue]
-  const clientsInQueue = clients.filter(c => allQueue.some(p => p.clientId === c.id))
-  const countByClient = allQueue.reduce<Record<string, number>>((acc, p) => {
+  // Unfiltered counts for chips and stat boxes
+  const baseQueue = (clientFilter || statusF)
+    ? await listPosts({ statuses: ['draft', 'ready', 'failed'], limit: 200, includeInsights: false })
+    : queue
+  const clientsInQueue = clients.filter(c => baseQueue.some(p => p.clientId === c.id))
+  const countByClient = baseQueue.reduce<Record<string, number>>((acc, p) => {
     acc[p.clientId] = (acc[p.clientId] ?? 0) + 1
     return acc
   }, {})
 
-  const draftCount = queue.filter(p => p.status === 'draft').length
-  const readyCount = queue.filter(p => p.status === 'ready').length
-  const failedCount = queue.filter(p => p.status === 'failed').length
+  const draftCount = baseQueue.filter(p => p.status === 'draft').length
+  const readyCount = baseQueue.filter(p => p.status === 'ready').length
+  const failedCount = baseQueue.filter(p => p.status === 'failed').length
 
   const sortLabels: Record<SortOption, string> = { newest: 'Récent', oldest: 'Ancien', impact: 'Impact ↓' }
   const sortOptions: SortOption[] = ['newest', 'oldest', 'impact']
@@ -109,9 +118,15 @@ export default async function ValidationPage({
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <StatBox label="Brouillons" value={draftCount} color="text-amber-400" border="border-amber-800/30" />
-        <StatBox label="Prêts" value={readyCount} color="text-purple-400" border="border-purple-800/30" />
-        <StatBox label="Échecs" value={failedCount} color="text-red-400" border="border-red-800/30" />
+        <StatBox label="Brouillons" value={draftCount} color="text-amber-400" border="border-amber-800/30"
+          href={makeValidationUrl({ client: clientFilter, sort: sortParam, q: searchQuery }, { status: statusF === 'draft' ? undefined : 'draft' })}
+          active={statusF === 'draft'} />
+        <StatBox label="Prêts" value={readyCount} color="text-purple-400" border="border-purple-800/30"
+          href={makeValidationUrl({ client: clientFilter, sort: sortParam, q: searchQuery }, { status: statusF === 'ready' ? undefined : 'ready' })}
+          active={statusF === 'ready'} />
+        <StatBox label="Échecs" value={failedCount} color="text-red-400" border="border-red-800/30"
+          href={makeValidationUrl({ client: clientFilter, sort: sortParam, q: searchQuery }, { status: statusF === 'failed' ? undefined : 'failed' })}
+          active={statusF === 'failed'} />
       </div>
 
       {/* Filters & Sort */}
@@ -221,13 +236,14 @@ export default async function ValidationPage({
   )
 }
 
-function StatBox({ label, value, color, border }: { label: string; value: number; color: string; border: string }) {
-  return (
-    <div title={`${label} dans la file de validation`} className={`bg-gray-900/40 border ${border} rounded-xl p-4 hover:-translate-y-0.5 transition-transform duration-200`}>
+function StatBox({ label, value, color, border, href, active }: { label: string; value: number; color: string; border: string; href?: string; active?: boolean }) {
+  const inner = (
+    <div title={`Filtrer : ${label}`} className={`bg-gray-900/40 border ${active ? 'border-purple-700/60 bg-purple-950/10' : border} rounded-xl p-4 transition-all hover:-translate-y-0.5 duration-200`}>
       <div className="text-xs text-gray-500">{label}</div>
       <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
     </div>
   )
+  return href ? <Link href={href} title={`Filtrer la validation : ${label}`}>{inner}</Link> : inner
 }
 
 function PostCard({ post, client, prevId, nextId }: { post: Post; client: Client | undefined; prevId?: string; nextId?: string }) {
