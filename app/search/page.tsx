@@ -86,7 +86,7 @@ export default async function SearchPage({
             {posts.map(p => (
               <Link
                 key={p.id}
-                href={`/posts/${p.id}?from=plan`}
+                href={`/posts/${p.id}?from=search`}
                 className="block p-3 rounded-xl bg-gray-900/40 border border-gray-800 hover:border-purple-700/50 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-1">

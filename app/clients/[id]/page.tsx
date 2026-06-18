@@ -479,7 +479,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             Activité agents
           </h2>
           {clientJobs.length > 0 && (
-            <Link href="/agents" title="Voir l'activité globale de tous les agents IA" className="text-xs text-purple-400 hover:underline">
+            <Link href={`/agents?client=${client.id}`} title={`Voir tous les jobs agents pour ${client.name}`} className="text-xs text-purple-400 hover:underline">
               Tous les jobs →
             </Link>
           )}
