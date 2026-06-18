@@ -606,7 +606,7 @@ function UpcomingPostRow({ post, referenceTs }: { post: Post; referenceTs: numbe
         {post.platforms.map(p => PLATFORM_EMOJI[p] ?? '🌐').join('')}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-sm text-white truncate">{post.caption.substring(0, 60)}</div>
+        <div className="text-sm text-white truncate">{post.brief || post.caption.substring(0, 60)}</div>
         <div className="text-[10px] text-gray-500">{dateLabel}</div>
       </div>
       <span className="text-[10px] text-blue-300 flex-shrink-0 font-medium">{countdown}</span>
