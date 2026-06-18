@@ -51,6 +51,7 @@ Dernière mise à jour : 2026-06-14
 - Génération vidéo
 - Tests automatisés
 - Versioning des posts
+- AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
 
 ---
 
