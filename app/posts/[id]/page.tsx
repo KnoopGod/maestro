@@ -76,7 +76,7 @@ export default async function PostDetailPage({
     : fromCtx === 'validation'
     ? { ...FROM_CFG.validation, href: validationHref }
     : fromCtx === 'search'
-    ? { ...FROM_CFG.search, href: searchHref }
+    ? { ...FROM_CFG.search, href: searchHref, title: searchBack ? `Retour aux résultats pour «${decodeURIComponent(searchBack)}»` : FROM_CFG.search.title }
     : FROM_CFG[fromCtx as Exclude<FromContext, 'client' | 'client-analytics'>]
   const cfg = STATUS_CFG[post.status] ?? STATUS_CFG.draft
   const StatusIcon = cfg.icon
@@ -184,7 +184,7 @@ export default async function PostDetailPage({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <DuplicatePostButton postId={post.id} className="px-3 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 transition-colors inline-flex items-center gap-1.5" />
-          <PostDeleteButton post={post} />
+          <PostDeleteButton post={post} redirectTo={breadcrumb.href} />
         </div>
       </div>
 

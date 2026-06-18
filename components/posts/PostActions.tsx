@@ -381,7 +381,7 @@ export function PostSupervisor({ post }: { post: Post }) {
   )
 }
 
-export function PostDeleteButton({ post }: { post: Post }) {
+export function PostDeleteButton({ post, redirectTo }: { post: Post; redirectTo?: string }) {
   const router = useRouter()
   const [confirm, setConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -397,7 +397,11 @@ export function PostDeleteButton({ post }: { post: Post }) {
       setLoading(false)
       return
     }
-    router.refresh()
+    if (redirectTo) {
+      router.push(redirectTo)
+    } else {
+      router.refresh()
+    }
   }
 
   if (post.status === 'published') return null
