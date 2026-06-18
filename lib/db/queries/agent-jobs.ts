@@ -129,13 +129,16 @@ export async function completeAgentJob(jobId: string, params: {
   })
 }
 
-export async function listRecentJobs(limit = 30): Promise<AgentJob[]> {
+export async function listRecentJobs(limit = 30, clientId?: string): Promise<AgentJob[]> {
+  const where = clientId ? `WHERE j.client_id = ?` : ''
+  const args: (number | string)[] = clientId ? [clientId, limit] : [limit]
   const result = await db.execute({
     sql: `SELECT j.*, c.name AS client_name, c.emoji AS client_emoji
           FROM agent_jobs j
           LEFT JOIN clients c ON c.id = j.client_id
+          ${where}
           ORDER BY j.started_at DESC LIMIT ?`,
-    args: [limit],
+    args,
   })
   return result.rows.map(r => mapJob(r as Record<string, unknown>))
 }

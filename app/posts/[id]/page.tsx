@@ -61,6 +61,21 @@ export default async function PostDetailPage({
   const cfg = STATUS_CFG[post.status] ?? STATUS_CFG.draft
   const StatusIcon = cfg.icon
 
+  // Countdown label for scheduled posts
+  const scheduleLabel = (() => {
+    if (post.status !== 'scheduled' || !post.scheduledAt) return undefined
+    const nowTs = new Date().getTime()
+    const diffMs = post.scheduledAt - nowTs
+    const diffH = Math.abs(Math.round(diffMs / 3_600_000))
+    const diffD = Math.floor(diffH / 24)
+    const remH = diffH % 24
+    if (diffMs <= 0) {
+      return `En retard de ${diffH}h`
+    }
+    if (diffD === 0) return `Dans ${diffH}h`
+    return remH > 0 ? `Dans ${diffD}j ${remH}h` : `Dans ${diffD}j`
+  })()
+
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Breadcrumb */}
@@ -255,7 +270,7 @@ export default async function PostDetailPage({
           {/* Actions */}
           <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4">
             <h2 className="text-xs font-semibold text-gray-400 mb-3">Actions</h2>
-            <PostActions post={post} />
+            <PostActions post={post} scheduleLabel={scheduleLabel} />
           </div>
 
           {/* Supervisor review */}

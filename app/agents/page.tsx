@@ -3,6 +3,7 @@ import { Bot, CheckCircle2, Clock, Sparkles, Activity, AlertTriangle, ArrowRight
 import { AGENTS, type AgentStatus, type MaestroAgent } from '@/lib/agent-registry'
 import { listRecentJobs } from '@/lib/db/queries/agent-jobs'
 import { listRecentCronExecutions } from '@/lib/db/queries/cron-log'
+import { listClients } from '@/lib/db/queries/clients'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AutoRefresh } from '@/components/agents/AutoRefresh'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
@@ -209,8 +210,17 @@ function CronRow({ exec, referenceTs }: { exec: CronExecution; referenceTs: numb
   )
 }
 
-export default async function AgentsPage() {
-  const [allJobs, cronExecs] = await Promise.all([listRecentJobs(30), listRecentCronExecutions(12)])
+export default async function AgentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ client?: string }>
+}) {
+  const { client: clientFilter } = await searchParams
+  const [allJobs, cronExecs, clients] = await Promise.all([
+    listRecentJobs(30, clientFilter),
+    listRecentCronExecutions(12),
+    listClients(),
+  ])
   const referenceTs = new Date().getTime()
 
   const runningJobs = allJobs.filter(j => j.status === 'running')
@@ -220,6 +230,11 @@ export default async function AgentsPage() {
   const recentJobs = allJobs.filter(j => j.status === 'completed' && j.startedAt < todayTs).slice(0, 6)
   const totalCost = allJobs.reduce((sum, j) => sum + (j.totalCost ?? 0), 0)
   const completedCount = allJobs.filter(j => j.status === 'completed').length
+
+  // Clients present in the unfiltered job list (for chips)
+  const allJobsUnfiltered = clientFilter ? await listRecentJobs(100) : allJobs
+  const clientIdsInJobs = new Set(allJobsUnfiltered.map(j => j.clientId).filter(Boolean))
+  const clientsWithJobs = clients.filter(c => clientIdsInJobs.has(c.id))
 
   const activeAgents = AGENTS.filter(a => a.status === 'active').sort((a, b) => a.order - b.order || a.name.localeCompare(b.name))
   const upcomingAgents = AGENTS.filter(a => a.status !== 'active')
@@ -266,10 +281,37 @@ export default async function AgentsPage() {
 
       {/* ── Activité ── */}
       <section aria-labelledby="activity-heading">
-        <h2 id="activity-heading" className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-          <Activity aria-hidden="true" className="w-4 h-4 text-purple-400" />
-          Activité en direct
-        </h2>
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <h2 id="activity-heading" className="text-sm font-semibold text-white flex items-center gap-2">
+            <Activity aria-hidden="true" className="w-4 h-4 text-purple-400" />
+            Activité en direct
+          </h2>
+          {clientsWithJobs.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Link
+                href="/agents"
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  !clientFilter ? 'bg-purple-600 border-purple-600 text-white' : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                }`}
+              >
+                Tous
+              </Link>
+              {clientsWithJobs.map(c => (
+                <Link
+                  key={c.id}
+                  href={clientFilter === c.id ? '/agents' : `/agents?client=${c.id}`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    clientFilter === c.id
+                      ? 'bg-purple-600 border-purple-600 text-white'
+                      : 'border-gray-700 text-gray-400 hover:border-gray-500'
+                  }`}
+                >
+                  {c.emoji} {c.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* En cours */}
         {runningJobs.length > 0 && (

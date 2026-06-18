@@ -11,9 +11,11 @@ interface PostActionsProps {
   post: Post
   /** Refresh the parent server component after a mutation. */
   refresh?: boolean
+  /** Pre-computed countdown label for scheduled posts, e.g. "Dans 2h" or "En retard de 3h". */
+  scheduleLabel?: string
 }
 
-export function PostActions({ post, refresh = true }: PostActionsProps) {
+export function PostActions({ post, refresh = true, scheduleLabel }: PostActionsProps) {
   const router = useRouter()
   const [status, setStatus] = useState(post.status)
   const [scheduledAt, setScheduledAt] = useState<string>(
@@ -192,6 +194,12 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
           Publier maintenant
         </button>
       </div>
+
+      {scheduleLabel && isScheduled && (
+        <p className={`text-xs ${scheduleLabel.startsWith('En retard') ? 'text-red-400' : 'text-blue-400'}`}>
+          {scheduleLabel.startsWith('En retard') ? '⏰' : '📅'} {scheduleLabel}
+        </p>
+      )}
 
       {error && (
         <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2 flex gap-1.5">
