@@ -40,6 +40,14 @@ function formatRelative(ts: number): string {
   return new Date(ts).toLocaleDateString('fr-FR')
 }
 
+function planHref(filters: { client?: string; status?: string }) {
+  const params = new URLSearchParams()
+  if (filters.client) params.set('client', filters.client)
+  if (filters.status) params.set('status', filters.status)
+  const query = params.toString()
+  return query ? `/plan?${query}` : '/plan'
+}
+
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ client?: string; status?: string }> }) {
   const { client: clientFilter, status: statusFilter } = await searchParams
 
@@ -58,6 +66,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const totalScheduled = posts.filter(p => p.status === 'scheduled').length
   const totalDraft = posts.filter(p => p.status === 'draft').length
   const totalFailed = posts.filter(p => p.status === 'failed').length
+  const studioHref = clientFilter ? `/studio?client=${encodeURIComponent(clientFilter)}` : '/studio'
 
   return (
     <div className="space-y-6">
@@ -72,8 +81,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           </p>
         </div>
         <Link
-          href="/studio"
-          title="Créer un nouveau post depuis le Studio"
+          href={studioHref}
+          title={clientFilter ? 'Créer un nouveau post avec ce client déjà sélectionné' : 'Créer un nouveau post depuis le Studio'}
           className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
         >
           <Sparkles className="w-4 h-4" />
@@ -94,14 +103,14 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
       <div className="flex flex-wrap gap-2 items-center">
         <span className="text-xs text-gray-500">Filtres :</span>
         <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter} />
-        <FilterChip href="/plan?status=scheduled" label="Planifiés" active={statusFilter === 'scheduled'} />
-        <FilterChip href="/plan?status=published" label="Publiés" active={statusFilter === 'published'} />
-        <FilterChip href="/plan?status=ready" label="Prêts" active={statusFilter === 'ready'} />
-        <FilterChip href="/plan?status=draft" label="Brouillons" active={statusFilter === 'draft'} />
-        <FilterChip href="/plan?status=failed" label="Échecs" active={statusFilter === 'failed'} />
+        <FilterChip href={planHref({ client: clientFilter, status: 'scheduled' })} label="Planifiés" active={statusFilter === 'scheduled'} />
+        <FilterChip href={planHref({ client: clientFilter, status: 'published' })} label="Publiés" active={statusFilter === 'published'} />
+        <FilterChip href={planHref({ client: clientFilter, status: 'ready' })} label="Prêts" active={statusFilter === 'ready'} />
+        <FilterChip href={planHref({ client: clientFilter, status: 'draft' })} label="Brouillons" active={statusFilter === 'draft'} />
+        <FilterChip href={planHref({ client: clientFilter, status: 'failed' })} label="Échecs" active={statusFilter === 'failed'} />
         {clientFilter && (
           <Link
-            href="/plan"
+            href={planHref({ status: statusFilter })}
             title="Retirer le filtre client et afficher tous les posts"
             className="text-xs px-2 py-1 rounded bg-purple-600/30 border border-purple-600/40 text-purple-300"
           >
@@ -116,8 +125,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           <Sparkles className="w-10 h-10 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-400">Aucun post pour le moment.</p>
           <Link
-            href="/studio"
-            title="Ouvrir le Studio pour générer le premier post"
+            href={studioHref}
+            title={clientFilter ? 'Ouvrir le Studio avec ce client déjà sélectionné' : 'Ouvrir le Studio pour générer le premier post'}
             className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3"
           >
             <Sparkles className="w-4 h-4" />
