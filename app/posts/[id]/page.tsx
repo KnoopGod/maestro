@@ -9,6 +9,7 @@ import { PostInlineEditor } from '@/components/posts/PostInlineEditor'
 import { PostImageSwap } from '@/components/posts/PostImageSwap'
 import { CopyCaptionButton } from '@/components/posts/CopyCaptionButton'
 import { DuplicatePostButton } from '@/components/posts/DuplicatePostButton'
+import { MarkReadyButton } from '@/components/posts/MarkReadyButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -301,6 +302,11 @@ export default async function PostDetailPage({
           {/* Actions */}
           <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4">
             <h2 className="text-xs font-semibold text-gray-400 mb-3">Actions</h2>
+            {post.status === 'draft' && (
+              <div className="mb-3">
+                <MarkReadyButton postId={post.id} />
+              </div>
+            )}
             <PostActions post={post} scheduleLabel={scheduleLabel} />
           </div>
 
