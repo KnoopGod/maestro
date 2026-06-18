@@ -181,7 +181,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatBox label="Total"      value={statusFilter ? statBase.length : totalPostsCount}   color="text-white"       href={planUrl({ status: undefined })}    active={!statusFilter} />
+        <StatBox label="Total"      value={totalPostsCount}   color="text-white"       href={planUrl({ status: undefined })}    active={!statusFilter} />
         <StatBox label="Publiés"    value={totalPublished} color="text-emerald-400" href={planUrl({ status: 'published' })}  active={statusFilter === 'published'} />
         <StatBox label="Planifiés"  value={totalScheduled} color="text-blue-400"    href={planUrl({ status: 'scheduled' })}  active={statusFilter === 'scheduled'} />
         <StatBox label="Brouillons" value={totalDraft}     color="text-amber-400"   href={planUrl({ status: 'draft' })}      active={statusFilter === 'draft'} />
