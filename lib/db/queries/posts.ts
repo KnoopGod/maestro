@@ -153,6 +153,38 @@ export async function listPosts(options?: {
   return rows.map(mapRow)
 }
 
+export async function countPosts(options?: {
+  clientId?: string
+  status?: PostStatus
+  statuses?: PostStatus[]
+  q?: string
+  platform?: string
+  contentType?: PostContentType
+  pillar?: string
+}): Promise<number> {
+  const conditions: string[] = []
+  const args: unknown[] = []
+
+  if (options?.clientId) { conditions.push('client_id = ?'); args.push(options.clientId) }
+  if (options?.status) { conditions.push('status = ?'); args.push(options.status) }
+  else if (options?.statuses?.length) {
+    conditions.push(`status IN (${options.statuses.map(() => '?').join(',')})`)
+    args.push(...options.statuses)
+  }
+  if (options?.q) {
+    const like = `%${options.q}%`
+    conditions.push('(caption LIKE ? OR brief LIKE ? OR hashtags LIKE ?)')
+    args.push(like, like, like)
+  }
+  if (options?.platform) { conditions.push(`platforms LIKE ?`); args.push(`%"${options.platform}"%`) }
+  if (options?.contentType) { conditions.push('content_type = ?'); args.push(options.contentType) }
+  if (options?.pillar) { conditions.push('pillar = ?'); args.push(options.pillar) }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+  const row = await queryOne<{ count: number }>(`SELECT COUNT(*) as count FROM posts ${where}`, args)
+  return row?.count ?? 0
+}
+
 export async function deletePost(id: string): Promise<void> {
   await queryOne(`DELETE FROM posts WHERE id = ?`, [id])
 }

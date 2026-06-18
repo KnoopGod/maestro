@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { listPosts } from '@/lib/db/queries/posts'
+import { listPosts, countPosts } from '@/lib/db/queries/posts'
 import { listClients } from '@/lib/db/queries/clients'
 import { CalendarDays, ExternalLink, AlertCircle, Sparkles, Copy, Download } from 'lucide-react'
 import type { Post, PostStatus, PostContentType } from '@/types/post'
@@ -59,7 +59,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   const orderDir = sortOption === 'oldest' ? 'ASC' as const : 'DESC' as const
 
   const showInsights = statusFilter === 'published'
-  const [posts, allPosts, clients, countBaseList] = await Promise.all([
+  const [posts, allPosts, clients, countBaseList, totalPostsCount] = await Promise.all([
     listPosts({
       clientId: clientFilter,
       status: statusFilter as PostStatus | undefined,
@@ -80,6 +80,8 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     statusFilter
       ? listPosts({ clientId: clientFilter, limit: 200, includeInsights: false, q: searchQuery, platform: platformFilter, contentType: contentTypeFilter, pillar: pillarFilter })
       : Promise.resolve(null as null),
+    // Accurate total count (not limited to 100)
+    countPosts({ clientId: clientFilter, q: searchQuery, platform: platformFilter, contentType: contentTypeFilter, pillar: pillarFilter }),
   ])
 
   const clientsMap = new Map<string, Client>(clients.map(c => [c.id, c]))
@@ -179,7 +181,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatBox label="Total"      value={posts.length}   color="text-white"       href={planUrl({ status: undefined })}    active={!statusFilter} />
+        <StatBox label="Total"      value={statusFilter ? statBase.length : totalPostsCount}   color="text-white"       href={planUrl({ status: undefined })}    active={!statusFilter} />
         <StatBox label="Publiés"    value={totalPublished} color="text-emerald-400" href={planUrl({ status: 'published' })}  active={statusFilter === 'published'} />
         <StatBox label="Planifiés"  value={totalScheduled} color="text-blue-400"    href={planUrl({ status: 'scheduled' })}  active={statusFilter === 'scheduled'} />
         <StatBox label="Brouillons" value={totalDraft}     color="text-amber-400"   href={planUrl({ status: 'draft' })}      active={statusFilter === 'draft'} />
