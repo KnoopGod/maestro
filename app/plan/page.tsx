@@ -95,6 +95,17 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   // Stat counts: use countBaseList when status filter is active to show real totals
   const statBase = countBaseList ?? posts
 
+  // Encoded active filter state to pass through to post detail for a correct back-link
+  const activePlanParams = new URLSearchParams()
+  if (clientFilter) activePlanParams.set('client', clientFilter)
+  if (statusFilter) activePlanParams.set('status', statusFilter)
+  if (searchQuery) activePlanParams.set('q', searchQuery)
+  if (platformFilter) activePlanParams.set('platform', platformFilter)
+  if (typeFilter) activePlanParams.set('type', typeFilter)
+  if (pillarFilter) activePlanParams.set('pillar', pillarFilter)
+  if (sortOption !== 'newest') activePlanParams.set('sort', sortOption)
+  const activePlanStr = activePlanParams.toString()
+
   // Build URL helper preserving all active filters
   function planUrl(overrides: Record<string, string | undefined>) {
     const p = new URLSearchParams()
@@ -312,7 +323,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           </Link>
         </div>
       ) : (
-        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} now={new Date().getTime()} />
+        <MonthGroupedPosts posts={posts} clientsMap={clientsMap} searchQuery={searchQuery} now={new Date().getTime()} activePlanStr={activePlanStr} />
       )}
     </div>
   )
@@ -341,7 +352,7 @@ function formatMonthLabel(key: string): string {
   })
 }
 
-function MonthGroupedPosts({ posts, clientsMap, searchQuery, now }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string; now: number }) {
+function MonthGroupedPosts({ posts, clientsMap, searchQuery, now, activePlanStr }: { posts: Post[]; clientsMap: Map<string, Client>; searchQuery?: string; now: number; activePlanStr?: string }) {
   const adjacency = new Map(posts.map((p, i) => [p.id, { prevId: posts[i - 1]?.id, nextId: posts[i + 1]?.id }]))
   const groups = new Map<string, Post[]>()
   for (const post of posts) {
@@ -405,9 +416,12 @@ function MonthGroupedPosts({ posts, clientsMap, searchQuery, now }: { posts: Pos
               <div className="flex-1 h-px bg-gray-800" />
             </div>
             <div className="space-y-3">
-              {group.map(p => (
-                <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} prevId={adjacency.get(p.id)?.prevId} nextId={adjacency.get(p.id)?.nextId} />
-              ))}
+              {group.map(p => {
+                const prevId = adjacency.get(p.id)?.prevId
+                const nextId = adjacency.get(p.id)?.nextId
+                const detailHref = `/posts/${p.id}?from=plan${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}${activePlanStr ? '&planBack=' + encodeURIComponent(activePlanStr) : ''}`
+                return <PostRow key={p.id} post={p} client={clientsMap.get(p.clientId)} searchQuery={searchQuery} now={now} detailHref={detailHref} />
+              })}
             </div>
           </div>
         )
@@ -444,7 +458,7 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   )
 }
 
-function PostRow({ post, client, searchQuery, now, prevId, nextId }: { post: Post; client: Client | undefined; searchQuery?: string; now: number; prevId?: string; nextId?: string }) {
+function PostRow({ post, client, searchQuery, now, detailHref }: { post: Post; client: Client | undefined; searchQuery?: string; now: number; detailHref: string }) {
   const statusCfg = STATUS_INFO[post.status]
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
@@ -599,7 +613,7 @@ function PostRow({ post, client, searchQuery, now, prevId, nextId }: { post: Pos
                 <MarkReadyButton postId={post.id} />
               )}
               <Link
-                href={`/posts/${post.id}?from=plan${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}`}
+                href={detailHref}
                 title="Voir le détail complet de ce post"
                 className="flex items-center gap-1 text-gray-500 hover:text-gray-300 hover:underline"
               >
