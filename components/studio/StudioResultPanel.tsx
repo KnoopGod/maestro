@@ -50,14 +50,24 @@ export function StudioResultPanel({
       )}
 
       {isPending && (
-        <div className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-12 text-center">
-          <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-3 animate-spin" />
-          <p className="text-white font-medium">L&apos;agent réfléchit...</p>
-          <div className="mt-4 space-y-1 text-xs text-gray-400">
-            <p>→ Chargement du contexte client</p>
-            <p>→ Application de la voix de marque et de la DA</p>
-            <p>→ Génération texte + image</p>
-            <p>→ Scoring d&apos;impact</p>
+        <div className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-10 text-center space-y-6">
+          <Loader2 className="w-10 h-10 text-purple-400 mx-auto animate-spin" />
+          <div>
+            <p className="text-white font-medium text-base">Génération en cours…</p>
+            <p className="text-xs text-gray-500 mt-1">Environ 30 à 60 secondes — ne fermez pas cette page</p>
+          </div>
+          <div className="space-y-2 text-left max-w-xs mx-auto">
+            {[
+              ['1', 'Analyse du profil et de la stratégie client'],
+              ['2', 'Rédaction des captions par plateforme'],
+              ['3', 'Génération du visuel IA'],
+              ['4', 'Contrôle qualité et verdict'],
+            ].map(([n, label]) => (
+              <div key={n} className="flex items-center gap-2.5 text-xs text-gray-400">
+                <span className="w-5 h-5 rounded-full bg-purple-900/60 border border-purple-700/40 flex items-center justify-center text-[9px] text-purple-400 font-bold flex-shrink-0">{n}</span>
+                {label}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -66,15 +76,30 @@ export function StudioResultPanel({
         <div className="bg-red-950/30 border border-red-700/40 rounded-2xl p-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-red-300">Erreur de génération</h3>
-              <p className="text-sm text-red-400 mt-1">{error}</p>
-              {error.includes('ANTHROPIC_API_KEY') && (
-                <p className="text-xs text-gray-400 mt-3">
-                  💡 Ajoute ta clé Anthropic dans <code className="bg-gray-800 px-1 rounded">.env.local</code> ou via{' '}
-                  <a href="/social/settings/connections" className="text-purple-400 hover:underline">Connexions</a>.
-                </p>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-300 mb-1">La génération a échoué</h3>
+              {error.includes('ANTHROPIC_API_KEY') || error.includes('API key') ? (
+                <p className="text-sm text-gray-300">La clé API Anthropic n&apos;est pas configurée.</p>
+              ) : error.includes('timeout') || error.includes('Timeout') ? (
+                <p className="text-sm text-gray-300">La génération a dépassé le temps imparti. Réessayez — cela arrive parfois lors de pointes de trafic.</p>
+              ) : error.includes('network') || error.includes('fetch') ? (
+                <p className="text-sm text-gray-300">Problème de connexion. Vérifiez votre réseau et réessayez.</p>
+              ) : (
+                <p className="text-sm text-gray-400">{error}</p>
               )}
+              <div className="mt-3 flex gap-2 flex-wrap">
+                <button
+                  onClick={onRegenerateAll}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Réessayer
+                </button>
+                {(error.includes('ANTHROPIC_API_KEY') || error.includes('API key')) && (
+                  <a href="/settings" className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-purple-900/40 hover:bg-purple-800/40 text-purple-300 transition-colors">
+                    Configurer les clés API →
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

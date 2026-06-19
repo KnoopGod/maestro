@@ -57,24 +57,23 @@ export default async function StudioPage({
         </div>
       </div>
 
-      <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-4">
-        <div className="text-xs uppercase tracking-wider text-purple-400 mb-2">Tunnel MVP</div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs">
-          {[
-            ['1', 'Client', 'profil + stratégie'],
-            ['2', 'Library', 'DA + ressources'],
-            ['3', 'Studio', 'texte + image'],
-            ['4', 'Validation', 'supervision + OK humain'],
-            ['5', 'Calendrier', 'planifier ou publier'],
-          ].map(([step, title, detail]) => (
-            <div key={step} className="rounded-xl border border-gray-800 bg-gray-950/40 p-3">
-              <div className="text-[10px] text-purple-400">ÉTAPE {step}</div>
-              <div className="font-medium text-white mt-1">{title}</div>
-              <div className="text-gray-500 mt-0.5">{detail}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <nav aria-label="Étapes de création d'un post" className="flex items-center gap-1.5 text-[11px] font-mono overflow-x-auto pb-0.5">
+        {([
+          ['/clients', 'Client'],
+          [`/clients/${initialClientId ?? ''}/library`, 'Visuels'],
+          ['/studio', 'Studio', true],
+          ['/validation', 'Validation'],
+          ['/calendar', 'Calendrier'],
+        ] as [string, string, boolean?][]).map(([href, label, current], i) => (
+          <span key={href} className="flex items-center gap-1.5 flex-shrink-0">
+            {i > 0 && <span className="text-gray-700">›</span>}
+            {current
+              ? <span className="text-purple-400 font-semibold">{label}</span>
+              : <a href={href} className="text-gray-600 hover:text-gray-400 transition-colors">{label}</a>
+            }
+          </span>
+        ))}
+      </nav>
 
       <StudioForm
         clients={clients}
