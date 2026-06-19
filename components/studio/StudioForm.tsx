@@ -1,7 +1,9 @@
 'use client'
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { Sparkles, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { Sparkles, Loader2, Target, TrendingUp } from 'lucide-react'
 import type { Client } from '@/types/client'
+import { BUSINESS_OBJECTIVES, BUSINESS_TARGET_DELAYS, CONVERSION_CHANNELS } from '@/types/client'
 import type { Post } from '@/types/post'
 import type { ClientAsset } from '@/types/asset'
 import { PostIdeasPanel } from '@/components/studio/PostIdeasPanel'
@@ -258,6 +260,10 @@ export function StudioForm({
           onClientChange={handleClientChange}
         />
 
+        {selectedClient && (
+          <BusinessMissionCard client={selectedClient} />
+        )}
+
         <PostIdeasPanel clientId={clientId || null} onPick={applyIdea} />
 
         <BriefCard
@@ -369,6 +375,62 @@ export function StudioForm({
         onRegenerateAll={handleGenerate}
         onPostUpdated={mergeUpdatedPost}
       />
+    </div>
+  )
+}
+
+function BusinessMissionCard({ client }: { client: Client }) {
+  const profile = client.businessProfile
+  if (!profile) {
+    return (
+      <div className="rounded-xl border border-amber-800/30 bg-amber-950/20 p-4">
+        <div className="flex items-start gap-3">
+          <Target className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-300" />
+          <div>
+            <div className="text-sm font-semibold text-white">Mission business à compléter</div>
+            <p className="mt-1 text-xs leading-relaxed text-amber-100/70">
+              Ajoute l&apos;objectif commercial du client pour que le post serve une action mesurable : réservation, appel, DM, avis Google ou vente d&apos;offre.
+            </p>
+            <Link href={`/clients/${client.id}/edit`} className="mt-2 inline-flex text-xs font-medium text-amber-200 hover:underline">
+              Compléter le profil business →
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const objective = BUSINESS_OBJECTIVES[profile.priorityObjective]?.label ?? profile.priorityObjective
+  const delay = BUSINESS_TARGET_DELAYS[profile.targetDelay]?.label ?? profile.targetDelay
+  const channels = profile.conversionChannels.map(channel => CONVERSION_CHANNELS[channel]?.label ?? channel).join(', ')
+  const offers = profile.mainOffers.length ? profile.mainOffers.slice(0, 3).join(', ') : 'Offre à préciser'
+
+  return (
+    <div className="rounded-xl border border-emerald-800/30 bg-gradient-to-br from-emerald-950/25 to-gray-950/40 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-emerald-300" />
+          <div className="text-sm font-semibold text-white">Mission business du post</div>
+        </div>
+        <Link href={`/clients/${client.id}/edit`} className="text-[11px] text-emerald-200/80 hover:underline">
+          Modifier →
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 gap-2 text-xs">
+        <MissionRow label="Objectif" value={`${objective} · ${delay}`} />
+        <MissionRow label="Offres" value={offers} />
+        <MissionRow label="Conversion" value={channels || 'Canal à préciser'} />
+        {profile.offDays.length > 0 && <MissionRow label="Jours creux" value={profile.offDays.join(', ')} />}
+      </div>
+    </div>
+  )
+}
+
+function MissionRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-lg border border-emerald-900/30 bg-gray-950/35 px-3 py-2">
+      <span className="text-[10px] uppercase tracking-wider text-emerald-500/80">{label}</span>
+      <span className="text-right text-gray-200">{value}</span>
     </div>
   )
 }

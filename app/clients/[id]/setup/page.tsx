@@ -5,6 +5,7 @@ import { getClient } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accounts'
 import { listPosts } from '@/lib/db/queries/posts'
+import { ClientTestDrivePanel } from '@/components/clients/ClientTestDrivePanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
     getClientAssetSummary(id),
     getVisualIdentity(id),
     listClientSocialAccountSummaries(id),
-    listPosts({ clientId: id, limit: 1, includeInsights: false }),
+    listPosts({ clientId: id, limit: 100, includeInsights: false }),
   ])
 
   const hasImages = assetSummary.images > 0 || assetSummary.logos > 0
@@ -140,6 +141,16 @@ export default async function ClientSetupPage({ params }: { params: Promise<{ id
           Créer un post
         </Link>
       </div>
+
+      <ClientTestDrivePanel
+        client={client}
+        assetSummary={assetSummary}
+        hasVisualIdentity={hasIdentity}
+        socialAccounts={socialAccounts}
+        posts={posts}
+        aiReady={aiReady}
+        publicUrlReady={publicUrlReady}
+      />
 
       {/* Progress hero */}
       <div className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-6 flex items-center gap-6">

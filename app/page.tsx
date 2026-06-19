@@ -188,7 +188,7 @@ export default async function HomePage() {
             <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 02 //</div>
             <h3 className="text-base font-bold text-[#E0E3FF] tracking-wide uppercase">Gérer les Clients</h3>
             <p className="text-[11px] text-gray-500 font-mono mt-1.5 leading-relaxed">
-              {clients.length} clients HORECA — stratégies · performances
+              {clients.length} clients locaux — stratégie · production · performance
             </p>
           </Link>
         </div>

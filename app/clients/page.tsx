@@ -24,7 +24,7 @@ export default async function ClientsPage({
           <p className="text-sm text-gray-500 mt-0.5">
             {clients.length === 0
               ? 'Aucun client enregistré'
-              : `${clients.length} client${clients.length > 1 ? 's' : ''} HORECA`}
+              : `${clients.length} client${clients.length > 1 ? 's' : ''} commerces physiques`}
           </p>
         </div>
 

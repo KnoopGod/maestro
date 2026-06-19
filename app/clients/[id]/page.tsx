@@ -13,6 +13,7 @@ import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
 import { PortalLinkCard } from '@/components/clients/PortalLinkCard'
 import { PillarCoverageWidget } from '@/components/clients/PillarCoverageWidget'
+import { ClientTestDrivePanel } from '@/components/clients/ClientTestDrivePanel'
 import type { StrategyAdvice } from '@/lib/agents/strategy-advisor'
 import type { Post } from '@/types/post'
 
@@ -42,6 +43,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const contentPillars = client.strategy?.contentPillars ?? []
   const understoodSummary = client.clientSummary || buildClientUnderstanding(client, Boolean(identity?.stylePrompt))
   const businessProfile = client.businessProfile
+  const aiReady = Boolean(process.env.ANTHROPIC_API_KEY && process.env.OPENAI_API_KEY)
+  const publicUrlReady = Boolean(process.env.CODEXRS_PUBLIC_URL && !/localhost|127\.0\.0\.1/.test(process.env.CODEXRS_PUBLIC_URL || ''))
   const setupComplete = Boolean(client.description && client.brandVoiceTone && contentPillars.length > 0)
   const facebookConnected = socialAccounts.some(a => a.platform === 'facebook')
   const instagramConnected = socialAccounts.some(a => a.platform === 'instagram')
@@ -199,6 +202,16 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <PortalLinkCard clientId={client.id} />
+
+      <ClientTestDrivePanel
+        client={client}
+        assetSummary={assetSummary}
+        hasVisualIdentity={Boolean(identity?.stylePrompt)}
+        socialAccounts={socialAccounts}
+        posts={clientPosts}
+        aiReady={aiReady}
+        publicUrlReady={publicUrlReady}
+      />
 
       <div className="bg-gradient-to-br from-slate-950/60 to-gray-900/40 border border-gray-800 rounded-2xl p-5">
         <div className="flex items-start justify-between gap-4 mb-3">
