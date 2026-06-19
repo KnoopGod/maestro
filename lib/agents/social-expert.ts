@@ -1,9 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
+import { BUSINESS_OBJECTIVES, CONVERSION_CHANNELS } from '@/types/client'
 import type { VisualIdentity } from '@/types/asset'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
+import { getPlaybook } from '@/lib/playbooks'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 
@@ -101,6 +103,10 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const identityBlock = buildIdentityBlock(identity)
 
   // Master prompt with full client context
+  const playbook = client.businessProfile?.vertical
+    ? getPlaybook(client.businessProfile.vertical)
+    : getPlaybook(client.type)
+
   const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création contenu HORECA avec 10 ans d'expérience terrain.
 Tu as géré les comptes Instagram et Facebook de plus de 80 établissements en France : restaurants gastronomiques, bistrots, hôtels boutiques, bars à cocktails, chambres d'hôtes.
 
@@ -187,6 +193,24 @@ Toujours renseigner suggestedFormat et justifier en 1 phrase dans formatRational
 
 Réponds en français, en JSON strict, sans markdown.`)
 
+  const businessBlock = client.businessProfile ? `
+# OBJECTIF BUSINESS
+
+**Objectif prioritaire :** ${BUSINESS_OBJECTIVES[client.businessProfile.priorityObjective]?.label ?? client.businessProfile.priorityObjective}
+**Canaux de conversion :** ${client.businessProfile.conversionChannels.map(c => CONVERSION_CHANNELS[c]?.label ?? c).join(', ') || 'non renseignés'}
+${client.businessProfile.mainOffers.length ? `**Offres à mettre en avant :** ${client.businessProfile.mainOffers.join(', ')}` : ''}
+
+Aligne le CTA et l'angle du post sur cet objectif. Favorise les canaux de conversion listés ci-dessus plutôt que des formules génériques.
+
+# CONTEXTE VERTICAL
+
+${playbook.promptContext}
+` : `
+# CONTEXTE VERTICAL
+
+${playbook.promptContext}
+`
+
   const userPrompt = `# CONTEXTE CLIENT
 
 **Établissement :** ${client.name}
@@ -195,7 +219,7 @@ Réponds en français, en JSON strict, sans markdown.`)
 **Description :** ${client.description || 'non renseignée'}
 **Résumé compris par l'outil :** ${client.clientSummary || 'non renseigné'}
 **Langues :** ${client.languages.join(', ')}
-
+${businessBlock}
 # VOIX DE MARQUE
 
 **Ton :** ${client.brandVoiceTone || 'à déterminer (style conversationnel)'}

@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-14
+Dernière mise à jour : 2026-06-19
 
 ---
 
@@ -38,6 +38,9 @@ Dernière mise à jour : 2026-06-14
 | Phase 4 | Génération asynchrone (after() + polling + jobId) | ✅ |
 | Phase 5 | Agent Activity Center + AutoRefresh | ✅ |
 | Phase 6 | RETURNING * DB + batch identity + pipeline parallèle + next/image | ✅ |
+| Business Profile + Playbooks | Types client, formulaires new/edit, Vertical Playbooks HORECA | ✅ |
+| Test Drive Cockpit | Panneau 6 étapes sur la fiche client, % de complétion | ✅ |
+| Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
 
 ### Note : proxy.ts
 
@@ -51,6 +54,8 @@ Dernière mise à jour : 2026-06-14
 - Génération vidéo
 - Tests automatisés
 - Versioning des posts
+- Dashboard croissance (KPIs chiffre d'affaires par client, suivi objectifs business)
+- Revenue Loop minimale (mesurer si l'objectif business est atteint post par post)
 - AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
 
 ---
