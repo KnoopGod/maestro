@@ -20,9 +20,9 @@ export function EmptyState({ icon: Icon, title, description, cta, className = ''
       {cta && (
         <Link
           href={cta.href}
-          className="inline-flex items-center gap-1.5 mt-4 text-sm text-purple-400 hover:text-purple-300 transition-colors"
+          className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 rounded-lg transition-all duration-150 active:scale-[0.98]"
         >
-          {cta.icon && <cta.icon className="w-3.5 h-3.5" aria-hidden="true" />}
+          {cta.icon && <cta.icon className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />}
           {cta.label}
         </Link>
       )}

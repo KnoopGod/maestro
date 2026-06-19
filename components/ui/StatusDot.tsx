@@ -3,10 +3,10 @@ import { motion } from 'framer-motion'
 import { AIStatus } from '@/types'
 
 const STATUS_CONFIG: Record<AIStatus, { color: string; label: string; pulse: boolean }> = {
-  active:   { color: 'bg-green-400',  label: 'Actif',    pulse: true },
-  limited:  { color: 'bg-orange-400', label: 'Limité',   pulse: false },
-  timeout:  { color: 'bg-red-500',    label: 'Timeout',  pulse: false },
-  inactive: { color: 'bg-gray-500',   label: 'Inactif',  pulse: false },
+  active:   { color: 'bg-emerald-400', label: 'Actif',    pulse: true },
+  limited:  { color: 'bg-amber-400',   label: 'Limité',   pulse: false },
+  timeout:  { color: 'bg-red-400',     label: 'Timeout',  pulse: false },
+  inactive: { color: 'bg-gray-600',    label: 'Inactif',  pulse: false },
 }
 
 interface Props {
@@ -32,7 +32,7 @@ export function StatusDot({ status, showLabel = false, size = 'md' }: Props) {
         <span className={`relative inline-flex rounded-full ${cfg.color} ${SIZE[size]}`} />
       </span>
       {showLabel && (
-        <span className="text-xs font-medium text-gray-400">{cfg.label}</span>
+        <span className="text-xs font-medium text-gray-300 transition-colors">{cfg.label}</span>
       )}
     </span>
   )

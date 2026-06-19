@@ -291,11 +291,11 @@ function StatCard({
         : 'border-gray-800 hover:border-indigo-700/50 hover:shadow-[0_0_16px_rgba(99,102,241,0.1)]'
     }`}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase">{label}</span>
+        <span className="text-[11px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase">{label}</span>
         <Icon aria-hidden="true" className={`w-3.5 h-3.5 ${accent} group-hover:scale-110 transition-transform duration-200`} />
       </div>
       <div className="text-2xl lg:text-3xl font-bold text-[#E0E3FF] font-mono">{value}</div>
-      <div className={`text-[8px] font-mono tracking-[0.15em] mt-1.5 ${urgent ? 'text-amber-600/70' : 'text-gray-600'}`}>{sub}</div>
+      <div className={`text-[11px] font-mono tracking-[0.15em] mt-1.5 ${urgent ? 'text-amber-600/70' : 'text-gray-600'}`}>{sub}</div>
     </div>
   )
   return href ? <Link href={href} title="Ouvrir la file de validation des posts à relire">{inner}</Link> : inner
