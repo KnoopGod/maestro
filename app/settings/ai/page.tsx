@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, BrainCircuit, CheckCircle2, Route, ShieldCheck, WalletCards } from 'lucide-react'
+import { ArrowLeft, BrainCircuit, CheckCircle2, Gauge, ImageIcon, Route, ShieldCheck, Sparkles, Video, WalletCards, Zap } from 'lucide-react'
 import { getAIProviderStatuses } from '@/lib/ai/providers'
 import { listRoutingPreview } from '@/lib/ai/router'
 import { AIProviderCard } from '@/components/settings/AIProviderCard'
@@ -25,6 +25,10 @@ export default function AISettingsPage() {
   const configuredCount = providers.filter(provider => provider.configured).length
   const activeProviders = providers.filter(provider => provider.status === 'active')
   const missingActive = activeProviders.filter(provider => !provider.configured)
+  const textProviders = providers.filter(provider => provider.category === 'text')
+  const imageProviders = providers.filter(provider => provider.category === 'image')
+  const videoProviders = providers.filter(provider => provider.category === 'video')
+  const localProviders = providers.filter(provider => provider.category === 'local')
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -42,7 +46,7 @@ export default function AISettingsPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-wide text-[#E0E3FF]">IA & MODÈLES</h1>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-gray-500">
-              Fondation parallèle du routeur IA : voir les providers, leurs capacités, les clés manquantes et le modèle recommandé par type de mission.
+              Cockpit du futur routeur IA : voir les providers connectés, les capacités disponibles, les modèles recommandés et les prochains branchements.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
@@ -53,13 +57,37 @@ export default function AISettingsPage() {
         </div>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-3">
+      <nav className="flex flex-wrap gap-2" aria-label="Navigation IA Router">
+        {[
+          ['#overview', 'Vue d’ensemble'],
+          ['#providers', 'Providers'],
+          ['#routing', 'Routing'],
+          ['#roadmap', 'Roadmap'],
+        ].map(([href, label]) => (
+          <Link
+            key={href}
+            href={href}
+            className="rounded-full border border-gray-800 bg-gray-950/60 px-3 py-1.5 text-xs text-gray-300 transition hover:border-indigo-600/60 hover:text-indigo-200"
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      <section id="overview" className="grid gap-3 md:grid-cols-3">
         <Principle icon={ShieldCheck} title="Qualité d’abord" text="Les tâches critiques restent sur un modèle premium." />
         <Principle icon={WalletCards} title="Coût contrôlé" text="Les variantes simples pourront aller vers des modèles economy." />
         <Principle icon={Route} title="Fallback clair" text="Chaque mission doit expliquer son provider, son modèle et sa solution de secours." />
       </section>
 
-      <section className="space-y-3">
+      <section className="grid gap-3 lg:grid-cols-4">
+        <CapabilityLane icon={BrainCircuit} title="Texte & stratégie" providers={textProviders} />
+        <CapabilityLane icon={ImageIcon} title="Image & édition" providers={imageProviders} />
+        <CapabilityLane icon={Video} title="Vidéo & reels" providers={videoProviders} />
+        <CapabilityLane icon={Gauge} title="Local / low-cost" providers={localProviders} />
+      </section>
+
+      <section id="providers" className="space-y-3 scroll-mt-6">
         <div>
           <h2 className="text-sm font-semibold text-white">Providers IA</h2>
           <p className="mt-1 text-xs text-gray-500">Aucune clé n’est affichée côté interface. Maestro ne montre que configuré/non configuré.</p>
@@ -69,7 +97,7 @@ export default function AISettingsPage() {
         </div>
       </section>
 
-      <section className="space-y-3">
+      <section id="routing" className="space-y-3 scroll-mt-6">
         <div>
           <h2 className="text-sm font-semibold text-white">Décisions de routing prévues</h2>
           <p className="mt-1 text-xs text-gray-500">
@@ -108,6 +136,33 @@ export default function AISettingsPage() {
           ))}
         </div>
       </section>
+
+      <section id="roadmap" className="space-y-3 scroll-mt-6">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Roadmap d’intégration</h2>
+          <p className="mt-1 text-xs text-gray-500">
+            Ordre recommandé pour connecter le routeur aux vrais agents sans casser le tunnel de publication.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-5">
+          {[
+            ['1', 'Observer', 'Page IA Router visible, aucune action runtime modifiée.', true],
+            ['2', 'Variantes texte', 'Router les tâches simples vers un modèle moins cher.', false],
+            ['3', 'Performance', 'Laisser le routeur choisir l’analyse coût/performance.', false],
+            ['4', 'Images', 'Choisir OpenAI, Replicate ou Ideogram selon besoin visuel.', false],
+            ['5', 'Supervision', 'Brancher seulement quand le scoring qualité est stable.', false],
+          ].map(([step, title, text, done]) => (
+            <div key={String(step)} className={`rounded-2xl border p-4 ${done ? 'border-emerald-800/40 bg-emerald-950/15' : 'border-gray-800 bg-gray-950/50'}`}>
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-gray-600">Phase {step}</span>
+                {done ? <CheckCircle2 className="h-4 w-4 text-emerald-300" /> : <Zap className="h-4 w-4 text-gray-600" />}
+              </div>
+              <div className="text-sm font-semibold text-white">{String(title)}</div>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500">{String(text)}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
@@ -128,6 +183,33 @@ function Principle({ icon: Icon, title, text }: { icon: typeof ShieldCheck; titl
       <Icon className="mb-3 h-5 w-5 text-indigo-300" />
       <div className="text-sm font-semibold text-white">{title}</div>
       <p className="mt-1 text-xs leading-relaxed text-gray-500">{text}</p>
+    </div>
+  )
+}
+
+function CapabilityLane({ icon: Icon, title, providers }: { icon: typeof Sparkles; title: string; providers: ReturnType<typeof getAIProviderStatuses> }) {
+  const configured = providers.filter(provider => provider.configured).length
+  return (
+    <div className="rounded-2xl border border-gray-800 bg-gray-950/55 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-indigo-300" />
+          <div className="text-sm font-semibold text-white">{title}</div>
+        </div>
+        <span className="rounded-full border border-gray-700 px-2 py-0.5 text-[10px] text-gray-400">
+          {configured}/{providers.length}
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        {providers.map(provider => (
+          <div key={provider.id} className="flex items-center justify-between gap-2 text-xs">
+            <span className="text-gray-400">{provider.shortName}</span>
+            <span className={provider.configured ? 'text-emerald-300' : provider.status === 'active' ? 'text-amber-300' : 'text-gray-600'}>
+              {provider.configured ? 'connecté' : provider.status === 'active' ? 'à connecter' : 'prévu'}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

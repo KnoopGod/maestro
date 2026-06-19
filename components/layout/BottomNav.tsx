@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Users, Sparkles, CalendarDays, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
-import { ShieldCheck, BarChart3, FolderOpen, Bot, Plug, Settings, DollarSign, X, LogOut } from 'lucide-react'
+import { ShieldCheck, BarChart3, FolderOpen, Bot, Plug, Settings, DollarSign, X, LogOut, BrainCircuit } from 'lucide-react'
 
 const NAV_MAIN = [
   { href: '/',          icon: Home,         label: 'Home' },
@@ -18,6 +18,7 @@ const NAV_MORE = [
   { href: '/analytics',   icon: BarChart3,    label: 'Analytics' },
   { href: '/library',     icon: FolderOpen,   label: 'Library' },
   { href: '/agents',      icon: Bot,          label: 'Agents' },
+  { href: '/settings/ai', icon: BrainCircuit, label: 'IA Router' },
   { href: '/connections', icon: Plug,         label: 'Connexions' },
   { href: '/usage',       icon: DollarSign,   label: 'Usage' },
   { href: '/settings',    icon: Settings,     label: 'Settings' },
@@ -50,7 +51,9 @@ export function BottomNav() {
             <nav aria-labelledby="more-nav-title">
               <div className="grid grid-cols-4 gap-2">
                 {NAV_MORE.map(item => {
-                  const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+                  const active = item.href === '/settings'
+                    ? pathname === '/settings'
+                    : pathname === item.href || pathname.startsWith(`${item.href}/`)
                   return (
                     <Link
                       key={item.href}
@@ -99,7 +102,7 @@ export function BottomNav() {
       <nav aria-label="Navigation principale" className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#07081A]/95 backdrop-blur-xl border-t border-indigo-950/60 pb-safe">
         <div className="flex items-stretch h-16">
           {NAV_MAIN.map(item => {
-            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`))
             return (
               <Link
                 key={item.href}

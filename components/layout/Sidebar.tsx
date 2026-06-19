@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Home, Users, Sparkles, Bot, CalendarDays, BarChart3,
   FolderOpen, Plug, Settings, DollarSign, ShieldCheck,
-  LogOut, Activity,
+  LogOut, Activity, BrainCircuit,
 } from 'lucide-react'
 import { WipTag } from '@/components/ui/WipTag'
 
@@ -27,8 +27,9 @@ const NAV_WORK = [
 
 const NAV_SYSTEM = [
   { href: '/connections', icon: Plug,       label: 'Connexions', seq: '11', dot: true  },
-  { href: '/usage',       icon: DollarSign, label: 'Usage',      seq: '12', dot: false },
-  { href: '/settings',    icon: Settings,   label: 'Settings',   seq: '13', dot: false },
+  { href: '/settings/ai', icon: BrainCircuit, label: 'IA Router', seq: '12', dot: false },
+  { href: '/usage',       icon: DollarSign, label: 'Usage',      seq: '13', dot: false },
+  { href: '/settings',    icon: Settings,   label: 'Settings',   seq: '14', dot: false },
 ]
 
 function NavItem({
@@ -38,7 +39,11 @@ function NavItem({
   badge?: string | null; dot?: boolean; count?: number
 }) {
   const pathname = usePathname()
-  const active = pathname === href || (href !== '/' && pathname.startsWith(href))
+  const active = href === '/'
+    ? pathname === '/'
+    : href === '/settings'
+      ? pathname === '/settings'
+      : pathname === href || pathname.startsWith(`${href}/`)
 
   return (
     <Link
