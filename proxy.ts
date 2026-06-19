@@ -17,6 +17,11 @@ const PUBLIC_PATHS = [
   '/data-deletion',
 ]
 
+const PREVIEW_PUBLIC_PATHS = [
+  '/ia-select',
+  '/settings/ai',
+]
+
 // Methods that mutate state — validate Origin header on these.
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
@@ -93,6 +98,9 @@ function validateOrigin(req: NextRequest): string | null {
 
 function isPublicPath(pathname: string) {
   if (PUBLIC_PATHS.includes(pathname)) return true
+  // Les previews Vercel servent parfois à montrer une page isolée sans cloner
+  // toute la configuration production. On garde ces pages protégées en prod.
+  if (process.env.VERCEL_ENV === 'preview' && PREVIEW_PUBLIC_PATHS.includes(pathname)) return true
   // Portail client : accès par jeton de capacité (vérifié dans la page), hors auth admin.
   if (pathname.startsWith('/portal/')) return true
   if (pathname.startsWith('/api/portal/')) return true
