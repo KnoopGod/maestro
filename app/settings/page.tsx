@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Settings, User, CreditCard, Users, Palette, Shield, Code, Plug, DollarSign } from 'lucide-react'
+import { Settings, User, CreditCard, Users, Palette, Shield, Code, Plug, DollarSign, Database } from 'lucide-react'
 import { WipOverlay } from '@/components/ui/WipTag'
 import { isMultiUserMode } from '@/lib/auth/mode'
 
@@ -16,6 +16,7 @@ function getSections() {
   { icon: Palette,    title: 'Apparence',       desc: 'Thème, langue, notifications',        color: 'text-pink-400',    href: '#',                            wip: true  },
   { icon: Shield,     title: 'Sécurité',        desc: 'Sessions actives, audit log',         color: 'text-red-400',     href: '/settings/audit',              wip: false },
   { icon: Code,       title: 'API & Webhooks',  desc: 'Livraisons webhook, intégrations',    color: 'text-cyan-400',    href: '/settings/webhooks',           wip: false },
+  { icon: Database,   title: 'Système',         desc: 'Migrations DB, maintenance prod',      color: 'text-indigo-400',  href: '/settings/system',             wip: false },
   ]
 }
 
@@ -59,7 +60,7 @@ export default function SettingsPage() {
       <div className="border border-indigo-900/40 bg-gray-900/40 p-4">
         <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">{'// BUILD INFO'}</div>
         <p className="text-[11px] text-gray-400 font-mono">
-          <span className="text-[#E0E3FF]">VERSION</span> :: v0.3.0 — Sprint Post-Production
+          <span className="text-[#E0E3FF]">VERSION</span> :: v0.3.1 — Tunnel test client A-Z
         </p>
         <p className="text-[10px] text-gray-600 font-mono mt-1">
           Les modules marqués <span className="text-amber-500">{'// À VENIR'}</span> seront livrés dans les prochains sprints.
