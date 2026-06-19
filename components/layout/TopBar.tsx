@@ -7,7 +7,7 @@ export function TopBar() {
     <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-[#07081A]/95 backdrop-blur-xl border-b border-indigo-950/60 flex items-center px-4 lg:px-6 z-30">
       {/* Left label */}
       <div className="hidden lg:flex items-center gap-2 mr-6 flex-shrink-0">
-        <span className="text-[9px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase">CONSOLE //</span>
+        <span className="text-[11px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase">CONSOLE //</span>
       </div>
 
       {/* Search */}
@@ -28,7 +28,7 @@ export function TopBar() {
         {/* System status */}
         <div className="hidden lg:flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          <span className="text-[9px] text-indigo-600/50 font-mono tracking-widest">SYSTEM :: ONLINE</span>
+          <span className="text-[11px] text-indigo-600/50 font-mono tracking-widest">SYSTEM :: ONLINE</span>
         </div>
 
         {/* Notifications — not yet implemented */}
@@ -36,7 +36,7 @@ export function TopBar() {
           <button
             aria-label="Notifications (non disponible)"
             aria-disabled="true"
-            className="relative w-8 h-8 min-w-[44px] min-h-[44px] border border-amber-900/30 flex items-center justify-center opacity-40 cursor-not-allowed"
+            className="relative w-9 h-9 border border-amber-900/30 rounded-md flex items-center justify-center opacity-40 cursor-not-allowed transition-all duration-150"
           >
             <Bell aria-hidden="true" className="w-3.5 h-3.5 text-amber-600/60" />
           </button>
@@ -46,9 +46,10 @@ export function TopBar() {
         {/* CTA */}
         <Link
           href="/studio"
-          className="px-3 py-1.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-mono tracking-[0.12em] uppercase transition-colors flex items-center gap-2 border border-indigo-500/40"
+          className="px-3 py-1.5 min-h-[44px] bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-[11px] font-mono tracking-[0.12em] uppercase transition-all duration-150 flex items-center gap-2 rounded-lg group"
+          aria-label="Créer un nouveau post dans le Studio"
         >
-          <Sparkles aria-hidden="true" className="w-3 h-3" />
+          <Sparkles aria-hidden="true" className="w-3 h-3 group-hover:scale-110 transition-transform duration-150" />
           CRÉER
         </Link>
       </div>
