@@ -331,21 +331,48 @@ export function StudioForm({
           />
         )}
 
-        <button
-          onClick={handleGenerate}
-          disabled={!clientId || platforms.length === 0 || busy || (imageMode === 'library' && (!selectedAsset || (contentType === 'reel' && selectedAsset.type !== 'video')))}
-          title="Lancer la chaîne d'agents : analyse client, stratégie, rédaction, visuel, scoring puis draft prêt à valider"
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {busy ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> Création du post complet...</>
-          ) : (
-            <><Sparkles className="w-5 h-5" /> Générer post complet</>
-          )}
-        </button>
+        {/* Generate button — contextual help when disabled */}
+        {(() => {
+          const noAsset = imageMode === 'library' && !selectedAsset
+          const wrongAssetType = contentType === 'reel' && selectedAsset?.type !== 'video'
+          const noPlatform = platforms.length === 0
+          const blockReason = noAsset
+            ? 'Sélectionnez un visuel dans la bibliothèque pour continuer.'
+            : wrongAssetType
+            ? 'Pour un Reel, sélectionnez une vidéo (pas une image).'
+            : noPlatform
+            ? 'Choisissez au moins une plateforme de publication.'
+            : null
+          return (
+            <>
+              {blockReason && !busy && (
+                <p className="text-xs text-amber-400/80 text-center bg-amber-950/20 border border-amber-800/30 rounded-lg px-3 py-2">
+                  {blockReason}
+                </p>
+              )}
+              <button
+                onClick={handleGenerate}
+                disabled={!clientId || noPlatform || busy || noAsset || wrongAssetType}
+                title="Lancer les agents IA : analyse client → rédaction captions → génération image → contrôle qualité"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {busy ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Création du post complet...</>
+                ) : (
+                  <><Sparkles className="w-5 h-5" /> Générer post complet</>
+                )}
+              </button>
+              {busy && (
+                <p className="text-center text-[11px] text-gray-400">
+                  La génération prend entre 30 et 60 secondes — ne fermez pas cette page.
+                </p>
+              )}
+            </>
+          )
+        })()}
 
-        <div className="text-center text-[11px] text-gray-500">
-          Powered by <span className="text-purple-400">Social Expert</span> · Claude Sonnet 4.6
+        <div className="text-center text-[11px] text-gray-600">
+          4 agents IA en séquence · analyse · rédaction · image · contrôle qualité
         </div>
 
         <AgentWorkPlan

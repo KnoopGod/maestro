@@ -56,6 +56,7 @@ export function StudioResultPanel({
         <div className="bg-gradient-to-br from-purple-950/40 to-pink-950/30 border border-purple-700/30 rounded-2xl p-8 text-center">
           <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-3 animate-spin" />
           <p className="text-white font-medium">L&apos;agent réfléchit...</p>
+          <p className="text-xs text-gray-500 mt-1">Environ 30 à 60 secondes — ne fermez pas cette page</p>
 
           {progress && progress.events.length > 0 ? (
             // Progression live, alimentée par le polling du job
@@ -101,15 +102,30 @@ export function StudioResultPanel({
         <div className="bg-red-950/30 border border-red-700/40 rounded-2xl p-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-red-300">Erreur de génération</h3>
-              <p className="text-sm text-red-400 mt-1">{error}</p>
-              {error.includes('ANTHROPIC_API_KEY') && (
-                <p className="text-xs text-gray-400 mt-3">
-                  💡 Ajoute ta clé Anthropic dans <code className="bg-gray-800 px-1 rounded">.env.local</code> ou via{' '}
-                  <a href="/social/settings/connections" className="text-purple-400 hover:underline">Connexions</a>.
-                </p>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-300 mb-1">La génération a échoué</h3>
+              {error.includes('ANTHROPIC_API_KEY') || error.includes('API key') ? (
+                <p className="text-sm text-gray-300">La clé API Anthropic n&apos;est pas configurée.</p>
+              ) : error.includes('timeout') || error.includes('Timeout') ? (
+                <p className="text-sm text-gray-300">La génération a dépassé le temps imparti. Réessayez — cela arrive parfois lors de pointes de trafic.</p>
+              ) : error.includes('network') || error.includes('fetch') ? (
+                <p className="text-sm text-gray-300">Problème de connexion. Vérifiez votre réseau et réessayez.</p>
+              ) : (
+                <p className="text-sm text-gray-400">{error}</p>
               )}
+              <div className="mt-3 flex gap-2 flex-wrap">
+                <button
+                  onClick={onRegenerateAll}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Réessayer
+                </button>
+                {(error.includes('ANTHROPIC_API_KEY') || error.includes('API key')) && (
+                  <a href="/settings" className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-purple-900/40 hover:bg-purple-800/40 text-purple-300 transition-colors">
+                    Configurer les clés API →
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -82,7 +82,7 @@ export default async function HomePage() {
           MAESTRO // DASHBOARD
         </div>
         <h1 className="text-2xl font-bold text-[#E0E3FF] tracking-wide">
-          {greeting}, BRADLEY <span className="text-indigo-400">_</span>
+          {greeting} <span className="text-indigo-400">_</span>
         </h1>
         <p className="text-[10px] text-gray-500 font-mono mt-1 tracking-wider">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
@@ -95,8 +95,8 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
           <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
-          <StatCard label="COÛT IA CE MOIS"  value={costDisplay}           icon={BarChart3}   accent={costAccent}       sub="TOUS CLIENTS · CE MOIS" />
-          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'FILE VIDE' : `${toValidate} POST${toValidate > 1 ? 'S' : ''}`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
+          <StatCard label="ENGAGEMENT MOY."  value={`${avgEngagement}%`}   icon={BarChart3}   accent="text-emerald-400" sub="MOYENNE POSTS PUBLIÉS" />
+          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'Aucun post en attente' : `${toValidate} post${toValidate > 1 ? 's' : ''} à relire`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
         </div>
       </section>
 
@@ -188,7 +188,7 @@ export default async function HomePage() {
             <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 02 //</div>
             <h3 className="text-base font-bold text-[#E0E3FF] tracking-wide uppercase">Gérer les Clients</h3>
             <p className="text-[11px] text-gray-500 font-mono mt-1.5 leading-relaxed">
-              {clients.length} clients locaux — stratégie · production · performance
+              {clients.length} client{clients.length > 1 ? 's' : ''} — stratégies · performances · publications
             </p>
           </Link>
         </div>
@@ -220,7 +220,18 @@ export default async function HomePage() {
                       <div className={`w-9 h-9 bg-gradient-to-br ${c.color} flex items-center justify-center text-base`}>
                         {c.emoji}
                       </div>
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900 ${healthDot(c.daysSincePost)}`} />
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900 ${healthDot(c.daysSincePost)}`}
+                        title={
+                          c.daysSincePost === null
+                            ? 'Aucune publication encore'
+                            : c.daysSincePost <= 3
+                            ? `Actif — dernier post il y a ${c.daysSincePost}j`
+                            : c.daysSincePost <= 7
+                            ? `Attention — ${c.daysSincePost}j sans post`
+                            : `Inactif — ${c.daysSincePost}j sans publication`
+                        }
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[11px] font-medium text-[#E0E3FF] truncate group-hover:text-indigo-300 transition-colors font-mono tracking-wide uppercase">{c.name}</div>
