@@ -1,7 +1,7 @@
-# Spec 140 — AI Router Foundation
+# Spec 140 — IA SELECT Foundation
 
 ## Objectif
-Créer une première fondation parallèle pour le futur routeur IA de Maestro, sans modifier le pipeline Studio actuel.
+Créer une première fondation parallèle pour **IA SELECT**, le futur routeur IA de Maestro, sans modifier le pipeline Studio actuel.
 
 ## Ce qui est livré
 - Types centraux :

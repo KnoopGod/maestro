@@ -18,7 +18,7 @@ const NAV_MORE = [
   { href: '/analytics',   icon: BarChart3,    label: 'Analytics' },
   { href: '/library',     icon: FolderOpen,   label: 'Library' },
   { href: '/agents',      icon: Bot,          label: 'Agents' },
-  { href: '/settings/ai', icon: BrainCircuit, label: 'IA Router' },
+  { href: '/settings/ai', icon: BrainCircuit, label: 'IA SELECT' },
   { href: '/connections', icon: Plug,         label: 'Connexions' },
   { href: '/usage',       icon: DollarSign,   label: 'Usage' },
   { href: '/settings',    icon: Settings,     label: 'Settings' },

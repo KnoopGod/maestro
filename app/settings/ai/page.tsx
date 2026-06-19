@@ -40,13 +40,13 @@ export default function AISettingsPage() {
       <header className="border-b border-indigo-950/60 pb-5">
         <div className="mb-1 flex items-center gap-2 text-[9px] uppercase tracking-[0.3em] text-indigo-600/50">
           <BrainCircuit className="h-3 w-3" />
-          MAESTRO // AI ROUTER
+          MAESTRO // IA SELECT
         </div>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-wide text-[#E0E3FF]">IA & MODÈLES</h1>
+            <h1 className="text-2xl font-bold tracking-wide text-[#E0E3FF]">IA SELECT</h1>
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-gray-500">
-              Cockpit du futur routeur IA : voir les providers connectés, les capacités disponibles, les modèles recommandés et les prochains branchements.
+              Plateforme de sélection IA : voir les providers connectés, les capacités disponibles, les modèles recommandés et les prochains branchements.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
@@ -57,7 +57,7 @@ export default function AISettingsPage() {
         </div>
       </header>
 
-      <nav className="flex flex-wrap gap-2" aria-label="Navigation IA Router">
+      <nav className="flex flex-wrap gap-2" aria-label="Navigation IA SELECT">
         {[
           ['#overview', 'Vue d’ensemble'],
           ['#providers', 'Providers'],
@@ -146,7 +146,7 @@ export default function AISettingsPage() {
         </div>
         <div className="grid gap-3 md:grid-cols-5">
           {[
-            ['1', 'Observer', 'Page IA Router visible, aucune action runtime modifiée.', true],
+            ['1', 'Observer', 'IA SELECT visible, aucune action runtime modifiée.', true],
             ['2', 'Variantes texte', 'Router les tâches simples vers un modèle moins cher.', false],
             ['3', 'Performance', 'Laisser le routeur choisir l’analyse coût/performance.', false],
             ['4', 'Images', 'Choisir OpenAI, Replicate ou Ideogram selon besoin visuel.', false],

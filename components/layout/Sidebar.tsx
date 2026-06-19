@@ -27,7 +27,7 @@ const NAV_WORK = [
 
 const NAV_SYSTEM = [
   { href: '/connections', icon: Plug,       label: 'Connexions', seq: '11', dot: true  },
-  { href: '/settings/ai', icon: BrainCircuit, label: 'IA Router', seq: '12', dot: false },
+  { href: '/settings/ai', icon: BrainCircuit, label: 'IA SELECT', seq: '12', dot: false },
   { href: '/usage',       icon: DollarSign, label: 'Usage',      seq: '13', dot: false },
   { href: '/settings',    icon: Settings,   label: 'Settings',   seq: '14', dot: false },
 ]

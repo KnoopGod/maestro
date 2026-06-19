@@ -9,7 +9,7 @@ function getSections() {
   const multiUser = isMultiUserMode()
   return [
   { icon: Plug,       title: 'Connexions API',  desc: 'Anthropic, OpenAI, Meta...',          color: 'text-purple-400',  href: '/social/settings/connections', wip: false },
-  { icon: BrainCircuit, title: 'IA & Modèles',  desc: 'Routeur IA, providers, coûts',        color: 'text-indigo-400',  href: '/settings/ai',                 wip: false },
+  { icon: BrainCircuit, title: 'IA SELECT',     desc: 'Choix IA, providers, coûts',          color: 'text-indigo-400',  href: '/settings/ai',                 wip: false },
   { icon: DollarSign, title: 'Usage & Coûts',   desc: 'Tokens, coûts par client, par mois',  color: 'text-emerald-400', href: '/usage',                       wip: false },
   { icon: User,       title: 'Profil & compte', desc: 'Email, mot de passe, préférences',    color: 'text-blue-400',    href: multiUser ? '/settings/profile' : '#', wip: !multiUser },
   { icon: CreditCard, title: 'Facturation',     desc: 'Plan, paiement, factures',            color: 'text-emerald-400', href: '#',                            wip: true  },

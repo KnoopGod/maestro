@@ -1,12 +1,14 @@
-# Spec 139 — Roadmap AI Router / Model Router
+# Spec 139 — Roadmap IA SELECT / Model Router
 
 ## Contexte
-Maestro doit devenir un cockpit de croissance digitale pour commerces physiques. Pour garder une bonne marge tout en utilisant les meilleurs modèles selon les missions, il faut prévoir une architecture d'AI Router.
+Maestro doit devenir un cockpit de croissance digitale pour commerces physiques. Pour garder une bonne marge tout en utilisant les meilleurs modèles selon les missions, il faut prévoir une architecture **IA SELECT**.
 
 L'objectif n'est pas de connecter toutes les IA immédiatement. L'objectif est de créer une fondation claire pour choisir automatiquement le bon fournisseur IA selon la tâche, le coût, la qualité attendue et le niveau de risque.
 
 ## Objectif
 Préparer une fondation progressive pour router les missions IA de Maestro vers le meilleur modèle disponible, sans casser le MVP actuel.
+
+Nom produit retenu : **IA SELECT**.
 
 ## Vision produit
 Maestro doit pouvoir connecter plusieurs fournisseurs IA :
@@ -151,7 +153,7 @@ Elle doit afficher :
 - Journaliser `provider`, `model`, `reason`, `estimatedCost`.
 
 ### Phase B — Connexions & Statuts
-- Ajouter page `IA & Modèles`.
+- Ajouter page `IA SELECT`.
 - Afficher providers configurés/non configurés.
 - Afficher capacités disponibles.
 
@@ -181,4 +183,3 @@ Roadmap importante, mais à faire après :
 3. Studio orienté objectif business ;
 4. Dashboard croissance ;
 5. Revenue Loop minimale.
-
