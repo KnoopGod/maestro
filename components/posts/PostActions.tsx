@@ -92,9 +92,11 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
 
   return (
     <div className="space-y-3">
+      {/* Actions row */}
       <div className="flex flex-wrap items-end gap-2">
+        {/* Date picker */}
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">
+          <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-1.5 font-medium">
             Planification
           </label>
           <input
@@ -103,76 +105,85 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
             onChange={e => setScheduledAt(e.target.value)}
             disabled={isPublished}
             title="Choisir la date et l'heure auxquelles ce post doit être publié automatiquement"
-            className="w-full px-2.5 py-1.5 rounded-lg bg-gray-950 border border-gray-800 text-sm text-gray-200 focus:border-purple-600 focus:outline-none disabled:opacity-50"
+            className="w-full px-3 py-2 rounded-lg bg-gray-950/60 border border-gray-800 text-sm text-gray-200 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
           />
         </div>
 
+        {/* Schedule button */}
         <button
           onClick={schedule}
           disabled={!scheduledAt || !!busy || isPublished}
           title={isScheduled ? 'Modifier la date de publication programmée' : 'Planifier ce post pour une publication automatique'}
-          className="px-3 py-1.5 rounded-lg border border-blue-700/50 text-blue-300 hover:bg-blue-900/30 text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-3 py-2 rounded-lg border border-blue-700/50 text-blue-300 hover:bg-blue-900/30 hover:border-blue-600/60 text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 active:scale-[0.98]"
         >
           {busy === 'schedule' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CalendarClock className="w-3.5 h-3.5" />}
           {isScheduled ? 'Reporter' : 'Planifier'}
         </button>
 
+        {/* Unschedule button */}
         {isScheduled && (
           <button
             onClick={unschedule}
             disabled={!!busy}
             title="Retirer ce post du calendrier sans le supprimer"
-            className="px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 text-sm disabled:opacity-40"
+            className="px-3 py-2 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 hover:border-gray-600 hover:text-gray-300 text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 active:scale-[0.98]"
           >
             {busy === 'unschedule' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Annuler'}
           </button>
         )}
 
+        {/* Publish now — primary action */}
         <button
           onClick={() => setConfirmOpen(true)}
           disabled={!!busy || isPublished}
           title="Publier immédiatement ce post sur les plateformes connectées du client"
-          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 shadow-md shadow-emerald-900/30"
         >
           {busy === 'publish' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           Publier maintenant
         </button>
       </div>
 
+      {/* Error feedback */}
       {error && (
-        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2 flex gap-1.5">
+        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-3 flex gap-2">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
       <PublishErrorHint error={error} clientId={post.clientId} />
+
+      {/* Warning feedback */}
       {warning && (
-        <div className="text-xs text-amber-300 bg-amber-950/30 border border-amber-700/30 rounded-lg p-2 flex gap-1.5">
+        <div className="text-xs text-amber-300 bg-amber-950/30 border border-amber-700/30 rounded-lg p-3 flex gap-2">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>{warning}</span>
         </div>
       )}
 
+      {/* Confirmation modal */}
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-gray-800 bg-gray-950 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-gray-700 bg-gray-950 shadow-2xl shadow-black/60">
+            {/* Modal header */}
             <div className="flex items-center justify-between border-b border-gray-800 px-5 py-4">
               <div>
-                <h3 className="font-semibold text-white">Confirmer la publication</h3>
-                <p className="text-xs text-gray-500">Vérifie le récapitulatif avant l’envoi Meta.</p>
+                <h3 className="text-base font-semibold text-white">Confirmer la publication</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Vérifie le récapitulatif avant l&apos;envoi Meta.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
                 disabled={busy === 'publish'}
-                className="rounded-lg border border-gray-800 p-1.5 text-gray-400 hover:bg-gray-900 hover:text-white disabled:opacity-40"
+                className="rounded-lg border border-gray-800 p-1.5 text-gray-400 hover:bg-gray-800 hover:text-white hover:border-gray-700 disabled:opacity-40 transition-all duration-150"
                 title="Fermer la confirmation"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="space-y-3 px-5 py-4 text-sm">
+            {/* Modal body */}
+            <div className="space-y-2 px-5 py-4 text-sm">
               <ConfirmRow label="Plateformes" value={post.platforms.map(p => p.toUpperCase()).join(' + ')} />
               <ConfirmRow label="Visuel" value={post.imageUrl ? (post.contentType === 'reel' ? 'Vidéo attachée' : 'Image attachée') : 'Aucun visuel'} />
               <ConfirmRow label="CTA" value={post.ctaType ? `${getMetaCtaLabel(post.ctaType)}${post.ctaUrl ? ` · ${post.ctaUrl}` : ''}` : (post.cta || 'Aucun CTA Meta')} />
@@ -183,23 +194,24 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
                   : 'Pas encore supervisé'}
               />
               {post.supervisorReview?.summary && (
-                <div className="rounded-xl border border-purple-700/30 bg-purple-950/20 p-3 text-xs text-purple-100">
+                <div className="rounded-xl border border-purple-700/30 bg-purple-950/20 p-3 text-xs text-purple-100 leading-relaxed">
                   {post.supervisorReview.summary}
                 </div>
               )}
               {post.supervisorReview?.verdict === 'blocked' && (
-                <div className="rounded-xl border border-red-700/40 bg-red-950/30 p-3 text-xs text-red-100">
+                <div className="rounded-xl border border-red-700/40 bg-red-950/30 p-3 text-xs text-red-100 font-medium">
                   Verdict bloquant : corrige le post avant publication.
                 </div>
               )}
             </div>
 
+            {/* Modal footer */}
             <div className="flex justify-end gap-2 border-t border-gray-800 px-5 py-4">
               <button
                 type="button"
                 onClick={() => setConfirmOpen(false)}
                 disabled={busy === 'publish'}
-                className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-300 hover:bg-gray-900 disabled:opacity-40"
+                className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:border-gray-600 hover:text-white disabled:opacity-40 transition-all duration-150 active:scale-[0.98]"
               >
                 Annuler
               </button>
@@ -207,7 +219,7 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
                 type="button"
                 onClick={publishNow}
                 disabled={busy === 'publish' || post.supervisorReview?.verdict === 'blocked'}
-                className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 hover:opacity-90 active:scale-[0.98] px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 transition-all duration-150 shadow-md shadow-emerald-900/30"
               >
                 {busy === 'publish' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 Confirmer et publier
@@ -222,9 +234,9 @@ export function PostActions({ post, refresh = true }: PostActionsProps) {
 
 function ConfirmRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-800 bg-gray-900/50 px-3 py-2">
-      <span className="text-xs uppercase tracking-wider text-gray-500">{label}</span>
-      <span className="max-w-[70%] text-right text-gray-200 break-words">{value}</span>
+    <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-800 bg-gray-900/50 px-3 py-2.5">
+      <span className="text-xs uppercase tracking-wider text-gray-500 font-medium flex-shrink-0">{label}</span>
+      <span className="max-w-[70%] text-right text-sm text-gray-200 break-words">{value}</span>
     </div>
   )
 }
@@ -252,9 +264,9 @@ export function PostSupervisor({ post }: { post: Post }) {
   }
 
   const verdictColor =
-    review?.verdict === 'ready' ? 'bg-emerald-900/40 text-emerald-300 border-emerald-700/40' :
+    review?.verdict === 'ready'   ? 'bg-emerald-900/40 text-emerald-300 border-emerald-700/40' :
     review?.verdict === 'blocked' ? 'bg-red-900/40 text-red-300 border-red-700/40' :
-    review?.verdict === 'revise' ? 'bg-amber-900/40 text-amber-300 border-amber-700/40' :
+    review?.verdict === 'revise'  ? 'bg-amber-900/40 text-amber-300 border-amber-700/40' :
     'bg-gray-800 text-gray-400 border-gray-700'
 
   return (
@@ -262,11 +274,11 @@ export function PostSupervisor({ post }: { post: Post }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-purple-400" />
-          <span className="text-sm font-medium text-white">Claude Supervisor</span>
+          <span className="text-sm font-semibold text-white">Claude Supervisor</span>
           {review && (
             <>
-              <span className={`text-[10px] border rounded-full px-2 py-0.5 ${verdictColor}`}>{review.verdict}</span>
-              <span className="text-[10px] text-gray-500">{review.score}/100</span>
+              <span className={`text-[11px] border rounded-full px-2 py-0.5 font-medium ${verdictColor}`}>{review.verdict}</span>
+              <span className="text-xs text-gray-500 font-mono">{review.score}/100</span>
             </>
           )}
         </div>
@@ -274,43 +286,43 @@ export function PostSupervisor({ post }: { post: Post }) {
           onClick={supervise}
           disabled={loading}
           title="Demander à l'agent superviseur de relire le post, détecter les risques et donner un score qualité"
-          className="px-3 py-1.5 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 text-xs flex items-center gap-1.5 disabled:opacity-40"
+          className="group px-3 py-1.5 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 hover:border-purple-600/60 text-xs flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 active:scale-[0.98]"
         >
-          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 group-hover:scale-110 transition-transform duration-150" />}
           {review ? 'Re-superviser' : 'Demander supervision'}
         </button>
       </div>
 
       {error && (
-        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2">{error}</div>
+        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2.5">{error}</div>
       )}
 
       {review && (
         <div className="space-y-3 text-sm text-gray-300">
-          <p className="italic text-gray-300">{review.summary}</p>
+          <p className="italic text-gray-300 leading-relaxed">{review.summary}</p>
           {review.risks.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-red-400 mb-1">⚠️ Risques</div>
+              <div className="text-[11px] uppercase tracking-wider text-red-400 mb-1.5 font-medium">Risques</div>
               <ul className="space-y-1">
                 {review.risks.map(r => (
-                  <li key={r} className="text-xs text-red-300/90 bg-red-950/20 border border-red-700/20 rounded px-2 py-1">{r}</li>
+                  <li key={r} className="text-xs text-red-300/90 bg-red-950/20 border border-red-700/20 rounded-lg px-3 py-1.5 leading-snug">{r}</li>
                 ))}
               </ul>
             </div>
           )}
           {review.improvements.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wider text-purple-400 mb-1">💡 Améliorations</div>
+              <div className="text-[11px] uppercase tracking-wider text-purple-400 mb-1.5 font-medium">Améliorations suggérées</div>
               <ul className="space-y-1">
                 {review.improvements.map(r => (
-                  <li key={r} className="text-xs text-purple-300/90 bg-purple-950/20 border border-purple-700/20 rounded px-2 py-1">{r}</li>
+                  <li key={r} className="text-xs text-purple-300/90 bg-purple-950/20 border border-purple-700/20 rounded-lg px-3 py-1.5 leading-snug">{r}</li>
                 ))}
               </ul>
             </div>
           )}
           {review.nextAction && (
-            <div className="bg-purple-950/30 border border-purple-700/30 rounded-lg p-2 text-xs text-purple-200">
-              <span className="font-medium">Prochaine action :</span> {review.nextAction}
+            <div className="bg-purple-950/30 border border-purple-700/30 rounded-lg p-3 text-xs text-purple-200 leading-relaxed">
+              <span className="font-semibold text-purple-100">Prochaine action :</span> {review.nextAction}
             </div>
           )}
         </div>
@@ -353,12 +365,12 @@ export function PublishDueButton() {
         onClick={publishDue}
         disabled={loading}
         title="Lancer manuellement le cron de publication pour tester les posts dont la date est dépassée"
-        className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-40"
+        className="group px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 shadow-md shadow-blue-900/30"
       >
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-150" />}
         Publier les posts dus
       </button>
-      {result && <span className="text-xs text-gray-400">{result.message}</span>}
+      {result && <span className="text-xs text-gray-400 font-mono">{result.message}</span>}
       {error && <span className="text-xs text-red-300">{error}</span>}
     </div>
   )

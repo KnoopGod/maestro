@@ -7,7 +7,11 @@ import { CLIENT_TYPES, CLIENT_STATUS, type ClientType, type ClientStatus } from 
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditClientPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const { id } = await params
   const client = await getClient(id)
   if (!client) notFound()
@@ -18,19 +22,21 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
     <div className="max-w-2xl space-y-6">
       <Link
         href={`/clients/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-200 transition-colors group"
       >
         <ArrowLeft className="w-4 h-4" />
         Retour à {client.name}
       </Link>
 
       <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${client.color} flex items-center justify-center text-2xl shadow-lg`}>
+        <div
+          className={`w-14 h-14 rounded-xl bg-gradient-to-br ${client.color} flex items-center justify-center text-2xl shadow-lg`}
+        >
           {client.emoji}
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Éditer le client</h1>
-          <p className="text-sm text-gray-500">{client.name}</p>
+          <p className="text-sm text-gray-400">{client.name}</p>
         </div>
       </div>
 
@@ -40,7 +46,7 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
           <legend className="text-sm font-semibold text-white px-1">Identité</legend>
 
           <div>
-            <label htmlFor="name" className="block text-xs text-gray-400 mb-1.5">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1.5">
               Nom de l&apos;établissement
             </label>
             <input
@@ -48,12 +54,14 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
               name="name"
               defaultValue={client.name}
               required
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
           </div>
 
           <div>
-            <label htmlFor="type" className="block text-xs text-gray-400 mb-1.5">Type</label>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-1.5">
+              Type
+            </label>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {(Object.keys(CLIENT_TYPES) as ClientType[]).map(t => {
                 const cfg = CLIENT_TYPES[t]
@@ -62,9 +70,17 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
                     key={t}
                     className="cursor-pointer aspect-square rounded-xl border border-gray-800 hover:border-purple-500 bg-gray-950/60 flex flex-col items-center justify-center gap-1 transition-all has-[:checked]:border-purple-500 has-[:checked]:bg-purple-900/20"
                   >
-                    <input type="radio" name="type" value={t} defaultChecked={client.type === t} className="sr-only peer" />
+                    <input
+                      type="radio"
+                      name="type"
+                      value={t}
+                      defaultChecked={client.type === t}
+                      className="sr-only peer"
+                    />
                     <span className="text-2xl">{cfg.emoji}</span>
-                    <span className="text-[10px] text-gray-400 peer-checked:text-purple-300 text-center px-1">{cfg.label}</span>
+                    <span className="text-[11px] text-gray-400 peer-checked:text-purple-300 text-center px-1">
+                      {cfg.label}
+                    </span>
                   </label>
                 )
               })}
@@ -72,37 +88,48 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-xs text-gray-400 mb-1.5">Statut</label>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-1.5">
+              Statut
+            </label>
             <select
               id="status"
               name="status"
               defaultValue={client.status}
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             >
               {(Object.keys(CLIENT_STATUS) as ClientStatus[]).map(s => (
-                <option key={s} value={s}>{CLIENT_STATUS[s].label}</option>
+                <option key={s} value={s}>
+                  {CLIENT_STATUS[s].label}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label htmlFor="city" className="block text-xs text-gray-400 mb-1.5">Ville</label>
+            <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-1.5">
+              Ville
+            </label>
             <input
               id="city"
               name="city"
               defaultValue={client.city ?? ''}
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
           </div>
 
           <div>
-            <label htmlFor="description" className="block text-xs text-gray-400 mb-1.5">Description courte</label>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Description courte
+            </label>
             <textarea
               id="description"
               name="description"
               defaultValue={client.description ?? ''}
               rows={2}
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500 resize-none"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 resize-none transition-all duration-150"
             />
           </div>
         </fieldset>
@@ -112,35 +139,50 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
           <legend className="text-sm font-semibold text-white px-1">Voix de marque</legend>
 
           <div>
-            <label htmlFor="brandVoiceTone" className="block text-xs text-gray-400 mb-1.5">Ton</label>
+            <label
+              htmlFor="brandVoiceTone"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Ton
+            </label>
             <input
               id="brandVoiceTone"
               name="brandVoiceTone"
               defaultValue={client.brandVoiceTone ?? ''}
               placeholder="Ex: Convivial, chaleureux, passionné"
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
           </div>
 
           <div>
-            <label htmlFor="brandVoiceKeywords" className="block text-xs text-gray-400 mb-1.5">Mots-clés à utiliser (séparés par virgules)</label>
+            <label
+              htmlFor="brandVoiceKeywords"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Mots-clés à utiliser (séparés par virgules)
+            </label>
             <input
               id="brandVoiceKeywords"
               name="brandVoiceKeywords"
               defaultValue={client.brandVoiceKeywords ?? ''}
               placeholder="authentique, fait maison, tradition"
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
           </div>
 
           <div>
-            <label htmlFor="brandVoiceAvoid" className="block text-xs text-gray-400 mb-1.5">Mots à éviter</label>
+            <label
+              htmlFor="brandVoiceAvoid"
+              className="block text-sm font-medium text-gray-300 mb-1.5"
+            >
+              Mots à éviter
+            </label>
             <input
               id="brandVoiceAvoid"
               name="brandVoiceAvoid"
               defaultValue={client.brandVoiceAvoid ?? ''}
               placeholder="corporate, froid, technique"
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
           </div>
         </fieldset>
@@ -149,13 +191,13 @@ export default async function EditClientPage({ params }: { params: Promise<{ id:
         <div className="flex gap-2 justify-end">
           <Link
             href={`/clients/${id}`}
-            className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm"
+            className="px-4 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-gray-600 text-sm transition-all duration-150 active:scale-[0.98]"
           >
             Annuler
           </Link>
           <button
             type="submit"
-            className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium"
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium transition-all duration-150"
           >
             Enregistrer
           </button>
