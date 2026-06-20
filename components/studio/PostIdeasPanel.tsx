@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Lightbulb, Loader2, Sparkles, Wand2, Zap, CheckCircle2, XCircle } from 'lucide-react'
+import { Lightbulb, Loader2, Sparkles, Wand2, Zap, CheckCircle2, XCircle, Clock, Target } from 'lucide-react'
 import type { PostIdea } from '@/lib/agents/planner'
 import { failureMessage, pollJob } from '@/lib/studio/poll-job'
 
@@ -13,6 +13,22 @@ interface PostIdeasPanelProps {
 interface BulkResult {
   done: number
   failed: number
+}
+
+const PILLAR_COLORS: Record<string, string> = {
+  engagement: 'bg-purple-900/40 border-purple-700/40 text-purple-300',
+  promotion: 'bg-pink-900/40 border-pink-700/40 text-pink-300',
+  éducation: 'bg-blue-900/40 border-blue-700/40 text-blue-300',
+  inspiration: 'bg-amber-900/40 border-amber-700/40 text-amber-300',
+  communauté: 'bg-emerald-900/40 border-emerald-700/40 text-emerald-300',
+}
+
+function getPillarColor(pillar: string): string {
+  const key = pillar.toLowerCase()
+  for (const [k, v] of Object.entries(PILLAR_COLORS)) {
+    if (key.includes(k)) return v
+  }
+  return 'bg-gray-800/60 border-gray-700/40 text-gray-300'
 }
 
 export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
@@ -103,15 +119,20 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
   return (
     <div className="bg-gradient-to-br from-purple-950/30 to-pink-950/20 border border-purple-700/30 rounded-2xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-purple-400" />
-          <h3 className="text-sm font-semibold text-white">Idées de posts (Strategy Director)</h3>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-purple-900/40 border border-purple-700/30 flex items-center justify-center flex-shrink-0">
+            <Lightbulb className="w-4 h-4 text-purple-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Idées de posts</h3>
+            <p className="text-[11px] text-gray-500">Strategy Director</p>
+          </div>
         </div>
         <button
           onClick={generate}
           disabled={loading || bulkLoading || !clientId}
           title="Demander au Strategy Director de proposer 5 angles de posts adaptés au client sélectionné"
-          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 active:scale-[0.98] text-white text-xs font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
         >
           {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
           {ideas.length > 0 ? 'Régénérer' : 'Proposer 5 idées'}
@@ -119,13 +140,26 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
       </div>
 
       {error && (
-        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-2">{error}</div>
+        <div className="text-xs text-red-300 bg-red-950/30 border border-red-700/30 rounded-lg p-3 flex items-center gap-2">
+          <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          {error}
+        </div>
       )}
 
       {ideas.length === 0 && !loading && !error && (
-        <p className="text-xs text-gray-400">
-          Claude analyse la stratégie du client et propose 5 angles concrets, prêts à passer au générateur.
-        </p>
+        <div className="text-center py-4">
+          <Lightbulb className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Claude analyse la stratégie du client et propose 5 angles concrets, prêts à passer au générateur.
+          </p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex items-center justify-center gap-2 py-4 text-xs text-gray-400">
+          <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+          Analyse en cours...
+        </div>
       )}
 
       {ideas.length > 0 && (
@@ -133,31 +167,35 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
           {ideas.map((idea, idx) => (
             <div
               key={idx}
-              className="bg-gray-950/40 border border-gray-800 rounded-xl p-3 hover:border-purple-700/50 transition-colors"
+              className="bg-gray-950/50 border border-gray-800 rounded-xl p-3.5 hover:border-purple-700/50 hover:bg-gray-950/70 transition-all duration-150"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <span className="text-sm font-semibold text-white">{idea.title}</span>
                     {idea.pillar && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/40 border border-purple-700/30 text-purple-300">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border ${getPillarColor(idea.pillar)} flex items-center gap-1`}>
+                        <Target className="w-2.5 h-2.5" />
                         {idea.pillar}
                       </span>
                     )}
                     {idea.bestTime && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/30 border border-blue-700/30 text-blue-300">
-                        ⏰ {idea.bestTime}
+                      <span className="text-[10px] px-2 py-0.5 rounded-full border bg-blue-900/30 border-blue-700/30 text-blue-300 flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5" />
+                        {idea.bestTime}
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-gray-500 mb-1">{idea.objective}</p>
-                  <p className="text-xs text-gray-300 line-clamp-2">{idea.brief}</p>
+                  {idea.objective && (
+                    <p className="text-xs text-gray-500 mb-1.5 font-medium">{idea.objective}</p>
+                  )}
+                  <p className="text-xs text-gray-300 leading-relaxed line-clamp-2">{idea.brief}</p>
                 </div>
                 <button
                   onClick={() => onPick(idea)}
                   disabled={bulkLoading}
                   title={`Remplir le Studio avec cette idée : ${idea.title}`}
-                  className="px-2.5 py-1 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/30 text-[11px] flex items-center gap-1 flex-shrink-0 disabled:opacity-40"
+                  className="px-2.5 py-1.5 rounded-lg border border-purple-700/40 text-purple-300 hover:bg-purple-900/40 hover:border-purple-600/60 text-xs flex items-center gap-1.5 flex-shrink-0 disabled:opacity-40 transition-all duration-150 active:scale-[0.97]"
                 >
                   <Wand2 className="w-3 h-3" />
                   Utiliser
@@ -167,7 +205,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
           ))}
 
           {/* Bulk generation footer */}
-          <div className="pt-2 border-t border-gray-800/60 flex items-center justify-between gap-3">
+          <div className="pt-3 border-t border-gray-800/60 flex items-center justify-between gap-3">
             {meta && (
               <p className="text-[10px] text-gray-600">
                 {meta.model} · ${meta.cost.toFixed(4)}
@@ -188,7 +226,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
                     {bulkResult.failed} échec{bulkResult.failed > 1 ? 's' : ''}
                   </span>
                 )}
-                <a href="/plan" title="Voir les drafts générés dans l'historique et le calendrier" className="text-purple-400 hover:underline">
+                <a href="/plan" title="Voir les drafts générés dans l'historique et le calendrier" className="text-purple-400 hover:text-purple-300 hover:underline transition-colors">
                   Voir les drafts →
                 </a>
               </div>
@@ -197,7 +235,7 @@ export function PostIdeasPanel({ clientId, onPick }: PostIdeasPanelProps) {
                 onClick={generateAllDrafts}
                 disabled={bulkLoading || ideas.length === 0}
                 title="Créer automatiquement un draft complet pour chaque idée proposée"
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/30 border border-emerald-600/30 text-emerald-300 hover:bg-emerald-700/50 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700/30 border border-emerald-600/30 text-emerald-300 hover:bg-emerald-700/50 hover:border-emerald-600/50 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 active:scale-[0.98]"
               >
                 {bulkLoading ? (
                   <>

@@ -37,16 +37,19 @@ export function AgentWorkPlan({
   const steps = [
     {
       agent: 'Account Director',
+      icon: '🎯',
       before: `Identifier ${clientLabel}, relire stratégie, historique et résumé client.`,
       after: result?.directive ? `${result.directive.priorityPillar} — ${result.directive.rationale}` : null,
     },
     {
       agent: 'Social Director',
+      icon: '✍️',
       before: `Transformer l'ordre en texte ${platformLabel}. Brief : ${brief.trim() || 'à compléter'}`,
       after: result?.captions?.length ? `${result.captions.length} caption(s), hook principal : ${result.captions[0]?.hook || '—'}` : null,
     },
     {
       agent: 'Visual Director',
+      icon: '🎨',
       before: `${visualTask}. Format demandé : ${CONTENT_TYPE_INFO[contentType].label}.`,
       after: result?.post.imageUrl
         ? 'Visuel prêt et attaché au draft.'
@@ -56,44 +59,65 @@ export function AgentWorkPlan({
     },
     {
       agent: 'Impact Reviewer',
+      icon: '🔍',
       before: 'Contrôler hook, CTA, cohérence DA, score impact et risques avant validation.',
       after: result ? `Score ${result.post.impactScore}/100${result.review ? ` · verdict ${result.review.verdict}` : ''}` : null,
     },
     {
       agent: 'Publisher',
+      icon: '🚀',
       before: 'Laisser en validation avant publication automatique Facebook/Instagram.',
       after: result ? `Draft ${result.post.status} créé : #${result.post.id}` : null,
     },
   ]
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-3">
+    <div className="bg-gray-900/40 border border-gray-800 rounded-2xl p-5 space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-white">🧠 Préparation des agents</h3>
-        <p className="text-xs text-gray-500 mt-1">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <span>🧠</span>
+          Préparation des agents
+        </h3>
+        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
           Ce panneau montre ce que chaque agent s&apos;apprête à faire, puis son résultat après génération.
         </p>
       </div>
       <div className="space-y-2">
-        {steps.map((step, index) => (
-          <div key={step.agent} className="rounded-xl border border-gray-800 bg-gray-950/40 p-3">
-            <div className="flex items-center justify-between gap-3 mb-1.5">
-              <div className="text-xs font-semibold text-purple-200">
-                {index + 1}. {step.agent}
+        {steps.map((step, index) => {
+          const isDone = !!step.after
+          const isError = step.after?.startsWith('Échec')
+          const statusColor = isError
+            ? 'border-amber-700/50 text-amber-300 bg-amber-950/20'
+            : isDone
+              ? 'border-emerald-700/50 text-emerald-300 bg-emerald-950/20'
+              : 'border-gray-700 text-gray-500 bg-gray-900/50'
+          const leftBorderColor = isError
+            ? 'border-l-amber-500/60'
+            : isDone
+              ? 'border-l-emerald-500/60'
+              : 'border-l-gray-700'
+          return (
+            <div
+              key={step.agent}
+              className={`rounded-xl border border-gray-800 border-l-2 ${leftBorderColor} bg-gray-950/40 p-3 transition-all`}
+            >
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{step.icon}</span>
+                  <span className="text-xs font-semibold text-purple-200">
+                    {index + 1}. {step.agent}
+                  </span>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusColor} flex-shrink-0`}>
+                  {isDone ? (isError ? 'Erreur' : 'Terminé') : 'En attente'}
+                </span>
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                step.after
-                  ? step.after.startsWith('Échec')
-                    ? 'border-amber-700/50 text-amber-300 bg-amber-950/20'
-                    : 'border-emerald-700/50 text-emerald-300 bg-emerald-950/20'
-                  : 'border-gray-700 text-gray-500 bg-gray-900/50'
-              }`}>
-                {step.after ? 'Résultat' : 'Prévu'}
-              </span>
+              <p className={`text-xs leading-relaxed ${isDone ? (isError ? 'text-amber-200/80' : 'text-emerald-200/80') : 'text-gray-400'}`}>
+                {step.after || step.before}
+              </p>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed">{step.after || step.before}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
