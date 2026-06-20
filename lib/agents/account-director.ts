@@ -1,9 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
+import { BUSINESS_OBJECTIVES, CONVERSION_CHANNELS, BUSINESS_TARGET_DELAYS } from '@/types/client'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
+import { getPlaybook } from '@/lib/playbooks'
 
 export interface AccountDirective {
   /** Pilier prioritaire à traiter ensuite (issu de client.strategy.contentPillars). */
@@ -107,6 +109,10 @@ Exemple de mauvais enrichedBrief : "Parler du tartare et mettre en avant la qual
 
 Réponds en français, en JSON strict, sans markdown.`)
 
+  const playbook = client.businessProfile?.vertical
+    ? getPlaybook(client.businessProfile.vertical)
+    : getPlaybook(client.type)
+
   const userPrompt = `# CLIENT
 
 **Établissement :** ${client.name}
@@ -127,6 +133,24 @@ Réponds en français, en JSON strict, sans markdown.`)
 **Piliers de contenu :** ${client.strategy.contentPillars.join(', ') || 'non renseignés'}
 **Fréquence :** ${client.strategy.frequency}
 **À éviter stratégiquement :** ${client.strategy.avoid.join(', ') || 'non renseigné'}
+
+${client.businessProfile ? `# PROFIL BUSINESS
+
+**Objectif prioritaire :** ${BUSINESS_OBJECTIVES[client.businessProfile.priorityObjective]?.label ?? client.businessProfile.priorityObjective}
+**Délai cible :** ${BUSINESS_TARGET_DELAYS[client.businessProfile.targetDelay]?.label ?? client.businessProfile.targetDelay}
+**Offres principales :** ${client.businessProfile.mainOffers.length ? client.businessProfile.mainOffers.join(', ') : 'non renseignées'}
+**Canaux de conversion :** ${client.businessProfile.conversionChannels.map(c => CONVERSION_CHANNELS[c]?.label ?? c).join(', ') || 'non renseignés'}
+${client.businessProfile.offDays.length ? `**Jours creux à remplir :** ${client.businessProfile.offDays.join(', ')}` : ''}
+${client.businessProfile.peakDays.length ? `**Jours de pointe :** ${client.businessProfile.peakDays.join(', ')}` : ''}
+${client.businessProfile.seasonality ? `**Saisonnalité :** ${client.businessProfile.seasonality}` : ''}
+${client.businessProfile.constraints.length ? `**Contraintes :** ${client.businessProfile.constraints.join(', ')}` : ''}
+
+Le brief enrichi et le CTA doivent être directement orientés vers cet objectif et ces canaux de conversion.
+
+# CONTEXTE VERTICAL
+
+${playbook.promptContext}
+` : ''}
 
 # DIRECTION ARTISTIQUE
 
