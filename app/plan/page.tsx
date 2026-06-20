@@ -17,11 +17,11 @@ const PLATFORM_INFO: Record<string, { label: string; emoji: string; color: strin
 }
 
 const STATUS_INFO: Record<string, { label: string; color: string; dot: string }> = {
-  draft:     { label: 'Brouillon', color: 'bg-amber-900/40 text-amber-400 border-amber-800/40',  dot: 'bg-amber-400' },
-  ready:     { label: 'Prêt',      color: 'bg-purple-900/40 text-purple-300 border-purple-700/40', dot: 'bg-purple-400' },
-  scheduled: { label: 'Planifié',  color: 'bg-blue-900/40 text-blue-300 border-blue-800/40',       dot: 'bg-blue-400' },
-  published: { label: 'Publié',    color: 'bg-emerald-900/40 text-emerald-400 border-emerald-800/40', dot: 'bg-emerald-400' },
-  failed:    { label: 'Échec',     color: 'bg-red-900/40 text-red-400 border-red-800/40',         dot: 'bg-red-400' },
+  draft:     { label: 'Brouillon', color: 'bg-gray-700/40 text-gray-400 border-gray-700',             dot: 'bg-gray-400' },
+  ready:     { label: 'Prêt',      color: 'bg-emerald-900/30 text-emerald-400 border-emerald-800/40', dot: 'bg-emerald-400' },
+  scheduled: { label: 'Planifié',  color: 'bg-blue-900/30 text-blue-400 border-blue-800/40',          dot: 'bg-blue-400' },
+  published: { label: 'Publié',    color: 'bg-purple-900/30 text-purple-400 border-purple-800/40',    dot: 'bg-purple-400' },
+  failed:    { label: 'Échec',     color: 'bg-red-900/30 text-red-400 border-red-800/40',             dot: 'bg-red-400' },
 }
 
 function formatTime(ts: number): string {
@@ -61,38 +61,39 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
             <CalendarDays className="w-7 h-7 text-purple-400" />
             Plan
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-400 mt-1">
             Historique de tous tes posts générés et publiés
           </p>
         </div>
         <Link
           href="/studio"
           title="Créer un nouveau post depuis le Studio"
-          className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
+          className="group px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium flex items-center gap-2 transition-all duration-150 shadow-lg shadow-purple-900/30"
         >
-          <Sparkles className="w-4 h-4" />
+          <Sparkles className="w-4 h-4 group-hover:scale-110 transition-transform duration-150" />
           Nouveau post
         </Link>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatBox label="Total" value={posts.length} color="text-white" />
-        <StatBox label="Publiés" value={totalPublished} color="text-emerald-400" />
-        <StatBox label="Planifiés" value={totalScheduled} color="text-blue-400" />
-        <StatBox label="Brouillons" value={totalDraft} color="text-amber-400" />
-        <StatBox label="Échecs" value={totalFailed} color="text-red-400" />
+        <StatBox label="Total"      value={posts.length}    color="text-white"      bg="bg-gray-900/40"    border="border-gray-800" />
+        <StatBox label="Publiés"    value={totalPublished}  color="text-purple-400" bg="bg-purple-900/10"  border="border-purple-800/40" />
+        <StatBox label="Planifiés"  value={totalScheduled}  color="text-blue-400"   bg="bg-blue-900/10"    border="border-blue-800/40" />
+        <StatBox label="Brouillons" value={totalDraft}      color="text-gray-400"   bg="bg-gray-900/40"    border="border-gray-800" />
+        <StatBox label="Échecs"     value={totalFailed}     color="text-red-400"    bg="bg-red-900/10"     border="border-red-800/40" />
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-xs text-gray-500">Filtres :</span>
+        <span className="text-xs text-gray-500 font-medium">Filtres :</span>
         <FilterChip href="/plan" label="Tous" active={!clientFilter && !statusFilter} />
         <FilterChip href="/plan?status=scheduled" label="Planifiés" active={statusFilter === 'scheduled'} />
         <FilterChip href="/plan?status=published" label="Publiés" active={statusFilter === 'published'} />
@@ -103,24 +104,27 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           <Link
             href="/plan"
             title="Retirer le filtre client et afficher tous les posts"
-            className="text-xs px-2 py-1 rounded bg-purple-600/30 border border-purple-600/40 text-purple-300"
+            className="text-xs px-2.5 py-1.5 rounded-lg bg-purple-600/30 border border-purple-600/40 text-purple-300 hover:bg-purple-600/40 transition-colors duration-150 flex items-center gap-1"
           >
-            Client : {clientsMap.get(clientFilter)?.name ?? '?'} ✕
+            {clientsMap.get(clientFilter)?.name ?? '?'} ✕
           </Link>
         )}
       </div>
 
       {/* Posts list */}
       {posts.length === 0 ? (
-        <div className="bg-gray-900/20 border border-dashed border-gray-700 rounded-2xl p-12 text-center">
-          <Sparkles className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-400">Aucun post pour le moment.</p>
+        <div className="bg-gray-900/40 border border-dashed border-gray-700 rounded-2xl p-12 text-center">
+          <Sparkles className="w-10 h-10 text-gray-700 mx-auto mb-4" />
+          <p className="text-gray-400 font-medium text-sm">Aucun post pour le moment.</p>
+          <p className="text-gray-600 text-xs mt-1">
+            {statusFilter ? `Aucun post avec le statut « ${statusFilter} ».` : 'Commencez par générer votre premier post dans le Studio.'}
+          </p>
           <Link
             href="/studio"
             title="Ouvrir le Studio pour générer le premier post"
-            className="inline-flex items-center gap-1.5 text-sm text-purple-400 hover:underline mt-3"
+            className="group inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-lg border border-gray-700 text-sm text-gray-300 hover:text-white hover:bg-gray-800 hover:border-gray-600 transition-all duration-150"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 group-hover:scale-110 transition-transform duration-150" />
             Créer le premier post
           </Link>
         </div>
@@ -136,11 +140,11 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
   )
 }
 
-function StatBox({ label, value, color }: { label: string; value: number; color: string }) {
+function StatBox({ label, value, color, bg, border }: { label: string; value: number; color: string; bg: string; border: string }) {
   return (
-    <div title={`${label} : ${value}`} className="bg-gray-900/40 border border-gray-800 rounded-xl p-4">
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className={`text-2xl font-bold ${color} mt-1`}>{value}</div>
+    <div title={`${label} : ${value}`} className={`${bg} border ${border} rounded-xl p-4 hover:-translate-y-0.5 transition-transform duration-200`}>
+      <div className="text-xs text-gray-500 font-medium">{label}</div>
+      <div className={`text-2xl font-bold ${color} mt-1.5`}>{value}</div>
     </div>
   )
 }
@@ -150,10 +154,10 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
     <Link
       href={href}
       title={`Filtrer l'historique : ${label}`}
-      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 ${
         active
-          ? 'bg-purple-600 text-white'
-          : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
+          ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
+          : 'bg-gray-900/60 border border-gray-800 text-gray-400 hover:bg-gray-800 hover:border-gray-700 hover:text-gray-300'
       }`}
     >
       {label}
@@ -162,14 +166,14 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
 }
 
 function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
-  const statusCfg = STATUS_INFO[post.status]
+  const statusCfg = STATUS_INFO[post.status] ?? STATUS_INFO.draft
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
+    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 hover:shadow-[0_0_16px_rgba(0,0,0,0.3)] transition-all duration-150">
       <div className="flex items-start gap-4">
         {/* Image / placeholder */}
-        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 ring-1 ring-gray-800">
           {post.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={post.imageUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
@@ -182,8 +186,8 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span title={`Statut : ${statusCfg.label}`} className={`text-[10px] border rounded-full px-2 py-0.5 ${statusCfg.color} flex items-center gap-1`}>
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <span title={`Statut : ${statusCfg.label}`} className={`text-[11px] border rounded-full px-2 py-0.5 ${statusCfg.color} flex items-center gap-1 font-medium`}>
               <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
               {statusCfg.label}
             </span>
@@ -191,7 +195,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
               <Link
                 href={`/clients/${client.id}`}
                 title={`Ouvrir la fiche client de ${client.name}`}
-                className="text-xs text-purple-300 hover:underline flex items-center gap-1"
+                className="text-xs text-purple-300 hover:text-purple-200 transition-colors flex items-center gap-1 font-medium"
               >
                 {client.emoji} {client.name}
               </Link>
@@ -200,12 +204,12 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
               <span
                 key={p}
                 title={`Plateforme cible : ${PLATFORM_INFO[p]?.label ?? p}`}
-                className={`text-[10px] border rounded px-1.5 py-0.5 ${PLATFORM_INFO[p]?.color ?? 'border-gray-700 text-gray-400'}`}
+                className={`text-[11px] border rounded-md px-1.5 py-0.5 font-medium ${PLATFORM_INFO[p]?.color ?? 'border-gray-700 text-gray-400'}`}
               >
                 {PLATFORM_INFO[p]?.emoji} {PLATFORM_INFO[p]?.label}
               </span>
             ))}
-            <span className="text-[11px] text-gray-500 ml-auto">
+            <span className="text-xs text-gray-500 ml-auto">
               {post.publishedAt ? `Publié ${formatRelative(post.publishedAt)}` : `Créé ${formatRelative(post.createdAt)}`}
             </span>
           </div>
@@ -215,7 +219,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
           </p>
 
           {post.hashtags.length > 0 && (
-            <p className="text-[11px] text-blue-400 mt-1 line-clamp-1">
+            <p className="text-[11px] text-blue-400/80 mt-1.5 line-clamp-1 font-mono">
               {post.hashtags.slice(0, 5).map(h => `#${h.replace(/^#/, '')}`).join(' ')}
             </p>
           )}
@@ -223,7 +227,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
           {/* Error if failed */}
           {post.status === 'failed' && post.error && (
             <>
-              <div className="mt-2 p-2 rounded-lg bg-red-950/30 border border-red-700/30 text-xs text-red-300 flex items-start gap-1.5">
+              <div className="mt-2 p-3 rounded-lg bg-red-950/30 border border-red-700/30 text-xs text-red-300 flex items-start gap-2">
                 <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                 <span>{post.error}</span>
               </div>
@@ -248,7 +252,7 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     title={`Ouvrir le post publié sur ${cfg?.label ?? platform}`}
-                    className={`text-[11px] px-2 py-1 rounded border ${cfg?.color} flex items-center gap-1 hover:underline`}
+                    className={`text-[11px] px-2 py-1 rounded-lg border ${cfg?.color} flex items-center gap-1 hover:opacity-80 transition-opacity duration-150 font-medium`}
                   >
                     <ExternalLink className="w-3 h-3" />
                     Voir sur {cfg?.label}
@@ -258,21 +262,21 @@ function PostRow({ post, client }: { post: Post; client: Client | undefined }) {
             </div>
           )}
 
-          {/* Meta */}
-          <div className="mt-3 rounded-lg border border-gray-800 bg-gray-950/40 p-2">
-            <div className="flex items-center justify-between gap-3 text-[10px] text-gray-500 mb-1.5">
-              <span>{progress.currentStep}</span>
-              <span>{progress.percent}%</span>
+          {/* Progress bar */}
+          <div className="mt-3 rounded-lg border border-gray-800 bg-gray-950/40 p-3">
+            <div className="flex items-center justify-between gap-3 text-xs text-gray-500 mb-2">
+              <span className="font-medium">{progress.currentStep}</span>
+              <span className="font-mono text-gray-400">{progress.percent}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
-              <div className={`h-full ${progressBarClass(progress.tone)}`} style={{ width: `${progress.percent}%` }} />
+              <div className={`h-full ${progressBarClass(progress.tone)} transition-all duration-500`} style={{ width: `${progress.percent}%` }} />
             </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-gray-600">
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
               <span>Prochaine étape : {progress.nextStep}</span>
               <span>ETA : {progress.eta}</span>
               <span>{formatTime(post.createdAt)}</span>
-              {post.impactScore > 0 && <span>Impact {post.impactScore}/100</span>}
-              {post.cost > 0 && <span>${post.cost.toFixed(4)}</span>}
+              {post.impactScore > 0 && <span className="text-gray-500">Impact <span className="text-gray-400 font-medium">{post.impactScore}/100</span></span>}
+              {post.cost > 0 && <span className="text-gray-500 font-mono">${post.cost.toFixed(4)}</span>}
             </div>
           </div>
         </div>
