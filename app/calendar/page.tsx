@@ -146,7 +146,7 @@ export default async function CalendarPage({
           <Link
             href={`/api/posts/export/ical${clientFilter ? `?clientId=${clientFilter}` : ''}`}
             title={clientFilter ? `Exporter les posts planifiés de ce client en iCal` : `Exporter tous les posts planifiés en iCal (Google Calendar, Apple Calendar…)`}
-            className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-sm flex items-center gap-1.5 transition-all duration-150"
           >
             <Download className="w-4 h-4" />
             iCal
@@ -206,7 +206,7 @@ export default async function CalendarPage({
               Vue semaine
             </h2>
             {weekOffset !== 0 && (
-              <span className="text-[10px] text-indigo-400/60 font-mono">
+              <span className="text-[11px] text-indigo-400/70 font-mono">
                 {weekOffset > 0 ? `+${weekOffset}` : weekOffset} sem.
               </span>
             )}
@@ -215,11 +215,11 @@ export default async function CalendarPage({
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-gray-800">
-                  <th className="text-left px-4 py-2 text-[10px] text-gray-600 font-mono w-36">CLIENT</th>
+                  <th className="text-left px-4 py-2 text-[11px] text-gray-500 font-mono w-36">CLIENT</th>
                   {weekDays.map((d, i) => (
-                    <th key={i} className={`text-center py-2 px-2 text-[10px] font-mono w-12 ${i === todayIndex ? 'text-indigo-400' : 'text-gray-600'}`}>
+                    <th key={i} className={`text-center py-2 px-2 text-[11px] font-mono w-12 ${i === todayIndex ? 'text-indigo-400' : 'text-gray-500'}`}>
                       <div>{DAYS_FR[i]}</div>
-                      <div className={`text-[9px] mt-0.5 ${i === todayIndex ? 'text-indigo-300' : 'text-gray-700'}`}>{d.getDate()}</div>
+                      <div className={`text-[11px] mt-0.5 ${i === todayIndex ? 'text-indigo-300' : 'text-gray-600'}`}>{d.getDate()}</div>
                     </th>
                   ))}
                   <th className="px-3 py-2 w-10" />
@@ -273,7 +273,7 @@ export default async function CalendarPage({
               </tbody>
             </table>
           </div>
-          <div className="px-5 py-2.5 border-t border-gray-800 flex items-center gap-4 text-[9px] text-gray-600 font-mono">
+          <div className="px-5 py-2.5 border-t border-gray-800 flex items-center gap-4 text-[11px] text-gray-500 font-mono">
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Publié</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />Planifié</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400/60 inline-block" />Brouillon</span>
@@ -363,7 +363,7 @@ function TimelineRow({ post, client, now, weekOffset, clientFilter, prevId, next
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-sm text-white truncate">{post.brief}</span>
           {overdue && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 border border-red-700/40">
+            <span className="text-[11px] px-1.5 py-0.5 rounded bg-red-900/40 text-red-300 border border-red-700/40">
               en retard
             </span>
           )}
@@ -374,7 +374,7 @@ function TimelineRow({ post, client, now, weekOffset, clientFilter, prevId, next
       </div>
       <div className="text-right text-[11px] text-gray-400 flex-shrink-0">
         <div>{when}</div>
-        <span className={`inline-block text-[10px] border rounded-full px-2 py-0.5 mt-1 ${cfg.color}`}>{cfg.label}</span>
+        <span className={`inline-block text-[11px] border rounded-full px-2 py-0.5 mt-1 ${cfg.color}`}>{cfg.label}</span>
       </div>
     </Link>
   )

@@ -111,7 +111,7 @@ export default async function ValidationPage({
           <Link
             href={clientFilter ? `/studio?client=${clientFilter}` : '/studio'}
             title="Créer un nouveau post à ajouter dans la file de validation"
-            className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium flex items-center gap-1.5 transition-all duration-150"
           >
             <Sparkles className="w-4 h-4" />
             Nouveau post
@@ -142,7 +142,7 @@ export default async function ValidationPage({
           <div className="flex flex-wrap items-center gap-2">
             {/* Client filter */}
             <div className="flex flex-wrap items-center gap-1.5 mr-2">
-              <span className="text-[10px] uppercase tracking-wider text-gray-500">Client</span>
+              <span className="text-[11px] uppercase tracking-wider text-gray-500">Client</span>
               <Link
                 href={buildUrl({ sort: sortParam, q: searchQuery, status: statusFilter })}
                 title="Afficher tous les clients"
@@ -172,7 +172,7 @@ export default async function ValidationPage({
 
             {/* Sort */}
             <div className="flex items-center gap-1.5 ml-auto">
-              <span className="text-[10px] uppercase tracking-wider text-gray-500">Trier</span>
+              <span className="text-[11px] uppercase tracking-wider text-gray-500">Trier</span>
               {sortOptions.map(s => (
                 <Link
                   key={s}
@@ -266,7 +266,7 @@ function StatBox({ label, value, color, border, href, active }: { label: string;
 function PostCard({ post, client, prevId, nextId, activeValidationStr }: { post: Post; client: Client | undefined; prevId?: string; nextId?: string; activeValidationStr?: string }) {
   const leftBorder = POST_STATUS_BORDER[post.status] ?? ''
   return (
-    <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 transition-colors duration-200`}>
+    <article className={`bg-gray-900/40 border border-l-2 ${leftBorder} border-gray-800 rounded-2xl p-5 space-y-4 hover:border-gray-700 hover:shadow-[0_0_20px_rgba(99,102,241,0.08)] transition-all duration-200`}>
       <div className="flex items-start gap-3">
         <PostSelectCheckbox postId={post.id} />
         {post.imageUrl ? (
@@ -285,11 +285,11 @@ function PostCard({ post, client, prevId, nextId, activeValidationStr }: { post:
             )}
             <StatusPill status={post.status} />
             {post.pillar && (
-              <span className="text-[10px] bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 rounded-full px-2 py-0.5 truncate max-w-[100px]">
+              <span className="text-[11px] bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 rounded-full px-2 py-0.5 truncate max-w-[100px]">
                 {post.pillar}
               </span>
             )}
-            <span className="text-[10px] text-gray-600 ml-auto">Impact {post.impactScore}/100</span>
+            <span className="text-[11px] text-gray-500 ml-auto">Impact {post.impactScore}/100</span>
           </div>
           <p className="text-sm font-medium text-white line-clamp-2">{post.brief}</p>
         </div>
@@ -320,7 +320,7 @@ function PostCard({ post, client, prevId, nextId, activeValidationStr }: { post:
           <div>
             <span className="font-medium">{post.portalFeedback.action === 'approved' ? 'Client approuvé' : 'Modifications demandées'}</span>
             {post.portalFeedback.comment && <p className="mt-0.5 text-[11px] opacity-80">{post.portalFeedback.comment}</p>}
-            <p className="text-[10px] opacity-50 mt-0.5">{new Date(post.portalFeedback.reviewedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+            <p className="text-[11px] opacity-60 mt-0.5">{new Date(post.portalFeedback.reviewedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
           </div>
         </div>
       )}
@@ -336,7 +336,7 @@ function PostCard({ post, client, prevId, nextId, activeValidationStr }: { post:
           <Link
             href={`/posts/${post.id}?from=validation${prevId ? `&prevId=${prevId}` : ''}${nextId ? `&nextId=${nextId}` : ''}${activeValidationStr ? '&validationBack=' + encodeURIComponent(activeValidationStr) : ''}`}
             title="Voir le détail complet de ce post"
-            className="text-[11px] text-gray-500 hover:text-gray-300 transition-colors px-2 py-1 rounded border border-gray-800 hover:border-gray-700"
+            className="text-[11px] text-gray-500 hover:text-gray-300 transition-all duration-150 px-2 py-1 rounded border border-gray-800 hover:border-gray-700 bg-gray-800 hover:bg-gray-700"
           >
             Détail
           </Link>
@@ -358,6 +358,6 @@ const STATUS_PILL: Record<string, { label: string; cls: string }> = {
 function StatusPill({ status }: { status: string }) {
   const cfg = STATUS_PILL[status] ?? { label: status, cls: 'text-gray-400 border-gray-700 bg-gray-800/20' }
   return (
-    <span title={`Statut du post : ${cfg.label}`} className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
+    <span title={`Statut du post : ${cfg.label}`} className={`text-[11px] border rounded-full px-2 py-0.5 ${cfg.cls}`}>{cfg.label}</span>
   )
 }

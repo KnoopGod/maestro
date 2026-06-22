@@ -67,13 +67,13 @@ function EventRow({ event, isLast }: { event: AgentEvent; isLast: boolean }) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <span className="text-sm font-medium text-white">{(agent as typeof agent & {name: string}).name.split(' · ')[0]}</span>
-              <span className={`text-[10px] border rounded-full px-2 py-0.5 ${cfg.color} border-current/30`}>
+              <span className="text-sm font-medium text-[#E0E3FF]">{(agent as typeof agent & {name: string}).name.split(' · ')[0]}</span>
+              <span className={`text-[11px] border rounded-full px-2 py-0.5 ${cfg.color} border-current/30`}>
                 <span className={`inline-block w-1.5 h-1.5 rounded-full ${cfg.dot} mr-1`} />
                 {cfg.label}
               </span>
               {event.durationMs && (
-                <span className="text-[10px] text-gray-600">{elapsed(event.durationMs)}</span>
+                <span className="text-[11px] text-gray-400">{elapsed(event.durationMs)}</span>
               )}
             </div>
             <div className="text-xs text-gray-400">{event.taskLabel}</div>
@@ -97,10 +97,10 @@ function EventRow({ event, isLast }: { event: AgentEvent; isLast: boolean }) {
           <div className="mx-4 mb-4 p-3 rounded-lg bg-red-950/40 border border-red-800/40">
             <p className="text-xs text-red-300">{event.errorMessage}</p>
             {event.errorAction === 'retry' && (
-              <p className="text-[10px] text-gray-500 mt-1">→ Réessaie la génération depuis le Studio</p>
+              <p className="text-[11px] text-gray-400 mt-1">→ Réessaie la génération depuis le Studio</p>
             )}
             {event.errorAction === 'fix_config' && (
-              <p className="text-[10px] text-gray-500 mt-1">→ Vérifie la configuration dans Connexions</p>
+              <p className="text-[11px] text-gray-400 mt-1">→ Vérifie la configuration dans Connexions</p>
             )}
           </div>
         )}
@@ -108,7 +108,7 @@ function EventRow({ event, isLast }: { event: AgentEvent; isLast: boolean }) {
         {/* Output data (expandable) */}
         {open && event.outputData && (
           <div className="mx-4 mb-4 p-3 rounded-lg bg-gray-950/60 border border-gray-800">
-            <pre className="text-[10px] text-gray-400 overflow-x-auto whitespace-pre-wrap">
+            <pre className="text-[11px] text-gray-400 overflow-x-auto whitespace-pre-wrap">
               {JSON.stringify(event.outputData, null, 2)}
             </pre>
           </div>
@@ -178,8 +178,8 @@ export default function JobDetailPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Breadcrumb */}
-      <Link href={agentsHref} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-        <ArrowLeft className="w-4 h-4" />
+      <Link href={agentsHref} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 group transition-all duration-150">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
         Activité agents
       </Link>
 
@@ -194,11 +194,11 @@ export default function JobDetailPage() {
             </span>
           </div>
           <p className="text-sm text-gray-400">{job.briefSummary}</p>
-          <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
+          <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
             <span>{since(job.startedAt, now)}</span>
             <span>·</span>
             <span>{elapsed(totalDuration)} total</span>
-            {job.totalCost > 0 && <><span>·</span><span>${job.totalCost.toFixed(4)}</span></>}
+            {job.totalCost > 0 && <><span>·</span><span className="text-emerald-400">${job.totalCost.toFixed(4)}</span></>}
           </div>
         </div>
         <button
@@ -218,7 +218,7 @@ export default function JobDetailPage() {
             <p className="text-sm font-medium text-purple-300">{agentMeta(runningEvent.agent).emoji} {agentMeta(runningEvent.agent).name.split(' · ')[0]}</p>
             <p className="text-xs text-gray-400">{runningEvent.taskLabel}</p>
           </div>
-          <span className="ml-auto text-xs text-gray-600 animate-pulse">en cours...</span>
+          <span className="ml-auto text-[11px] text-gray-400 animate-pulse">en cours...</span>
         </div>
       )}
 
@@ -226,17 +226,17 @@ export default function JobDetailPage() {
       {job.postId && job.status === 'completed' && (
         <Link
           href={`/posts/${job.postId}?from=agents&agentsBack=${encodeURIComponent(clientFilter ? `/agents/jobs/${id}?client=${clientFilter}` : `/agents/jobs/${id}`)}`}
-          className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
+          className="group flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-all duration-150"
         >
           <ExternalLink className="w-4 h-4" />
-          Voir le post généré → #{job.postId.substring(0, 8)}
+          Voir le post généré <span className="group-hover:translate-x-0.5 inline-block transition-transform duration-150">→</span> #{job.postId.substring(0, 8)}
         </Link>
       )}
 
       {/* Timeline */}
       {job.events && job.events.length > 0 ? (
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-white mb-3">Timeline</h2>
+          <h2 className="text-base font-semibold text-[#E0E3FF] mb-3">Timeline</h2>
           {job.events.map((event, idx) => (
             <EventRow key={event.id} event={event} isLast={idx === job.events!.length - 1} />
           ))}
@@ -249,7 +249,7 @@ export default function JobDetailPage() {
 
       {/* Footer polling indicator */}
       {job.status === 'running' && (
-        <p className="text-center text-[10px] text-gray-700">
+        <p className="text-center text-[11px] text-gray-500">
           Actualisation automatique toutes les 2s · dernière à {new Date(lastUpdated).toLocaleTimeString('fr-FR')}
         </p>
       )}
