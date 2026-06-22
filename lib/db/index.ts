@@ -12,7 +12,8 @@ function cleanEnv(value: string | undefined) {
   return trimmed
 }
 
-const url = cleanEnv(process.env.DATABASE_URL) || 'file:./maestro.db'
+const defaultLocalUrl = process.env.VERCEL ? 'file:/tmp/maestro.db' : 'file:./maestro.db'
+const url = cleanEnv(process.env.DATABASE_URL) || defaultLocalUrl
 const authToken = cleanEnv(process.env.DATABASE_AUTH_TOKEN)
 const isLocalDb = url.startsWith('file:')
 const schemaAutoInit =
