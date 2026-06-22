@@ -55,7 +55,7 @@ export default async function UsagePage() {
           href="https://console.anthropic.com/settings/billing"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-purple-400 hover:underline flex items-center gap-1.5"
+          className="group text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-all duration-150"
         >
           <ExternalLink className="w-4 h-4" />
           Voir solde Anthropic
@@ -152,7 +152,7 @@ export default async function UsagePage() {
               <Link
                 key={c.clientId}
                 href={`/clients/${c.clientId}/finance`}
-                className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-800/40 transition-colors"
+                className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-800/40 hover:shadow-[0_0_20px_rgba(99,102,241,0.08)] transition-all duration-150"
               >
                 <div className="text-xl">{c.emoji}</div>
                 <div className="flex-1 min-w-0">
@@ -166,7 +166,7 @@ export default async function UsagePage() {
                 </div>
                 <div className="text-right min-w-[80px]">
                   <div className="text-sm font-bold text-emerald-400">${c.cost.toFixed(4)}</div>
-                  <div className="text-[10px] text-gray-500">{c.postsCount} post{c.postsCount > 1 ? 's' : ''}</div>
+                  <div className="text-[11px] text-gray-500">{c.postsCount} post{c.postsCount > 1 ? 's' : ''}</div>
                 </div>
               </Link>
             ))}
@@ -187,7 +187,7 @@ export default async function UsagePage() {
               const height = Math.max((m.cost / maxMonthCost) * 100, 4)
               return (
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     ${m.cost.toFixed(4)}
                   </div>
                   <div
@@ -195,7 +195,7 @@ export default async function UsagePage() {
                     style={{ height: `${height}%` }}
                     title={`${m.month}: $${m.cost.toFixed(4)} · ${m.postsCount} posts`}
                   />
-                  <div className="text-[10px] text-gray-500">{formatMonth(m.month)}</div>
+                  <div className="text-[11px] text-gray-400">{formatMonth(m.month)}</div>
                 </div>
               )
             })}
@@ -216,7 +216,7 @@ export default async function UsagePage() {
               <Link key={p.id} href={`/posts/${p.id}?from=usage${stats.recentPosts[i - 1] ? `&prevId=${stats.recentPosts[i - 1].id}` : ''}${stats.recentPosts[i + 1] ? `&nextId=${stats.recentPosts[i + 1].id}` : ''}`} title="Voir le détail de ce post" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30 transition-colors">
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-gray-300 truncate">{p.brief || p.caption}</div>
-                  <div className="text-[10px] text-gray-600 mt-0.5">
+                  <div className="text-[11px] text-gray-500 mt-0.5">
                     {formatRelative(p.createdAt)} · {p.tokensUsed.toLocaleString()} tokens
                   </div>
                 </div>
@@ -262,7 +262,7 @@ function StatCard({
   return (
     <div className={`bg-gradient-to-br ${color} to-gray-900/40 border ${border} rounded-xl p-5`}>
       <div className="flex items-center justify-between mb-2">
-        <span className={`text-xs ${accent}`}>{label}</span>
+        <span className={`text-[11px] uppercase tracking-wider ${accent}`}>{label}</span>
         <Icon className={`w-4 h-4 ${accent}`} />
       </div>
       <div className="text-2xl font-bold text-white font-mono">{value}</div>

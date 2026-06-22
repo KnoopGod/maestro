@@ -87,7 +87,7 @@ export function ClientGridWithFilters({
         <Link
           href="/clients/new"
           title="Créer le premier profil client HORECA"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium rounded-lg transition-all duration-150"
         >
           <Plus className="w-4 h-4" />
           Créer mon premier client
@@ -104,10 +104,10 @@ export function ClientGridWithFilters({
           <Link
             href={statusFilter === 'all' ? '/clients' : `/clients?status=${statusFilter}`}
             title="Afficher tous les types de clients"
-            className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all ${
+            className={`text-xs px-3 py-2 min-h-[36px] rounded-lg font-medium transition-all duration-150 ${
               filter === 'all'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm'
+                : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800 hover:border-gray-700'
             }`}
           >
             Tous ({counts.all})
@@ -121,10 +121,10 @@ export function ClientGridWithFilters({
                 key={t}
                 href={href}
                 title={`Afficher uniquement les clients de type ${cfg.label}`}
-                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 flex items-center gap-1.5 ${
                   active
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm'
+                    : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800 hover:border-gray-700'
                 }`}
               >
                 <span>{cfg.emoji}</span>
@@ -141,7 +141,7 @@ export function ClientGridWithFilters({
                 type="button"
                 onClick={selectVisible}
                 title="Sélectionner tous les clients actuellement visibles"
-                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-300 hover:bg-gray-800"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2 text-xs font-medium text-gray-300 hover:bg-gray-800 hover:border-gray-700 transition-all duration-150"
               >
                 <CheckSquare className="h-3.5 w-3.5" />
                 Tout sélectionner
@@ -174,7 +174,7 @@ export function ClientGridWithFilters({
         {/* Status filter */}
         {Object.values(statusCounts).some((n, i) => i > 0 && n > 0) && (
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] uppercase tracking-wider text-gray-500 mr-1">Statut</span>
+            <span className="text-[11px] uppercase tracking-wider text-gray-500 mr-1">Statut</span>
             <Link
               href={filter === 'all' ? '/clients' : `/clients?type=${filter}`}
               title="Afficher tous les statuts"
@@ -250,7 +250,7 @@ export function ClientGridWithFilters({
                 type="button"
                 onClick={clearSelection}
                 disabled={isPending}
-                className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 text-sm text-gray-300 transition-all duration-150 disabled:opacity-50"
               >
                 Annuler
               </button>
@@ -258,7 +258,7 @@ export function ClientGridWithFilters({
                 type="button"
                 onClick={deleteSelected}
                 disabled={isPending}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 active:scale-[0.98] transition-all duration-150 disabled:opacity-50"
               >
                 {isPending ? 'Suppression...' : 'Supprimer la sélection'}
               </button>

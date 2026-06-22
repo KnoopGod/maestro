@@ -163,7 +163,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
               return `/api/posts/export${str ? `?${str}` : ''}`
             })()}
             title="Exporter les posts filtrés en CSV"
-            className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 text-sm flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-sm flex items-center gap-1.5 transition-all duration-150"
           >
             <Download className="w-4 h-4" />
             CSV
@@ -171,7 +171,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
           <Link
             href={clientFilter ? `/studio?client=${clientFilter}` : '/studio'}
             title="Créer un nouveau post depuis le Studio"
-            className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5"
+            className="px-3 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium flex items-center gap-1.5 transition-all duration-150"
           >
             <Sparkles className="w-4 h-4" />
             Nouveau post
@@ -417,7 +417,7 @@ function MonthGroupedPosts({ posts, clientsMap, searchQuery, now, activePlanStr,
                   <span
                     key={status}
                     title={`${STATUS_INFO[status]?.label ?? status} : ${count}`}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${STATUS_BADGE_COLOR[status] ?? 'bg-gray-700 text-gray-400'}`}
+                    className={`text-[11px] px-1.5 py-0.5 rounded font-medium ${STATUS_BADGE_COLOR[status] ?? 'bg-gray-700 text-gray-400'}`}
                   >
                     {count} {STATUS_INFO[status]?.label ?? status}
                   </span>
@@ -473,7 +473,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
   const progress = getPostWorkflowProgress(post.status, Boolean(post.supervisorReview))
 
   return (
-    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
+    <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-gray-700 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150">
       <div className="flex items-start gap-4">
         {/* Image / placeholder */}
         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
@@ -489,7 +489,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span title={`Statut : ${statusCfg.label}`} className={`text-[10px] border rounded-full px-2 py-0.5 ${statusCfg.color} flex items-center gap-1`}>
+            <span title={`Statut : ${statusCfg.label}`} className={`text-[11px] border rounded-full px-2 py-0.5 ${statusCfg.color} flex items-center gap-1`}>
               <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
               {statusCfg.label}
             </span>
@@ -506,7 +506,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
               <span
                 key={p}
                 title={`Plateforme cible : ${PLATFORM_INFO[p]?.label ?? p}`}
-                className={`text-[10px] border rounded px-1.5 py-0.5 ${PLATFORM_INFO[p]?.color ?? 'border-gray-700 text-gray-400'}`}
+                className={`text-[11px] border rounded px-1.5 py-0.5 ${PLATFORM_INFO[p]?.color ?? 'border-gray-700 text-gray-400'}`}
               >
                 {PLATFORM_INFO[p]?.emoji} {PLATFORM_INFO[p]?.label}
               </span>
@@ -515,7 +515,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
               <Link
                 href={planUrl({ pillar: post.pillar })}
                 title={`Filtrer par pilier : ${post.pillar}`}
-                className="text-[10px] border rounded px-1.5 py-0.5 border-violet-700/40 text-violet-300 hover:bg-violet-900/20 transition-colors"
+                className="text-[11px] border rounded px-1.5 py-0.5 border-violet-700/40 text-violet-300 hover:bg-violet-900/20 transition-colors"
               >
                 {post.pillar}
               </Link>
@@ -524,7 +524,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
               <Link
                 href={planUrl({ type: post.contentType })}
                 title={`Filtrer par type : ${CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}`}
-                className="text-[10px] border rounded px-1.5 py-0.5 border-indigo-700/40 text-indigo-300 hover:bg-indigo-900/20 transition-colors"
+                className="text-[11px] border rounded px-1.5 py-0.5 border-indigo-700/40 text-indigo-300 hover:bg-indigo-900/20 transition-colors"
               >
                 {CONTENT_TYPE_LABELS[post.contentType] ?? post.contentType}
               </Link>
@@ -566,7 +566,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
             const ins = post.metaInsights[0]
             const engRate = ins.reach > 0 ? (((ins.likes ?? 0) + (ins.comments ?? 0) + (ins.shares ?? 0)) / ins.reach * 100).toFixed(1) : null
             return (
-              <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-gray-500 bg-gray-900/40 rounded-lg px-3 py-1.5">
+              <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-gray-400 bg-gray-900/40 rounded-lg px-3 py-1.5">
                 {ins.reach > 0 && <span className="text-gray-400">👁 {ins.reach.toLocaleString('fr-FR')} portée</span>}
                 {(ins.likes ?? 0) > 0 && <span>❤️ {ins.likes}</span>}
                 {(ins.comments ?? 0) > 0 && <span>💬 {ins.comments}</span>}
@@ -605,14 +605,14 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
 
           {/* Meta */}
           <div className="mt-3 rounded-lg border border-gray-800 bg-gray-950/40 p-2">
-            <div className="flex items-center justify-between gap-3 text-[10px] text-gray-500 mb-1.5">
+            <div className="flex items-center justify-between gap-3 text-[11px] text-gray-400 mb-1.5">
               <span>{progress.currentStep}</span>
               <span>{progress.percent}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-gray-800 overflow-hidden">
               <div className={`h-full ${progressBarClass(progress.tone)}`} style={{ width: `${progress.percent}%` }} />
             </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-gray-600">
+            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-gray-500">
               <span>Prochaine étape : {progress.nextStep}</span>
               <span>ETA : {progress.eta}</span>
               <InlineSchedulePicker postId={post.id} status={post.status} scheduledAt={post.scheduledAt} now={now} />
@@ -637,7 +637,7 @@ function PostRow({ post, client, searchQuery, now, detailHref, planUrl }: { post
                 <Copy className="w-3 h-3" />
                 Réutiliser
               </Link>
-              <DuplicatePostButton postId={post.id} className="flex items-center gap-1 text-[10px] text-gray-500 hover:text-gray-300 hover:underline transition-colors" />
+              <DuplicatePostButton postId={post.id} className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-300 hover:underline transition-colors" />
             </div>
           </div>
         </div>

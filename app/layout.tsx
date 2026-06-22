@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <Sidebar validationCount={validationCount} />
         <TopBar />
-        <BottomNav />
+        <BottomNav validationCount={validationCount} />
         <main
           id="main-content"
           aria-label="Contenu principal"

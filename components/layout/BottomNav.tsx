@@ -23,7 +23,7 @@ const NAV_MORE = [
   { href: '/settings',    icon: Settings,     label: 'Settings' },
 ]
 
-export function BottomNav() {
+export function BottomNav({ validationCount = 0 }: { validationCount?: number }) {
   const pathname = usePathname()
   const [showMore, setShowMore] = useState(false)
 
@@ -127,12 +127,19 @@ export function BottomNav() {
           })}
           <button
             onClick={() => setShowMore(true)}
-            aria-label="Afficher plus de navigation"
+            aria-label={validationCount > 0 ? `Afficher plus de navigation — ${validationCount} post${validationCount > 1 ? 's' : ''} à valider` : 'Afficher plus de navigation'}
             aria-expanded={showMore}
             title="Afficher les autres sections de l'application"
-            className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-500"
+            className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 relative"
           >
-            <MoreHorizontal aria-hidden="true" className="w-5 h-5" />
+            <div className="relative">
+              <MoreHorizontal aria-hidden="true" className="w-5 h-5" />
+              {validationCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[9px] font-bold bg-amber-500 text-black rounded-full px-1">
+                  {validationCount > 99 ? '99+' : validationCount}
+                </span>
+              )}
+            </div>
             <span aria-hidden="true" className="text-[10px]">Plus</span>
           </button>
         </div>

@@ -78,66 +78,59 @@ export default async function HomePage() {
 
       {/* Header */}
       <div className="border-b border-indigo-950/60 pb-5">
-        <div className="text-[9px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">
+        <div className="text-[11px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-1">
           MAESTRO // DASHBOARD
         </div>
         <h1 className="text-2xl font-bold text-[#E0E3FF] tracking-wide">
-          {greeting}, BRADLEY <span className="text-indigo-400">_</span>
+          {greeting} <span className="text-indigo-400">_</span>
         </h1>
-        <p className="text-[10px] text-gray-500 font-mono mt-1 tracking-wider">
+        <p className="text-[11px] text-gray-500 font-mono mt-1 tracking-wider">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
         </p>
       </div>
 
       {/* Stats */}
       <section aria-labelledby="stats-heading">
-        <h2 id="stats-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">{'// OVERVIEW'}</h2>
+        <h2 id="stats-heading" className="text-[11px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">{'// OVERVIEW'}</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
           <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
-          <StatCard label="COÛT IA CE MOIS"  value={costDisplay}           icon={BarChart3}   accent={costAccent}       sub="TOUS CLIENTS · CE MOIS" />
-          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'FILE VIDE' : `${toValidate} POST${toValidate > 1 ? 'S' : ''}`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
+          <StatCard label="ENGAGEMENT MOY."  value={`${avgEngagement}%`}   icon={BarChart3}   accent="text-emerald-400" sub="MOYENNE POSTS PUBLIÉS" />
+          <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'Aucun post en attente' : `${toValidate} post${toValidate > 1 ? 's' : ''} à relire`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
         </div>
       </section>
 
       {/* Priorités du jour */}
       {clients.length > 0 && (
         <section aria-labelledby="priorities-heading">
-          <h2 id="priorities-heading" className={`text-[8px] font-mono tracking-[0.3em] uppercase mb-3 ${urgentClients.length > 0 ? 'text-amber-500/70' : 'text-emerald-500/70'}`}>
+          <h2 id="priorities-heading" className={`text-[11px] font-mono tracking-[0.3em] uppercase mb-3 ${urgentClients.length > 0 ? 'text-amber-500/70' : 'text-emerald-500/70'}`}>
             {'// PRIORITÉS DU JOUR'}
           </h2>
           {urgentClients.length === 0 ? (
-            <div className="flex items-center gap-2.5 p-3 bg-emerald-950/20 border border-emerald-900/30">
+            <div className="flex items-center gap-2.5 p-3 bg-emerald-950/20 border border-emerald-900/30 rounded-xl">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
               <span className="text-[11px] text-emerald-400/80 font-mono tracking-wide">Tous vos clients sont à jour — aucun retard de publication</span>
             </div>
           ) : (
             <div className="space-y-2">
               {urgentClients.map(c => (
-                <div key={c.id} className="flex items-center gap-3 p-3 bg-amber-950/20 border border-amber-900/30 hover:border-amber-600/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.08)] transition-all">
-                  <Link
-                    href={`/clients/${c.id}`}
-                    title={`Ouvrir la fiche de ${c.name}`}
-                    className="flex items-center gap-3 flex-1 min-w-0"
-                  >
-                    <div className={`w-8 h-8 bg-gradient-to-br ${c.color} flex items-center justify-center text-sm flex-shrink-0`}>
-                      {c.emoji}
+                <Link
+                  key={c.id}
+                  href={`/clients/${c.id}`}
+                  title={`Ouvrir ${c.name} : client prioritaire à relancer`}
+                  className="flex items-center gap-3 p-3 bg-amber-950/20 border border-amber-900/30 hover:border-amber-600/50 hover:shadow-[0_0_12px_rgba(245,158,11,0.08)] transition-all duration-150 group rounded-xl"
+                >
+                  <div className={`w-8 h-8 bg-gradient-to-br ${c.color} flex items-center justify-center text-sm flex-shrink-0`}>
+                    {c.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-medium text-[#E0E3FF] truncate font-mono tracking-wide uppercase">{c.name}</div>
+                    <div className="text-[11px] text-amber-400/70 font-mono mt-0.5">
+                      {c.daysSincePost === null ? '⚑ Jamais publié' : `⚑ ${c.daysSincePost}j sans post`}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-medium text-[#E0E3FF] truncate font-mono tracking-wide uppercase">{c.name}</div>
-                      <div className="text-[9px] text-amber-400/70 font-mono mt-0.5">
-                        {c.daysSincePost === null ? '⚑ Jamais publié' : `⚑ ${c.daysSincePost}j sans post`}
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href={`/studio?client=${c.id}`}
-                    title={`Créer un post pour ${c.name}`}
-                    className="text-[9px] text-amber-700/60 font-mono hover:text-amber-400 transition-colors flex-shrink-0"
-                  >
-                    CRÉER →
-                  </Link>
-                </div>
+                  </div>
+                  <span className="text-[11px] text-amber-700/60 font-mono group-hover:text-amber-400 transition-colors flex-shrink-0">CRÉER →</span>
+                </Link>
               ))}
             </div>
           )}
@@ -146,7 +139,7 @@ export default async function HomePage() {
 
       {/* Week schedule */}
       <section aria-labelledby="today-heading">
-        <h2 id="today-heading" className="text-[8px] text-blue-600/60 font-mono tracking-[0.3em] uppercase mb-3">
+        <h2 id="today-heading" className="text-[11px] text-blue-600/60 font-mono tracking-[0.3em] uppercase mb-3">
           {'// PLANIFIÉ — 7 JOURS'}
         </h2>
         <TodayScheduleWidget posts={todayPosts} clientsMap={clientsMap} />
@@ -154,7 +147,7 @@ export default async function HomePage() {
 
       {/* Quick actions */}
       <section aria-labelledby="actions-heading">
-        <h2 id="actions-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">{'// ACTIONS RAPIDES'}</h2>
+        <h2 id="actions-heading" className="text-[11px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase mb-3">{'// ACTIONS RAPIDES'}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             href="/studio"
@@ -167,7 +160,7 @@ export default async function HomePage() {
               </div>
               <ArrowRight aria-hidden="true" className="w-4 h-4 text-indigo-600/40 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
             </div>
-            <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 01 //</div>
+            <div className="text-[11px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 01 //</div>
             <h3 className="text-base font-bold text-[#E0E3FF] tracking-wide uppercase">Créer un Post</h3>
             <p className="text-[11px] text-gray-500 font-mono mt-1.5 leading-relaxed">
               Texte · image · vidéo — agents IA spécialisés
@@ -185,10 +178,10 @@ export default async function HomePage() {
               </div>
               <ArrowRight aria-hidden="true" className="w-4 h-4 text-indigo-600/40 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
             </div>
-            <div className="text-[8px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 02 //</div>
+            <div className="text-[11px] text-indigo-600/50 font-mono tracking-[0.25em] uppercase mb-1">MODULE 02 //</div>
             <h3 className="text-base font-bold text-[#E0E3FF] tracking-wide uppercase">Gérer les Clients</h3>
             <p className="text-[11px] text-gray-500 font-mono mt-1.5 leading-relaxed">
-              {clients.length} clients locaux — stratégie · production · performance
+              {clients.length} client{clients.length > 1 ? 's' : ''} — stratégies · performances · publications
             </p>
           </Link>
         </div>
@@ -196,10 +189,10 @@ export default async function HomePage() {
 
       {/* Recent clients */}
       <section aria-labelledby="clients-heading">
-        <div className="border border-gray-800 bg-gray-900/40 p-5">
+        <div className="border border-gray-800 bg-gray-900/40 p-5 rounded-2xl">
           <div className="flex items-center justify-between mb-4">
-            <h2 id="clients-heading" className="text-[8px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase">{'// CLIENTS ENREGISTRÉS'}</h2>
-            <Link href="/clients" title="Afficher tous les clients enregistrés" className="text-[9px] text-indigo-500 hover:text-indigo-300 font-mono tracking-wider transition-colors">
+            <h2 id="clients-heading" className="text-[11px] text-indigo-600/50 font-mono tracking-[0.3em] uppercase">{'// CLIENTS ENREGISTRÉS'}</h2>
+            <Link href="/clients" title="Afficher tous les clients enregistrés" className="text-[11px] text-indigo-500 hover:text-indigo-300 font-mono tracking-wider transition-colors">
               VOIR TOUT ({clients.length}) →
             </Link>
           </div>
@@ -214,21 +207,32 @@ export default async function HomePage() {
                     key={c.id}
                     href={`/clients/${c.id}`}
                     title={`Ouvrir la fiche de ${c.name}`}
-                    className="flex items-center gap-3 p-3 border border-gray-800 hover:border-indigo-700/50 transition-all group"
+                    className="flex items-center gap-3 p-3 border border-gray-800 hover:border-indigo-700/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150 group rounded-xl"
                   >
                     <div className="relative flex-shrink-0">
                       <div className={`w-9 h-9 bg-gradient-to-br ${c.color} flex items-center justify-center text-base`}>
                         {c.emoji}
                       </div>
-                      <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900 ${healthDot(c.daysSincePost)}`} />
+                      <span
+                        className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-gray-900 ${healthDot(c.daysSincePost)}`}
+                        title={
+                          c.daysSincePost === null
+                            ? 'Aucune publication encore'
+                            : c.daysSincePost <= 3
+                            ? `Actif — dernier post il y a ${c.daysSincePost}j`
+                            : c.daysSincePost <= 7
+                            ? `Attention — ${c.daysSincePost}j sans post`
+                            : `Inactif — ${c.daysSincePost}j sans publication`
+                        }
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[11px] font-medium text-[#E0E3FF] truncate group-hover:text-indigo-300 transition-colors font-mono tracking-wide uppercase">{c.name}</div>
-                      <div className="text-[9px] text-gray-600 font-mono truncate">
+                      <div className="text-[11px] text-gray-600 font-mono truncate">
                         {typeCfg?.label ?? ''}{c.city ? ` // ${c.city}` : ''}
                       </div>
                     </div>
-                    <span className="text-[9px] text-indigo-700/60 font-mono">►</span>
+                    <span className="text-[11px] text-indigo-700/60 font-mono group-hover:text-indigo-400 transition-colors">►</span>
                   </Link>
                 )
               })}
@@ -252,11 +256,11 @@ function StatCard({
         : 'border-gray-800 hover:border-indigo-700/50 hover:shadow-[0_0_16px_rgba(99,102,241,0.1)]'
     }`}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[8px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase">{label}</span>
+        <span className="text-[11px] text-indigo-600/50 font-mono tracking-[0.2em] uppercase">{label}</span>
         <Icon aria-hidden="true" className={`w-3.5 h-3.5 ${accent} group-hover:scale-110 transition-transform duration-200`} />
       </div>
       <div className="text-2xl lg:text-3xl font-bold text-[#E0E3FF] font-mono">{value}</div>
-      <div className={`text-[8px] font-mono tracking-[0.15em] mt-1.5 ${urgent ? 'text-amber-600/70' : 'text-gray-600'}`}>{sub}</div>
+      <div className={`text-[11px] font-mono tracking-[0.15em] mt-1.5 ${urgent ? 'text-amber-600/70' : 'text-gray-600'}`}>{sub}</div>
     </div>
   )
   return href ? <Link href={href} title="Ouvrir la file de validation des posts à relire">{inner}</Link> : inner

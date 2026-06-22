@@ -63,8 +63,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-6 max-w-6xl">
       {/* Breadcrumb */}
-      <Link href="/clients" title="Retourner à la liste complète des clients" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors">
-        <ArrowLeft className="w-4 h-4" />
+      <Link href="/clients" title="Retourner à la liste complète des clients" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 group transition-all duration-150">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
         Retour aux clients
       </Link>
 
@@ -93,7 +93,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <Link
             href={`/studio?client=${client.id}`}
             title={`Créer un post complet pour ${client.name}`}
-            className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium flex items-center gap-1.5 transition-all duration-150"
           >
             <Sparkles className="w-4 h-4" />
             Créer un post
@@ -109,7 +109,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <Link
             href={`/clients/${client.id}/edit`}
             title={`Modifier le profil, la stratégie et la voix de marque de ${client.name}`}
-            className="px-3 py-2 rounded-lg border border-gray-800 hover:bg-gray-800 text-gray-300 text-sm flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-sm flex items-center gap-1.5 transition-all duration-150"
           >
             <Edit3 className="w-4 h-4" />
             Éditer
@@ -144,7 +144,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
 
-        <Link href={`/clients/${client.id}/agents`} title="Voir les agents IA qui ont travaillé pour ce client et leurs livrables" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 transition-all flex items-center gap-3 group">
+        <Link href={`/clients/${client.id}/agents`} title="Voir les agents IA qui ont travaillé pour ce client et leurs livrables" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150 flex items-center gap-3 group">
           <Bot className="w-5 h-5 text-purple-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Agents</div>
@@ -152,7 +152,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
 
-        <Link href={`/plan?client=${client.id}`} title="Voir les posts planifiés, publiés et en préparation pour ce client" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 transition-all flex items-center gap-3 group">
+        <Link href={`/plan?client=${client.id}`} title="Voir les posts planifiés, publiés et en préparation pour ce client" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150 flex items-center gap-3 group">
           <CalendarDays className="w-5 h-5 text-blue-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Calendrier</div>
@@ -160,7 +160,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
 
-        <Link href={`/clients/${client.id}/analytics`} title="Voir les performances des posts publiés et récupérer les insights Meta" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 transition-all flex items-center gap-3 group">
+        <Link href={`/clients/${client.id}/analytics`} title="Voir les performances des posts publiés et récupérer les insights Meta" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150 flex items-center gap-3 group">
           <BarChart3 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Analytics</div>
@@ -176,7 +176,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </Link>
 
-        <Link href={`/clients/${client.id}/connections`} title="Connecter Facebook, Instagram et les plateformes nécessaires pour publier" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 transition-all flex items-center gap-3 group">
+        <Link href={`/clients/${client.id}/connections`} title="Connecter Facebook, Instagram et les plateformes nécessaires pour publier" className="bg-gray-900/40 border border-gray-800 rounded-xl p-4 hover:border-purple-700/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150 flex items-center gap-3 group">
           <Settings2 className="w-5 h-5 text-gray-400 flex-shrink-0" />
           <div>
             <div className="text-sm font-medium text-white">Connexions</div>
@@ -338,7 +338,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <div className="flex-1">
             <div className="text-sm font-semibold text-white flex items-center gap-2 mb-1">
               Direction Artistique active
-              <span className="text-[10px] bg-emerald-900/40 text-emerald-400 border border-emerald-800/40 rounded-full px-2 py-0.5">
+              <span className="text-[11px] bg-emerald-900/40 text-emerald-400 border border-emerald-800/40 rounded-full px-2 py-0.5">
                 injectée dans les générations
               </span>
             </div>
@@ -347,7 +347,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               {identity.palette.slice(0, 5).map((c, i) => (
                 <div key={i} className="w-5 h-5 rounded-md border border-gray-700" style={{ backgroundColor: c }} title={c} />
               ))}
-              <span className="text-[10px] text-purple-300 ml-2">
+              <span className="text-[11px] text-purple-300 ml-2">
                 {identity.styleKeywords.slice(0, 3).join(' · ')}
               </span>
             </div>
@@ -428,11 +428,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                   <div className="flex-1 min-w-0">
                     <div className="text-sm text-gray-300">{p.name}</div>
                     {account?.handle && (
-                      <div className="text-[10px] text-gray-500 truncate">{account.handle}</div>
+                      <div className="text-[11px] text-gray-500 truncate">{account.handle}</div>
                     )}
                   </div>
                   {account ? (
-                    <span className="text-[10px] text-emerald-400 bg-emerald-950/30 border border-emerald-700/40 rounded-full px-2 py-0.5">
+                    <span className="text-[11px] text-emerald-400 bg-emerald-950/30 border border-emerald-700/40 rounded-full px-2 py-0.5">
                       ✓ Connecté
                     </span>
                   ) : (
@@ -449,7 +449,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             })}
           </div>
           {socialAccounts.length === 0 && (
-            <p className="text-[11px] text-gray-600 mt-3">
+            <p className="text-[11px] text-gray-500 mt-3">
               Connecte un compte dans{' '}
               <Link href={`/clients/${client.id}/connections`} title="Ouvrir les connexions de ce client" className="text-purple-400 hover:underline">
                 Connexions
@@ -581,10 +581,10 @@ function ClientStat({ label, value, sub, color, href }: {
   label: string; value: string | number; sub: string; color: string; href?: string
 }) {
   const content = (
-    <div className={`bg-gray-900/40 border border-gray-800 rounded-xl p-3 ${href ? 'hover:border-purple-700/50 transition-colors' : ''}`}>
-      <div className="text-[10px] uppercase tracking-wider text-gray-500">{label}</div>
+    <div className={`bg-gray-900/40 border border-gray-800 rounded-xl p-3 ${href ? 'hover:border-purple-700/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-150' : ''}`}>
+      <div className="text-[11px] uppercase tracking-wider text-gray-500">{label}</div>
       <div className={`text-xl font-bold mt-0.5 ${color}`}>{value}</div>
-      <div className="text-[10px] text-gray-600 mt-0.5">{sub}</div>
+      <div className="text-[11px] text-gray-500 mt-0.5">{sub}</div>
     </div>
   )
   return href ? <Link href={href} title={`${label} : ${value}`}>{content}</Link> : content
@@ -593,7 +593,7 @@ function ClientStat({ label, value, sub, color, href }: {
 function BusinessInfo({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
     <div className="rounded-xl border border-emerald-900/30 bg-gray-950/30 p-3">
-      <div className="text-[10px] uppercase tracking-wider text-emerald-500/70">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider text-emerald-500/70">{label}</div>
       <div className="mt-1 text-sm font-medium leading-snug text-white">{value}</div>
       {detail ? <div className="mt-1 text-[11px] text-gray-500">{detail}</div> : null}
     </div>
@@ -639,9 +639,9 @@ function RecentPostRow({ post, prevId, nextId }: { post: Post; prevId?: string; 
       <Icon className={`w-4 h-4 flex-shrink-0 ${cfg.color}`} />
       <div className="flex-1 min-w-0">
         <div className="text-sm text-white truncate">{post.brief || post.caption.substring(0, 60)}</div>
-        <div className="text-[10px] text-gray-500">{post.platforms.join(' + ')} · {when}</div>
+        <div className="text-[11px] text-gray-500">{post.platforms.join(' + ')} · {when}</div>
       </div>
-      <span className={`text-[10px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
+      <span className={`text-[11px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
     </Link>
   )
 }
@@ -676,9 +676,9 @@ function UpcomingPostRow({ post, referenceTs, prevId, nextId }: { post: Post; re
       </span>
       <div className="flex-1 min-w-0">
         <div className="text-sm text-white truncate">{post.brief || post.caption.substring(0, 60)}</div>
-        <div className="text-[10px] text-gray-500">{dateLabel}</div>
+        <div className="text-[11px] text-gray-500">{dateLabel}</div>
       </div>
-      <span className="text-[10px] text-blue-300 flex-shrink-0 font-medium">{countdown}</span>
+      <span className="text-[11px] text-blue-300 flex-shrink-0 font-medium">{countdown}</span>
     </Link>
   )
 }
@@ -702,9 +702,9 @@ function AgentJobRow({ job }: { job: AgentJob }) {
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
       <div className="flex-1 min-w-0">
         <div className="text-sm text-white truncate">{job.briefSummary ?? 'Job'}</div>
-        <div className="text-[10px] text-gray-500">{when}</div>
+        <div className="text-[11px] text-gray-500">{when}</div>
       </div>
-      <span className={`text-[10px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
+      <span className={`text-[11px] flex-shrink-0 ${cfg.color}`}>{cfg.label}</span>
     </Link>
   )
 }

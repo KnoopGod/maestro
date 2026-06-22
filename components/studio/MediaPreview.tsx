@@ -21,22 +21,27 @@ export function MediaPreview({
 
   if (contentType === 'reel') {
     return (
-      <video
-        src={imageUrl}
-        controls
-        className={`${className} w-full bg-black object-cover`}
-      />
+      <div className={`${className} relative overflow-hidden bg-black`}>
+        <video
+          src={imageUrl}
+          controls
+          className="w-full h-full object-cover"
+        />
+      </div>
     )
   }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={imageUrl}
-      alt="Aperçu du post"
-      loading="lazy"
-      decoding="async"
-      className={`${className} w-full object-cover`}
-    />
+    <div className={`${className} relative overflow-hidden group`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt="Aperçu du post"
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+      />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 pointer-events-none" />
+    </div>
   )
 }
