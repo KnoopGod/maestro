@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-19
+Dernière mise à jour : 2026-06-21
 
 ---
 
@@ -18,7 +18,7 @@ Dernière mise à jour : 2026-06-19
 | Validation / Supervisor | ✅ Fonctionnel | Filtres par verdict |
 | Publication Meta | ✅ Fonctionnel | Facebook + Instagram |
 | Calendrier | ✅ Fonctionnel | Planification + cron |
-| Analytics | ✅ Fonctionnel | Stats basiques |
+| Analytics | ✅ Fonctionnel | Stats basiques + tab Croissance |
 | Connexions Meta | ✅ Fonctionnel | OAuth + token storage |
 | Tunnel de lancement | ✅ Fonctionnel | 5 étapes guidées |
 | Dashboard alertes | ✅ Fonctionnel | Posts en échec + planifiés |
@@ -41,6 +41,7 @@ Dernière mise à jour : 2026-06-19
 | Business Profile + Playbooks | Types client, formulaires new/edit, Vertical Playbooks HORECA | ✅ |
 | Test Drive Cockpit | Panneau 6 étapes sur la fiche client, % de complétion | ✅ |
 | Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
+| Dashboard croissance | `/analytics/growth` — suivi objectifs business par client, scores d'impact, coûts IA, engagement Meta, alerte profils manquants | ✅ |
 
 ### Note : proxy.ts
 
@@ -54,8 +55,7 @@ Dernière mise à jour : 2026-06-19
 - Génération vidéo
 - Tests automatisés
 - Versioning des posts
-- Dashboard croissance (KPIs chiffre d'affaires par client, suivi objectifs business)
-- Revenue Loop minimale (mesurer si l'objectif business est atteint post par post)
+- Revenue Loop minimale (mesurer si l'objectif business est atteint post par post — ex. : tracker les DMs reçus après un post)
 - AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
 
 ---
@@ -65,8 +65,8 @@ Dernière mise à jour : 2026-06-19
 | Branche | Contenu |
 |---|---|
 | `main` | Branche production |
-| `claude/maestro-project-handoff-L67ha` | Session courante (Studio V2 + dashboard) |
-| `docs/phase0-infrastructure` | Phase 0 en cours (ce commit) |
+| `claude/gifted-keller-1d9dat` | Session courante (Dashboard Croissance) |
+| `codex/ai-router-foundation` | Fondation IA SELECT (non mergé) |
 | `codex/studio-v2-specs-009-012` | Studio V2 implémenté par Codex |
 | `codex/mvp-hardening` | Durcissement MVP (ancienne) |
 
