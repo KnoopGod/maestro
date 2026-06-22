@@ -11,6 +11,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import type { ClientAsset } from '@/types/asset'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface IdentitySynthesisResult {
   palette: string[]
@@ -99,7 +100,7 @@ Réponds UNIQUEMENT le JSON.`
   // Opus 4.7 with adaptive thinking — DA synthesis benefits from deep reasoning
   // about cross-asset patterns. Thinking content omitted (we only use the JSON).
   const message = await claude.messages.create({
-    model: 'claude-opus-4-7',
+    model: AGENT_MODELS.opus,
     max_tokens: 4096,
     thinking: { type: 'adaptive' },
     output_config: { effort: 'high' },
@@ -123,12 +124,11 @@ Réponds UNIQUEMENT le JSON.`
 
   const inputTokens = message.usage.input_tokens
   const outputTokens = message.usage.output_tokens
-  // Opus 4.7 pricing: $5/1M input, $25/1M output
-  const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
+  const cost = calcCost('opus', inputTokens, outputTokens)
 
   return {
     ...parsed,
-    cost: parseFloat(cost.toFixed(6)),
+    cost,
     tokensUsed: inputTokens + outputTokens,
   }
 }

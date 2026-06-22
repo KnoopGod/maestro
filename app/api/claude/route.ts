@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { prompt, model = 'claude-sonnet-4-6', maxTokens = 1024 } = await req.json()
+    const { prompt, model = AGENT_MODELS.sonnet, maxTokens = 1024 } = await req.json()
 
     if (!prompt) {
       return NextResponse.json({ error: 'prompt requis' }, { status: 400 })
@@ -31,8 +32,11 @@ export async function POST(req: NextRequest) {
     const inputTokens = message.usage.input_tokens
     const outputTokens = message.usage.output_tokens
 
-    // Pricing claude-sonnet-4-6 : $3/1M input, $15/1M output
-    const cost = (inputTokens * 3 + outputTokens * 15) / 1_000_000
+    const cost = model === AGENT_MODELS.haiku
+      ? calcCost('haiku', inputTokens, outputTokens)
+      : model === AGENT_MODELS.opus
+        ? calcCost('opus', inputTokens, outputTokens)
+        : calcCost('sonnet', inputTokens, outputTokens)
 
     return NextResponse.json({
       ai: 'claude',
@@ -41,7 +45,7 @@ export async function POST(req: NextRequest) {
       tokensUsed: inputTokens + outputTokens,
       inputTokens,
       outputTokens,
-      cost: parseFloat(cost.toFixed(6)),
+      cost,
     })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Erreur Claude API'
@@ -53,6 +57,6 @@ export async function GET() {
   const apiKey = process.env.ANTHROPIC_API_KEY
   return NextResponse.json({
     status: apiKey ? 'configured' : 'missing_key',
-    model: 'claude-sonnet-4-6',
+    model: AGENT_MODELS.sonnet,
   })
 }

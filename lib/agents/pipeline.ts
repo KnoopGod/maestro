@@ -9,6 +9,7 @@ import { generateVideo } from '@/lib/agents/video-creator'
 import { supervisePost } from '@/lib/agents/supervisor'
 import { buildImpactAnalysis, scoreImpact } from '@/lib/agents/impact-scorer'
 import { withTracking, skipTracking } from '@/lib/agents/tracking'
+import { AGENT_MODELS } from '@/lib/agents/config'
 
 function engagementRate(post: Post): number {
   if (!post.metaInsights.length) return 0
@@ -226,7 +227,7 @@ export async function runPostPipeline(input: {
   if (!finalPost) throw new Error('Post créé introuvable après supervision')
 
   const visualModel = image.assetId
-    ? (contentType === 'reel' ? 'luma-dream-machine' : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'))
+    ? (contentType === 'reel' ? 'luma-dream-machine' : AGENT_MODELS.image)
     : 'visual-skipped'
 
   return {

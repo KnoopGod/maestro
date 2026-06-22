@@ -3,6 +3,7 @@ import type { Client } from '@/types/client'
 import type { VisualIdentity } from '@/types/asset'
 import { createAsset } from '@/lib/db/queries/assets'
 import { saveClientBuffer } from '@/lib/storage/local'
+import { AGENT_MODELS } from '@/lib/agents/config'
 
 type ImageResponseItem = {
   b64_json?: string | null
@@ -52,7 +53,7 @@ export async function generateAndStoreImage(input: {
   const openai = new OpenAI({ apiKey })
 
   const image = await openai.images.generate({
-    model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
+    model: AGENT_MODELS.image,
     prompt,
     size: '1024x1024',
   })
