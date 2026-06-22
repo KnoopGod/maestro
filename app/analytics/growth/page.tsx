@@ -164,7 +164,7 @@ export default async function GrowthPage() {
               {withoutProfile.map(d => (
                 <Link
                   key={d.client.id}
-                  href={`/clients/${d.client.id}/business`}
+                  href={`/clients/${d.client.id}/edit`}
                   className="inline-flex items-center gap-1.5 text-xs px-2 py-1 bg-amber-950/40 text-amber-400 border border-amber-800/30 rounded-lg hover:bg-amber-900/30 transition-colors"
                 >
                   {d.client.emoji} {d.client.name} →
@@ -242,7 +242,7 @@ function ClientGrowthCard({ data }: { data: ClientDataItem }) {
 
   return (
     <Link
-      href={`/clients/${client.id}`}
+      href={`/clients/${client.id}/growth`}
       className="block bg-gray-900/40 border border-gray-800 rounded-2xl p-5 hover:border-indigo-800/50 hover:bg-gray-800/30 transition-all group"
     >
       {/* Client header */}
@@ -258,13 +258,9 @@ function ClientGrowthCard({ data }: { data: ClientDataItem }) {
               {delayLabel && <span className="opacity-60 ml-1">· {delayLabel}</span>}
             </span>
           ) : (
-            <Link
-              href={`/clients/${client.id}/business`}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="inline-block text-[10px] px-2 py-0.5 mt-0.5 rounded border border-amber-800/30 bg-amber-950/20 text-amber-500 hover:text-amber-300 transition-colors"
-            >
-              Configurer le profil →
-            </Link>
+            <span className="inline-block text-[10px] px-2 py-0.5 mt-0.5 rounded border border-amber-800/30 bg-amber-950/20 text-amber-500">
+              Profil business à configurer
+            </span>
           )}
         </div>
       </div>

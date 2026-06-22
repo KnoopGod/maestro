@@ -41,7 +41,8 @@ Dernière mise à jour : 2026-06-21
 | Business Profile + Playbooks | Types client, formulaires new/edit, Vertical Playbooks HORECA | ✅ |
 | Test Drive Cockpit | Panneau 6 étapes sur la fiche client, % de complétion | ✅ |
 | Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
-| Dashboard croissance | `/analytics/growth` — suivi objectifs business par client, scores d'impact, coûts IA, engagement Meta, alerte profils manquants | ✅ |
+| Dashboard croissance global | `/analytics/growth` — suivi objectifs business par client, scores d'impact, coûts IA, engagement Meta, alerte profils manquants | ✅ |
+| Dashboard croissance client | `/clients/[id]/growth` — santé de trajectoire, KPIs mensuels, tendance 3 mois, recommandations actionnables | ✅ |
 
 ### Note : proxy.ts
 
@@ -55,7 +56,7 @@ Dernière mise à jour : 2026-06-21
 - Génération vidéo
 - Tests automatisés
 - Versioning des posts
-- Revenue Loop minimale (mesurer si l'objectif business est atteint post par post — ex. : tracker les DMs reçus après un post)
+- Revenue Loop minimale (conversion tracking réel : appels, réservations, DMs générés par post)
 - AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
 
 ---
@@ -65,7 +66,9 @@ Dernière mise à jour : 2026-06-21
 | Branche | Contenu |
 |---|---|
 | `main` | Branche production |
-| `claude/gifted-keller-1d9dat` | Session courante (Dashboard Croissance) |
+| `claude/gifted-keller-1d9dat` | Dashboard Croissance global intégré |
+| `claude/gifted-keller-froavj` | Dashboard Croissance client intégré |
+| `codex/interface-color-themes` | Option couleur interface + intégration dashboards croissance |
 | `codex/ai-router-foundation` | Fondation IA SELECT (non mergé) |
 | `codex/studio-v2-specs-009-012` | Studio V2 implémenté par Codex |
 | `codex/mvp-hardening` | Durcissement MVP (ancienne) |
