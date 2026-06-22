@@ -95,7 +95,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard label="CLIENTS ACTIFS"   value={activeClients.length} icon={Users}       accent="text-indigo-400"  sub={`${clients.length} TOTAL`} />
           <StatCard label="POSTS CE MOIS"    value={totalPosts}            icon={Sparkles}    accent="text-pink-400"    sub="TOUS CLIENTS" />
-          <StatCard label="ENGAGEMENT MOY."  value={`${avgEngagement}%`}   icon={BarChart3}   accent="text-emerald-400" sub="MOYENNE POSTS PUBLIÉS" />
+          <StatCard label="COÛT IA CE MOIS"   value={costDisplay}           icon={BarChart3}   accent={costAccent}       sub={aiCostThisMonth > 20 ? 'BUDGET DÉPASSÉ' : 'TOUS AGENTS'} />
           <StatCard label="À VALIDER"        value={toValidate}            icon={CalendarDays} accent="text-amber-400"  sub={toValidate === 0 ? 'Aucun post en attente' : `${toValidate} post${toValidate > 1 ? 's' : ''} à relire`} href={toValidate > 0 ? '/validation' : undefined} urgent={toValidate > 0} />
         </div>
       </section>
