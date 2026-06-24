@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-19
+Dernière mise à jour : 2026-06-24
 
 ---
 
@@ -41,6 +41,8 @@ Dernière mise à jour : 2026-06-19
 | Business Profile + Playbooks | Types client, formulaires new/edit, Vertical Playbooks HORECA | ✅ |
 | Test Drive Cockpit | Panneau 6 étapes sur la fiche client, % de complétion | ✅ |
 | Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
+| Design pro-max V1 | Refonte complète de toutes les pages (dashboard, studio, validation, clients, calendrier, agents, settings, usage, connexions, login) | ✅ |
+| Fix TypeScript dashboard | avgEngagement corrigé, dead code cost retiré du Promise.all | ✅ |
 
 ### Note : proxy.ts
 
@@ -65,10 +67,8 @@ Dernière mise à jour : 2026-06-19
 | Branche | Contenu |
 |---|---|
 | `main` | Branche production |
-| `claude/maestro-project-handoff-L67ha` | Session courante (Studio V2 + dashboard) |
-| `docs/phase0-infrastructure` | Phase 0 en cours (ce commit) |
-| `codex/studio-v2-specs-009-012` | Studio V2 implémenté par Codex |
-| `codex/mvp-hardening` | Durcissement MVP (ancienne) |
+| `claude/gifted-keller-5s54x7` | Session courante — design pro-max + fix TS dashboard (11 commits) |
+| `codex/selective-handoff-recovery` | PR #7 open — config modèles IA centralisée + fallback DB temp |
 
 ---
 
