@@ -11,6 +11,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import { CLIENT_TYPES } from '@/types/client'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface LaunchAdvice {
   step2: {
@@ -103,7 +104,7 @@ Réponds en JSON strict, sans backticks, sans markdown, exactement ce format :
   try {
     const claude = new Anthropic({ apiKey })
     const message = await claude.messages.create({
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
       max_tokens: 3000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
@@ -116,13 +117,13 @@ Réponds en JSON strict, sans backticks, sans markdown, exactement ce format :
 
     const inputTokens = message.usage.input_tokens
     const outputTokens = message.usage.output_tokens
-    const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
+    const cost = calcCost('opus', inputTokens, outputTokens)
 
     return {
       advice: normalizeAdvice(parsed, fallback),
-      cost: parseFloat(cost.toFixed(6)),
+      cost,
       tokensUsed: inputTokens + outputTokens,
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
     }
   } catch {
     return { advice: fallback, cost: 0, tokensUsed: 0, model: 'fallback' }

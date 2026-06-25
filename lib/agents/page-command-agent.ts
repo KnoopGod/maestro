@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePageAgent, type PageAgentProfile } from './page-agent-registry'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface PageAgentResponse {
   agent: PageAgentProfile
@@ -37,7 +38,7 @@ Réponds en JSON strict:
 }`
 
   const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: AGENT_MODELS.sonnet,
     max_tokens: 1200,
     system,
     messages: [{ role: 'user', content: input.prompt }],
@@ -45,7 +46,7 @@ Réponds en JSON strict:
 
   const textBlock = message.content.find(block => block.type === 'text')
   const raw = textBlock?.type === 'text' ? textBlock.text : ''
-  const cost = (message.usage.input_tokens * 3 + message.usage.output_tokens * 15) / 1_000_000
+  const cost = calcCost('sonnet', message.usage.input_tokens, message.usage.output_tokens)
 
   try {
     const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
@@ -55,8 +56,8 @@ Réponds en JSON strict:
       answer: parsed.answer || raw || 'Ordre reçu.',
       nextActions: Array.isArray(parsed.nextActions) ? parsed.nextActions : [],
       risks: Array.isArray(parsed.risks) ? parsed.risks : [],
-      cost: parseFloat(cost.toFixed(6)),
-      model: 'claude-sonnet-4-6',
+      cost,
+      model: AGENT_MODELS.sonnet,
     }
   } catch {
     return {
@@ -64,8 +65,8 @@ Réponds en JSON strict:
       answer: raw || 'Ordre reçu.',
       nextActions: [],
       risks: [],
-      cost: parseFloat(cost.toFixed(6)),
-      model: 'claude-sonnet-4-6',
+      cost,
+      model: AGENT_MODELS.sonnet,
     }
   }
 }

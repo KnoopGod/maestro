@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { PageAgentCopilot } from '@/components/agents/PageAgentCopilot'
+import { ThemeBootScript } from '@/components/theme/ThemeBootScript'
 import { countPostsByStatus } from '@/lib/db/queries/posts'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -34,6 +35,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} dark h-full`}>
+      <head>
+        <ThemeBootScript />
+      </head>
       <body className="min-h-full bg-[#07081A] text-[#E0E3FF] antialiased">
         {/* WCAG 2.4.1 — Lien d'évitement clavier */}
         <a href="#main-content" className="skip-link">

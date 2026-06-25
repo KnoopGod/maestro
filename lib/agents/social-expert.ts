@@ -6,6 +6,7 @@ import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { getPlaybook } from '@/lib/playbooks'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
 
@@ -284,7 +285,7 @@ Génère une version optimisée pour chaque plateforme demandée.
   // Opus 4.7 with adaptive thinking — best quality on brand voice matching.
   // Thinking content omitted by default (we don't surface it to users).
   const message = await claude.messages.create({
-    model: 'claude-opus-4-7',
+    model: AGENT_MODELS.opus,
     max_tokens: 4096, // headroom for adaptive thinking + JSON output
     thinking: { type: 'adaptive' },
     output_config: { effort: 'high' },
@@ -322,15 +323,14 @@ Génère une version optimisée pour chaque plateforme demandée.
 
   const inputTokens = message.usage.input_tokens
   const outputTokens = message.usage.output_tokens
-  // Opus 4.7 pricing: $5/1M input, $25/1M output
-  const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
+  const cost = calcCost('opus', inputTokens, outputTokens)
 
   return {
     captions: captionsWithCount,
     reasoning: parsed.reasoning,
-    cost: parseFloat(cost.toFixed(6)),
+    cost,
     tokensUsed: inputTokens + outputTokens,
-    model: 'claude-opus-4-7',
+    model: AGENT_MODELS.opus,
   }
 }
 

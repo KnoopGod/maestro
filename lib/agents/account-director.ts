@@ -6,6 +6,7 @@ import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { getPlaybook } from '@/lib/playbooks'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface AccountDirective {
   /** Pilier prioritaire à traiter ensuite (issu de client.strategy.contentPillars). */
@@ -216,7 +217,7 @@ Réponds en JSON strict, sans backticks, sans markdown, exactement ce format :
   try {
     const claude = new Anthropic({ apiKey })
     const message = await claude.messages.create({
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
       max_tokens: 2048,
       thinking: { type: 'adaptive' },
       output_config: { effort: 'high' },
@@ -229,13 +230,13 @@ Réponds en JSON strict, sans backticks, sans markdown, exactement ce format :
     const parsed = parseDirective(rawText)
     const inputTokens = message.usage.input_tokens
     const outputTokens = message.usage.output_tokens
-    const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
+    const cost = calcCost('opus', inputTokens, outputTokens)
 
     return {
       directive: normalizeDirective(parsed, fallback, client.strategy.contentPillars),
-      cost: parseFloat(cost.toFixed(6)),
+      cost,
       tokensUsed: inputTokens + outputTokens,
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
     }
   } catch {
     return { directive: fallback, cost: 0, tokensUsed: 0, model: 'fallback' }

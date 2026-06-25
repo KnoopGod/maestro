@@ -6,6 +6,7 @@ import {
   createAgentQualityEnvelope,
   type AgentQualityEnvelope,
 } from '@/lib/agents/prompts'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface SupervisorResult {
   review: SupervisorReview
@@ -137,7 +138,7 @@ Réponds en français, en JSON strict, sans markdown.`)
   try {
     const claude = new Anthropic({ apiKey })
     const message = await claude.messages.create({
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
       max_tokens: 2048,
       thinking: { type: 'adaptive' },
       output_config: { effort: 'high' },
@@ -160,16 +161,16 @@ Réponds en français, en JSON strict, sans markdown.`)
 
     const inputTokens = message.usage.input_tokens
     const outputTokens = message.usage.output_tokens
-    const cost = (inputTokens * 5 + outputTokens * 25) / 1_000_000
+    const cost = calcCost('opus', inputTokens, outputTokens)
 
     const review = normalizeReview(parsed, post.impactScore)
 
     return {
       review,
       qualityEnvelope: buildSupervisorEnvelope(review),
-      cost: parseFloat(cost.toFixed(6)),
+      cost,
       tokensUsed: inputTokens + outputTokens,
-      model: 'claude-opus-4-7',
+      model: AGENT_MODELS.opus,
     }
   } catch {
     const review = fallbackSupervisorReview(input)

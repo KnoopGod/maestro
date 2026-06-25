@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
+import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface UrlBriefResult {
   brief: string
@@ -92,7 +93,7 @@ Analyse ce contenu et génère un JSON avec ces champs :
 JSON uniquement.`
 
   const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+    model: AGENT_MODELS.haiku,
     max_tokens: 512,
     system: systemPrompt,
     messages: [{ role: 'user', content: userPrompt }],
@@ -101,7 +102,7 @@ JSON uniquement.`
   const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
   const inputTokens = response.usage.input_tokens
   const outputTokens = response.usage.output_tokens
-  const cost = parseFloat(((inputTokens * 0.00000080) + (outputTokens * 0.00000400)).toFixed(6))
+  const cost = calcCost('haiku', inputTokens, outputTokens)
 
   // Parse JSON with regex fallback
   let parsed: { brief?: string; title?: string; keyPoints?: string[]; suggestedPillar?: string | null } = {}
