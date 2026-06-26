@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-21
+Dernière mise à jour : 2026-06-26
 
 ---
 
@@ -43,6 +43,7 @@ Dernière mise à jour : 2026-06-21
 | Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
 | Dashboard croissance global | `/analytics/growth` — suivi objectifs business par client, scores d'impact, coûts IA, engagement Meta, alerte profils manquants | ✅ |
 | Dashboard croissance client | `/clients/[id]/growth` — santé de trajectoire, KPIs mensuels, tendance 3 mois, recommandations actionnables | ✅ |
+| AI Router Phase A | Fondation types + router basique `lib/ai/` — AIProvider, AICapability, AITaskType, AIRoutingDecision, routing Anthropic/OpenAI par tâche | ✅ |
 
 ### Note : proxy.ts
 
@@ -57,7 +58,9 @@ Dernière mise à jour : 2026-06-21
 - Tests automatisés
 - Versioning des posts
 - Revenue Loop minimale (conversion tracking réel : appels, réservations, DMs générés par post)
-- AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
+- AI Router Phase B — UI Paramètres → IA & Modèles (providers connectés, capacités disponibles)
+- AI Router Phase C — Optimisation coûts + Profit Controller
+- AI Router Phase D — Multi-provider (Gemini, Groq, Replicate, Luma...)
 
 ---
 
