@@ -562,14 +562,3 @@ export async function listOverduePosts(): Promise<Post[]> {
   )
   return rows.map(mapRow)
 }
-
-/** Sum of AI cost for all posts created since the start of the current month. */
-export async function sumPostsCostThisMonth(): Promise<number> {
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
-  const row = await queryOne<{ total: number | null }>(
-    `SELECT SUM(cost) AS total FROM posts WHERE created_at >= ?`,
-    [monthStart]
-  )
-  return row?.total ?? 0
-}

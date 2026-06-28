@@ -7,10 +7,11 @@ export const AGENT_MODELS = {
 
 export type AgentModelTier = 'opus' | 'sonnet' | 'haiku'
 
+// Source: https://www.anthropic.com/pricing (claude-opus-4, claude-sonnet-4, claude-haiku-4)
 const PRICING_PER_1M_TOKENS: Record<AgentModelTier, { input: number; output: number }> = {
-  opus: { input: 5, output: 25 },
+  opus: { input: 15, output: 75 },
   sonnet: { input: 3, output: 15 },
-  haiku: { input: 1, output: 5 },
+  haiku: { input: 0.8, output: 4 },
 }
 
 export function calcCost(tier: AgentModelTier, inputTokens: number, outputTokens: number): number {
