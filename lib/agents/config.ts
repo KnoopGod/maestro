@@ -1,7 +1,7 @@
 export const AGENT_MODELS = {
-  opus: process.env.ANTHROPIC_OPUS_MODEL ?? 'claude-opus-4-7',
+  opus: process.env.ANTHROPIC_OPUS_MODEL ?? 'claude-opus-4-8',
   sonnet: process.env.ANTHROPIC_SONNET_MODEL ?? 'claude-sonnet-4-6',
-  haiku: process.env.ANTHROPIC_HAIKU_MODEL ?? 'claude-haiku-4-5',
+  haiku: process.env.ANTHROPIC_HAIKU_MODEL ?? 'claude-haiku-4-5-20251001',
   image: process.env.OPENAI_IMAGE_MODEL ?? 'gpt-image-1',
 } as const
 
