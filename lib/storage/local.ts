@@ -31,7 +31,7 @@ function extFromMime(mime: string): string {
   return map[mime] || '.bin'
 }
 
-// ─── Vercel Blob (production) ─────────────────────────────────────────────────
+// ─── Vercel Blob (production) ──────────────────────────────────────────
 
 async function blobPut(
   pathname: string,
@@ -46,7 +46,7 @@ async function blobPut(
   return blob.url
 }
 
-// ─── Local filesystem (dev) ───────────────────────────────────────────────────
+// ─── Local filesystem (dev) ────────────────────────────────────────
 
 async function localSave(
   clientId: string,
@@ -61,13 +61,17 @@ async function localSave(
   return `/uploads/clients/${clientId}/${filename}`
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Public API ────────────────────────────────────────────────
 
 export async function saveClientFile(
   clientId: string,
   file: File
 ): Promise<{ filename: string; url: string; sizeBytes: number; mimeType: string }> {
-  const ext = path.extname(file.name) || extFromMime(file.type)
+  // Derive the on-disk extension from the (already validated) MIME type, never
+  // from the client-supplied filename — prevents smuggling an executable
+  // extension (.html/.js/.svg) through a spoofed Content-Type. The original
+  // name is still preserved separately via createAsset(originalName).
+  const ext = extFromMime(file.type)
   const filename = `${nanoid(16)}${ext}`
   const mimeType = file.type || 'application/octet-stream'
   const arrayBuffer = await file.arrayBuffer()

@@ -3,6 +3,7 @@ import { unlink } from 'node:fs/promises'
 import { getClient } from '@/lib/db/queries/clients'
 import { createAsset, deleteAsset, getAsset, listClientAssets } from '@/lib/db/queries/assets'
 import { saveClientFile } from '@/lib/storage/local'
+import { validateUploadContent } from '@/lib/storage/validate-upload'
 import { extractTextFromFile, getAbsolutePath } from '@/lib/storage/extract-text'
 import { detectAssetType, type AssetCategory } from '@/types/asset'
 
@@ -88,6 +89,13 @@ export async function POST(
     }
     if (!ALLOWED_MIMES.has(file.type)) {
       return NextResponse.json({ error: `Type de fichier non autorisé : ${file.type}` }, { status: 415 })
+    }
+
+    // The browser-declared MIME is attacker-controlled — validate the real file
+    // content (magic bytes; SVG sanitization) before trusting it server-side.
+    const contentError = await validateUploadContent(file, file.type)
+    if (contentError) {
+      return NextResponse.json({ error: contentError }, { status: 415 })
     }
 
     // Save physically
