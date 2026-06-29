@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-21
+Dernière mise à jour : 2026-06-29
 
 ---
 
@@ -43,6 +43,7 @@ Dernière mise à jour : 2026-06-21
 | Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
 | Dashboard croissance global | `/analytics/growth` — suivi objectifs business par client, scores d'impact, coûts IA, engagement Meta, alerte profils manquants | ✅ |
 | Dashboard croissance client | `/clients/[id]/growth` — santé de trajectoire, KPIs mensuels, tendance 3 mois, recommandations actionnables | ✅ |
+| IA SELECT — Phase A+B | Fondation AI Router : types, providers (9), routing logic, page Paramètres → IA SELECT, AIProviderCard | ✅ |
 
 ### Note : proxy.ts
 
@@ -57,7 +58,8 @@ Dernière mise à jour : 2026-06-21
 - Tests automatisés
 - Versioning des posts
 - Revenue Loop minimale (conversion tracking réel : appels, réservations, DMs générés par post)
-- AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
+- IA SELECT — Phase C (Profit Controller branché au router) et Phase D (Gemini/Groq/Ollama/Replicate/Firefly/Luma)
+- Portail client externe
 
 ---
 
@@ -66,10 +68,9 @@ Dernière mise à jour : 2026-06-21
 | Branche | Contenu |
 |---|---|
 | `main` | Branche production |
-| `claude/gifted-keller-1d9dat` | Dashboard Croissance global intégré |
-| `claude/gifted-keller-froavj` | Dashboard Croissance client intégré |
+| `claude/gifted-keller-l332br` | Branche active — IA SELECT Phase A+B intégrée |
+| `codex/ai-router-foundation` | Source IA SELECT — intégré dans claude/gifted-keller-l332br |
 | `codex/interface-color-themes` | Option couleur interface + intégration dashboards croissance |
-| `codex/ai-router-foundation` | Fondation IA SELECT (non mergé) |
 | `codex/studio-v2-specs-009-012` | Studio V2 implémenté par Codex |
 | `codex/mvp-hardening` | Durcissement MVP (ancienne) |
 
