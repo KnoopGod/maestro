@@ -7,9 +7,12 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; assetId: string }> }
 ) {
-  const { assetId } = await params
+  const { id: clientId, assetId } = await params
   const asset = await getAsset(assetId)
-  if (!asset) return NextResponse.json({ error: 'Asset introuvable' }, { status: 404 })
+  // Verify the asset belongs to the client in the URL (prevents IDOR across clients).
+  if (!asset || asset.clientId !== clientId) {
+    return NextResponse.json({ error: 'Asset introuvable' }, { status: 404 })
+  }
 
   // Remove file from disk
   try {
@@ -26,7 +29,13 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; assetId: string }> }
 ) {
-  const { assetId } = await params
+  const { id: clientId, assetId } = await params
+  const asset = await getAsset(assetId)
+  // Verify the asset belongs to the client in the URL (prevents IDOR across clients).
+  if (!asset || asset.clientId !== clientId) {
+    return NextResponse.json({ error: 'Asset introuvable' }, { status: 404 })
+  }
+
   const body = await req.json()
 
   if (typeof body.starred === 'boolean') {
