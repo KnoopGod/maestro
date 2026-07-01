@@ -1,87 +1,101 @@
 # Statut actuel — MAESTRO
 
-Dernière mise à jour : 2026-06-21
+Dernière vérification : 2026-07-01
 
----
+## Phase actuelle
 
-## Phase actuelle : Stabilisation V1 — Phases 1–6 complétées
+**V1 prête pour un premier parcours client supervisé.**
 
-### Ce qui fonctionne
+La priorité n'est plus d'ajouter des modules : elle est de valider le tunnel
+réel avec un client, corriger les blocages rencontrés, puis mesurer les
+résultats commerciaux.
 
-| Fonctionnalité | État | Notes |
-|---|---|---|
-| Auth mot de passe | ✅ Fonctionnel | Cookie HMAC 30j |
-| Gestion clients | ✅ Fonctionnel | CRUD complet |
-| Library assets | ✅ Fonctionnel | Upload + analyse IA |
-| Direction Artistique (DA) | ✅ Fonctionnel | Synthèse IA depuis les assets |
-| Studio génération | ✅ Fonctionnel | 4 agents IA en pipeline |
-| Validation / Supervisor | ✅ Fonctionnel | Filtres par verdict |
-| Publication Meta | ✅ Fonctionnel | Facebook + Instagram |
-| Calendrier | ✅ Fonctionnel | Planification + cron |
-| Analytics | ✅ Fonctionnel | Stats basiques + tab Croissance |
-| Connexions Meta | ✅ Fonctionnel | OAuth + token storage |
-| Tunnel de lancement | ✅ Fonctionnel | 5 étapes guidées |
-| Dashboard alertes | ✅ Fonctionnel | Posts en échec + planifiés |
-| Brief structurée | ✅ Fonctionnel | 4 champs guidés |
-| Preview Instagram/Facebook | ✅ Fonctionnel | Prévisualisation réelle |
-| Confirmation publication | ✅ Fonctionnel | Modal avec résumé Supervisor |
-| Régénération partielle | ✅ Fonctionnel | Texte uniquement + instruction |
-| PublishErrorHint | ✅ Fonctionnel | Aide contextuelle erreurs Meta |
+## Production
 
-### Phases V1 complétées
-
-| Phase | Contenu | État |
-|---|---|---|
-| Phase 1 | Nettoyage code mort (7 pages, 3 routes API, store, mock-data, ollama) | ✅ |
-| Phase 2 | Découpage StudioForm.tsx → 6 sous-composants (620 → 347 lignes) | ✅ |
-| Phase 3 | Chiffrement AES-256-GCM tokens Meta + CSRF + headers HTTP | ✅ |
-| Phase 4 | Génération asynchrone (after() + polling + jobId) | ✅ |
-| Phase 5 | Agent Activity Center + AutoRefresh | ✅ |
-| Phase 6 | RETURNING * DB + batch identity + pipeline parallèle + next/image | ✅ |
-| Business Profile + Playbooks | Types client, formulaires new/edit, Vertical Playbooks HORECA | ✅ |
-| Test Drive Cockpit | Panneau 6 étapes sur la fiche client, % de complétion | ✅ |
-| Studio orienté objectif business | Account Director + Social Expert injectent l'objectif, canaux de conversion et playbook vertical | ✅ |
-| Dashboard croissance global | `/analytics/growth` — suivi objectifs business par client, scores d'impact, coûts IA, engagement Meta, alerte profils manquants | ✅ |
-| Dashboard croissance client | `/clients/[id]/growth` — santé de trajectoire, KPIs mensuels, tendance 3 mois, recommandations actionnables | ✅ |
-
-### Note : proxy.ts
-
-`proxy.ts` est le nom CORRECT pour Next.js 16.2.6+ (Turbopack). `middleware.ts` est déprécié dans cette version.
-
-### Ce qui n'existe pas encore
-
-- Portail client externe
-- Multi-utilisateurs / rôles
-- TikTok / LinkedIn
-- Génération vidéo
-- Tests automatisés
-- Versioning des posts
-- Revenue Loop minimale (conversion tracking réel : appels, réservations, DMs générés par post)
-- AI Router / Model Router : connecter plusieurs IA et choisir automatiquement le meilleur modèle selon mission, coût, qualité, vitesse et marge client. Spec roadmap : `CODEX_SPECS/139-ai-model-router-roadmap.md`
-
----
-
-## Branches actives
-
-| Branche | Contenu |
+| Élément | État |
 |---|---|
-| `main` | Branche production |
-| `claude/gifted-keller-1d9dat` | Dashboard Croissance global intégré |
-| `claude/gifted-keller-froavj` | Dashboard Croissance client intégré |
-| `codex/interface-color-themes` | Option couleur interface + intégration dashboards croissance |
-| `codex/ai-router-foundation` | Fondation IA SELECT (non mergé) |
-| `codex/studio-v2-specs-009-012` | Studio V2 implémenté par Codex |
-| `codex/mvp-hardening` | Durcissement MVP (ancienne) |
+| URL | `https://maestro-green.vercel.app` |
+| Branche | `main` |
+| Hébergement | Vercel |
+| Base | Turso |
+| Médias | Vercel Blob |
+| Santé | `ok: true` après authentification |
+| Authentification | Mot de passe administrateur + cookie HMAC |
+| Publication | Facebook et Instagram via Meta |
+| Génération vidéo IA | Inactive tant que `LUMA_API_KEY` n'est pas configurée |
 
----
+Les contrôles Anthropic, OpenAI, Blob, Meta, chiffrement, médias publics et
+Turso sont actifs en production.
 
-## Infrastructure
+## Tunnel validable
 
-| Composant | État |
+```text
+Client
+→ profil business et stratégie
+→ Library et direction artistique
+→ brief Studio
+→ génération asynchrone
+→ supervision et validation
+→ planification ou publication Meta
+→ analytics
+```
+
+## Fonctionnalités disponibles
+
+| Fonctionnalité | État |
 |---|---|
-| Dev local | ✅ Port 3010 |
-| DB locale | ✅ `./maestro.db` LibSQL |
-| DB production | 🔲 Turso (à configurer) |
-| Stockage images | ✅ Local dev, Vercel Blob prod |
-| Déploiement | 🔲 Vercel (à lier) |
-| Vercel Cron | ✅ Configuré `vercel.json` |
+| Gestion des clients | Fonctionnel |
+| Profil business et playbooks verticaux | Fonctionnel |
+| Library, uploads et analyse IA | Fonctionnel |
+| Synthèse de direction artistique | Fonctionnel |
+| Studio texte + image | Fonctionnel |
+| Brief guidé et régénération partielle | Fonctionnel |
+| Pipeline asynchrone `after()` + polling | Fonctionnel |
+| Supervisor et file de validation | Fonctionnel |
+| Prévisualisations Facebook et Instagram | Fonctionnel |
+| Calendrier et publication planifiée | Fonctionnel |
+| Publication Facebook et Instagram | Fonctionnel |
+| Centre d'activité des agents | Fonctionnel |
+| Analytics, croissance et coûts IA | Fonctionnel |
+| Suppressions groupées de posts | Fonctionnel |
+| Chiffrement des tokens Meta | Fonctionnel |
+
+## Fondations présentes mais non validées pour commercialisation
+
+- portail client externe ;
+- multi-utilisateurs et rôles ;
+- publication LinkedIn ;
+- génération vidéo Luma ;
+- webhooks et audit avancé.
+
+Ces fondations ne doivent pas être présentées comme terminées avant un test
+dédié de sécurité et de bout en bout.
+
+## Travaux différés
+
+- IA SELECT / routeur multi-modèles ;
+- queue durable avec reprise automatique des jobs ;
+- mesure des conversions réelles : réservations, appels, messages et chiffre
+  d'affaires ;
+- versioning des posts ;
+- tests automatisés du tunnel critique ;
+- TikTok et Google Business.
+
+## Limites connues
+
+- `after()` évite le timeout de la requête utilisateur, mais ne remplace pas
+  une queue durable. `cleanup-jobs` marque les jobs bloqués sans les relancer.
+- La génération vidéo IA nécessite `LUMA_API_KEY`.
+- Le premier client doit rester en validation humaine avant toute publication
+  automatique.
+
+## Prochaine validation
+
+Réaliser avec Pink House :
+
+1. vérifier le profil business et la stratégie ;
+2. vérifier les médias et la DA ;
+3. générer un post Facebook et un contenu Instagram ;
+4. contrôler le verdict du Supervisor ;
+5. publier après validation ;
+6. vérifier les identifiants Meta et les premiers insights.

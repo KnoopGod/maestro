@@ -52,11 +52,12 @@ Ce fichier enregistre les décisions importantes pour éviter de les remettre en
 **Raison** : Le stockage local permet de développer sans compte Vercel. Blob est natif sur Vercel.
 **Impact** : `BLOB_READ_WRITE_TOKEN` requis en production. `CODEXRS_PUBLIC_URL` requis pour que Meta accède aux images.
 
-### DT-05 — Génération de post synchrone (risque critique identifié)
-**Date** : 2026-06 (audit Phase 0)
-**Décision** : Actuellement synchrone (HTTP bloquant). À rendre asynchrone en Phase 4.
-**Raison** : Implémentation simple pour la V1. Le timeout Vercel (60s) est le risque principal.
-**Plan** : Phase 4 — retourner un `jobId` immédiat, polling ou SSE pour le suivi.
+### DT-05 — Génération de post asynchrone
+**Date** : 2026-06
+**Décision** : La route retourne un `jobId` immédiat et exécute le pipeline via `after()`.
+**Raison** : Ne pas bloquer la requête utilisateur pendant les appels IA.
+**Limite** : `after()` n'est pas une queue durable ; une reprise automatique sera
+nécessaire avant la montée en charge.
 
 ### DT-06 — Tokens Meta chiffrés si clé disponible
 **Date** : 2026-06 (audit Phase 0)

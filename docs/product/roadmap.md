@@ -28,11 +28,10 @@
 - Protection CSRF
 - Headers de sécurité dans `next.config.ts` (CSP, HSTS, X-Frame-Options)
 
-### Phase 4 — Génération asynchrone (critique)
-- Retourner un `jobId` immédiatement depuis `generate-post`
-- Exécuter le pipeline en arrière-plan
-- Polling ou SSE pour le suivi de progression
-- Résoudre le risque de timeout Vercel
+### Phase 4 — Génération asynchrone ✅
+- Retour immédiat d'un `jobId` depuis `generate-post`
+- Exécution du pipeline via `after()`
+- Polling de suivi de progression
 
 ### Phase 5 — Agent Activity Center
 - Dashboard de supervision des agents en temps réel
