@@ -12,7 +12,7 @@ Réalisé par : Claude Code
 |---|---|---|
 | Critique | 4 | 1 résolu, 3 acceptés en V1 (mono-admin) |
 | Important | 8 | 7 résolus, 1 sans objet (décision changée) |
-| Amélioration | 8 | 5 résolues, 1 partielle, 2 ouvertes |
+| Amélioration | 8 | 4 résolues, 1 partielle, 3 ouvertes |
 
 ---
 
@@ -91,7 +91,7 @@ migration de leurs tokens en clair.
 | A5 | `store/useCommandCenterStore.ts` : code mort | ✅ Résolu (Phase 1) | — |
 | A6 | Cookie session nommé `codexrs_session` (nom legacy) | Ouvert — toujours en place, renommage différé en V2 | V2 |
 | A7 | `next.config.ts` vide — pas d'optimisation image | ✅ Résolu (Phase 6) — `images.remotePatterns` configuré | — |
-| A8 | `SESSION_HANDOFF.md`, `AGENTS.md` à la racine | Partiel — `AGENTS.md` est un fichier de règles Next.js légitime (à garder) ; `SESSION_HANDOFF.md` est daté du 28 mai 2026 et obsolète par rapport à `docs/product/current-status.md` | Faible |
+| A8 | `SESSION_HANDOFF.md`, `AGENTS.md` à la racine | ✅ Résolu — `SESSION_HANDOFF.md` (daté du 28 mai 2026, obsolète) supprimé ; son contenu est couvert par `CLAUDE.md` et `docs/product/current-status.md`. `AGENTS.md` conservé (fichier de règles Next.js légitime) | — |
 
 ---
 
@@ -103,3 +103,4 @@ migration de leurs tokens en clair.
 | 2026-06-13 | CLAUDE.md branding CODEXRS | Mis à jour (Phase 0) |
 | 2026-06-13 | DB incompatible (ancien schéma) | Réinitialisée + seed |
 | 2026-06-30 | Audit technique obsolète (Phases 1–6 non reflétées) | Revue complète ligne par ligne contre le code réel ; statuts corrigés |
+| 2026-07-01 | `SESSION_HANDOFF.md` obsolète (A8) | Fichier supprimé, contenu couvert par `CLAUDE.md` et `docs/product/current-status.md` |
