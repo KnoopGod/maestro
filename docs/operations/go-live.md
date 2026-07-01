@@ -1,7 +1,6 @@
 # Go-live — Tester MAESTRO en direct
 
-Objectif : passer d'un code fonctionnel à une instance en ligne utilisable et testable.
-Le code est prêt ; il ne manque que la **configuration** dans Vercel.
+Objectif : vérifier qu'une instance en ligne est prête pour un premier client.
 
 ---
 
@@ -61,7 +60,7 @@ Dashboard → projet `maestro` → Settings → Environment Variables.
 
 ## 4. Vérifier que tout est vert
 
-Une fois les variables posées et le déploiement relancé, ouvre :
+Après authentification dans MAESTRO, ouvre :
 
 ```
 https://<ton-déploiement>/api/health
@@ -88,6 +87,7 @@ https://<ton-déploiement>/api/health
 ## Limites connues
 
 - **Job orphelin** : si la fonction serverless est recyclée pendant le pipeline
-  en arrière-plan, le job reste `running`. Un balayage périodique reste à ajouter.
+  en arrière-plan, le job peut rester `running`. Le cron `/api/cron/cleanup-jobs`
+  marque les jobs bloqués en échec ; il ne relance pas automatiquement le travail.
 - **CSRF** : protégé par cookie `SameSite=strict` + validation d'`Origin`. Un token
   CSRF dédié est prévu en V2 (multi-utilisateurs).

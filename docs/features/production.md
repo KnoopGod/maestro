@@ -100,15 +100,11 @@ Post mis à jour en DB
     platform_post_ids: { facebook: '...', instagram: '...' }
 ```
 
-## Risque critique C1
+## Exécution des générations
 
-Le pipeline est **synchrone** : la route `/api/studio/generate-post` bloque jusqu'à la fin.
-Durée typique : 30-90 secondes.
-Timeout Vercel : 60 secondes sur les Hobby plans, 900 secondes sur Pro.
+La route `/api/studio/generate-post` retourne immédiatement un `jobId` avec un
+statut HTTP 202. Le pipeline s'exécute via `after()` et le frontend interroge
+`/api/agents/jobs/[jobId]` pour suivre la progression.
 
-**Si le timeout est atteint** : le post n'est pas sauvegardé, l'utilisateur voit une erreur 504.
-
-**Solution planifiée (Phase 4)** :
-- Route retourne immédiatement un `jobId`
-- Pipeline s'exécute en background (Vercel Background Functions ou queue)
-- Frontend poll `/api/agents/jobs/[jobId]` pour suivre la progression
+Cette exécution évite de bloquer la requête utilisateur. Elle n'offre toutefois
+pas encore les garanties de reprise automatique d'une file de tâches durable.
