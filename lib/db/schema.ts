@@ -180,4 +180,6 @@ export async function initSchema() {
   await migrateWebhookLog()
   const { migrateBusinessProfile } = await import('./migrations/017-add-business-profile')
   await migrateBusinessProfile()
+  const { migrateCampaigns } = await import('./migrations/018-add-campaigns')
+  await migrateCampaigns()
 }

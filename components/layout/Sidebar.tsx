@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Home, Users, Sparkles, Bot, CalendarDays, BarChart3,
   FolderOpen, Plug, Settings, DollarSign, ShieldCheck,
-  LogOut, Activity,
+  LogOut, Activity, Megaphone,
 } from 'lucide-react'
 import { WipTag } from '@/components/ui/WipTag'
 
@@ -18,17 +18,18 @@ const NAV_WORK = [
   { href: '/studio',     icon: Sparkles,     label: 'Studio',     seq: '03', badge: 'NEW' },
   { href: '/validation', icon: ShieldCheck,  label: 'Validation', seq: '04', badge: null },
   { href: '/calendar',   icon: CalendarDays, label: 'Calendrier', seq: '05', badge: null },
-  { href: '/plan',       icon: CalendarDays, label: 'Historique', seq: '06', badge: null },
-  { href: '/agents',     icon: Bot,          label: 'Agents',     seq: '07', badge: null },
-  { href: '/production', icon: Activity,     label: 'Production', seq: '08', badge: 'LIVE' },
-  { href: '/analytics',  icon: BarChart3,    label: 'Analytics',  seq: '09', badge: null },
-  { href: '/library',    icon: FolderOpen,   label: 'Library',    seq: '10', badge: null },
+  { href: '/campaigns',  icon: Megaphone,    label: 'Campagnes',  seq: '06', badge: 'ADS' },
+  { href: '/plan',       icon: CalendarDays, label: 'Historique', seq: '07', badge: null },
+  { href: '/agents',     icon: Bot,          label: 'Agents',     seq: '08', badge: null },
+  { href: '/production', icon: Activity,     label: 'Production', seq: '09', badge: 'LIVE' },
+  { href: '/analytics',  icon: BarChart3,    label: 'Analytics',  seq: '10', badge: null },
+  { href: '/library',    icon: FolderOpen,   label: 'Library',    seq: '11', badge: null },
 ]
 
 const NAV_SYSTEM = [
-  { href: '/connections', icon: Plug,       label: 'Connexions', seq: '11', dot: true  },
-  { href: '/usage',       icon: DollarSign, label: 'Usage',      seq: '12', dot: false },
-  { href: '/settings',    icon: Settings,   label: 'Settings',   seq: '13', dot: false },
+  { href: '/connections', icon: Plug,       label: 'Connexions', seq: '12', dot: true  },
+  { href: '/usage',       icon: DollarSign, label: 'Usage',      seq: '13', dot: false },
+  { href: '/settings',    icon: Settings,   label: 'Settings',   seq: '14', dot: false },
 ]
 
 function NavItem({
