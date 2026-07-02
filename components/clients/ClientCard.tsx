@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Check, Sparkles } from 'lucide-react'
 import { CLIENT_TYPES, CLIENT_STATUS, type ClientWithStats } from '@/types/client'
+import { getPlaybook } from '@/lib/playbooks'
 import { DeleteClientButton } from './DeleteClientButton'
 
 function healthColor(days: number | null): string {
@@ -29,6 +30,8 @@ export function ClientCard({
   onSelectedChange?: (selected: boolean) => void
 }) {
   const typeCfg = CLIENT_TYPES[client.type]
+  // La verticale métier (businessProfile) est plus précise que le type legacy HORECA.
+  const typeLabel = client.businessProfile ? getPlaybook(client.businessProfile.vertical).label : typeCfg.label
   const statusCfg = CLIENT_STATUS[client.status]
   const dotColor = healthColor(client.daysSincePost)
   const lastPostLabel = healthLabel(client.daysSincePost)
@@ -60,7 +63,7 @@ export function ClientCard({
             <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-gray-900 ${dotColor}`} />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] text-indigo-400/70 font-mono tracking-[0.25em] uppercase mb-0.5">{typeCfg.label}{client.city ? ` // ${client.city}` : ''}</div>
+            <div className="text-[11px] text-indigo-400/70 font-mono tracking-[0.25em] uppercase mb-0.5">{typeLabel}{client.city ? ` // ${client.city}` : ''}</div>
             <div className="truncate text-sm font-medium text-[#E0E3FF] group-hover:text-indigo-300 transition-colors tracking-wide">{client.name}</div>
           </div>
         </Link>

@@ -28,6 +28,7 @@ const OBJECTIVE_COLOR: Record<BusinessObjective, string> = {
   improve_google_maps_visibility:'text-green-400  bg-green-950/30  border-green-800/30',
   increase_revenue_period:      'text-indigo-400 bg-indigo-950/30 border-indigo-800/30',
   attract_new_customers:        'text-fuchsia-400 bg-fuchsia-950/30 border-fuchsia-800/30',
+  generate_leads:               'text-sky-400    bg-sky-950/30    border-sky-800/30',
 }
 
 export default async function GrowthPage() {

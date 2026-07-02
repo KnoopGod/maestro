@@ -9,6 +9,7 @@ import { listClientSocialAccountSummaries } from '@/lib/db/queries/social-accoun
 import { listJobsByClient } from '@/lib/db/queries/agent-jobs'
 import type { AgentJob } from '@/lib/db/queries/agent-jobs'
 import { BUSINESS_OBJECTIVES, BUSINESS_TARGET_DELAYS, CLIENT_TYPES, CLIENT_STATUS, CONVERSION_CHANNELS, type Client } from '@/types/client'
+import { getPlaybook } from '@/lib/playbooks'
 import { DeleteClientButton } from '@/components/clients/DeleteClientButton'
 import { StrategyPanel } from '@/components/clients/StrategyPanel'
 import { PortalLinkCard } from '@/components/clients/PortalLinkCard'
@@ -58,6 +59,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const referenceTs = new Date().getTime()
   const typeCfg = CLIENT_TYPES[client.type]
+  // La verticale métier (businessProfile) prime sur le type legacy HORECA pour l'affichage.
+  const typeLabel = client.businessProfile ? getPlaybook(client.businessProfile.vertical).label : typeCfg.label
   const statusCfg = CLIENT_STATUS[client.status]
 
   return (
@@ -82,7 +85,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </span>
           </div>
           <p className="text-sm text-gray-400">
-            {typeCfg.label}{client.city ? ` · ${client.city}` : ''}
+            {typeLabel}{client.city ? ` · ${client.city}` : ''}
           </p>
           {client.description && (
             <p className="text-sm text-gray-500 mt-2 max-w-2xl">{client.description}</p>
@@ -566,8 +569,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 }
 
 function buildClientUnderstanding(client: Client, hasDa: boolean): string {
+  const typeLabel = client.businessProfile ? getPlaybook(client.businessProfile.vertical).label : CLIENT_TYPES[client.type].label
   const parts = [
-    `${client.name} est un ${CLIENT_TYPES[client.type].label.toLowerCase()}${client.city ? ` situé à ${client.city}` : ''}.`,
+    `${client.name} — ${typeLabel}${client.city ? `, situé à ${client.city}` : ''}.`,
     client.description ? `Positionnement perçu : ${client.description}.` : null,
     client.brandVoiceTone ? `Ton de marque : ${client.brandVoiceTone}.` : null,
     client.strategy?.objective ? `Objectif : ${client.strategy.objective}.` : null,

@@ -7,6 +7,7 @@ export type ConversionChannel =
   | 'whatsapp'
   | 'instagram_dm'
   | 'facebook_dm'
+  | 'linkedin_dm'
   | 'website'
   | 'booking_platform'
   | 'google_maps'
@@ -26,6 +27,7 @@ export type BusinessObjective =
   | 'improve_google_maps_visibility'
   | 'increase_revenue_period'
   | 'attract_new_customers'
+  | 'generate_leads'
 
 export type BusinessTargetDelay = '30d' | '3m' | '6m'
 
@@ -161,6 +163,10 @@ export const BUSINESS_OBJECTIVES: Record<BusinessObjective, { label: string; des
     label: 'Attirer de nouveaux clients',
     description: 'Faire découvrir le commerce à une nouvelle audience locale.',
   },
+  generate_leads: {
+    label: 'Générer des leads B2B',
+    description: 'Obtenir des demandes de devis, RDV commerciaux et contacts professionnels qualifiés.',
+  },
 }
 
 export const CONVERSION_CHANNELS: Record<ConversionChannel, { label: string }> = {
@@ -168,6 +174,7 @@ export const CONVERSION_CHANNELS: Record<ConversionChannel, { label: string }> =
   whatsapp: { label: 'WhatsApp' },
   instagram_dm: { label: 'DM Instagram' },
   facebook_dm: { label: 'Messenger Facebook' },
+  linkedin_dm: { label: 'Message LinkedIn' },
   website: { label: 'Site web' },
   booking_platform: { label: 'Plateforme de réservation' },
   google_maps: { label: 'Google Maps' },

@@ -25,18 +25,22 @@ import { getPlaybook } from '@/lib/playbooks'
 export async function createClientAction(formData: FormData) {
   const clientId = String(formData.get('clientId') ?? '').trim() || nanoid(12)
   const name = String(formData.get('name') ?? '').trim()
-  const type = String(formData.get('type') ?? '') as ClientType
   const city = String(formData.get('city') ?? '').trim() || undefined
   const description = String(formData.get('description') ?? '').trim() || undefined
   const clientSummary = String(formData.get('clientSummary') ?? '').trim() || undefined
   const brandVoiceTone = String(formData.get('brandVoiceTone') ?? '').trim() || undefined
   const brandVoiceKeywords = String(formData.get('brandVoiceKeywords') ?? '').trim() || undefined
   const businessProfile = buildBusinessProfile(formData)
+  const playbook = businessProfile ? getPlaybook(businessProfile.vertical) : null
+
+  // La colonne `type` est contrainte aux valeurs HORECA historiques (CHECK SQL).
+  // La vraie verticale vit dans businessProfile.vertical ; le playbook fournit
+  // le type legacy compatible pour les verticales hors HORECA (B2B, coiffeur…).
+  const rawType = String(formData.get('type') ?? '')
+  const type = (rawType in CLIENT_TYPES ? rawType : playbook?.legacyType) as ClientType | undefined
 
   if (!name || !type) throw new Error('Name and type required')
   if (!(type in CLIENT_TYPES)) throw new Error('Invalid type')
-
-  const playbook = businessProfile ? getPlaybook(businessProfile.vertical) : null
   const typeConfig = CLIENT_TYPES[type]
 
   const client = await dbCreateClient({
