@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { CheckSquare, Plus, Trash2, X } from 'lucide-react'
 import { useMemo, useState, useTransition } from 'react'
-import { CLIENT_TYPES, CLIENT_STATUS, type ClientType, type ClientStatus, type ClientWithStats } from '@/types/client'
+import { CLIENT_STATUS, type ClientStatus, type ClientWithStats } from '@/types/client'
 import { ClientCard } from './ClientCard'
 import { deleteClientsAction } from '@/lib/actions/clients'
+import { getPlaybookForClient, VERTICAL_OPTIONS } from '@/lib/playbooks'
 
-type Filter = 'all' | ClientType
+type Filter = 'all' | string
 type StatusFilter = 'all' | ClientStatus
 
 export function ClientGridWithFilters({
@@ -24,14 +25,14 @@ export function ClientGridWithFilters({
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  const counts: Record<Filter, number> = {
-    all: clients.length,
-    restaurant: clients.filter(c => c.type === 'restaurant').length,
-    hotel: clients.filter(c => c.type === 'hotel').length,
-    bar: clients.filter(c => c.type === 'bar').length,
-    bnb: clients.filter(c => c.type === 'bnb').length,
-    restaurant_hotel: clients.filter(c => c.type === 'restaurant_hotel').length,
-  }
+  const counts = useMemo(() => {
+    const result: Record<string, number> = { all: clients.length }
+    for (const client of clients) {
+      const vertical = getPlaybookForClient(client).vertical
+      result[vertical] = (result[vertical] ?? 0) + 1
+    }
+    return result
+  }, [clients])
 
   const statusCounts: Record<StatusFilter, number> = {
     all: clients.length,
@@ -42,7 +43,7 @@ export function ClientGridWithFilters({
 
   const filtered = useMemo(
     () => clients
-      .filter(c => filter === 'all' || c.type === filter)
+      .filter(c => filter === 'all' || getPlaybookForClient(c).vertical === filter)
       .filter(c => statusFilter === 'all' || c.status === statusFilter),
     [clients, filter, statusFilter]
   )
@@ -82,11 +83,11 @@ export function ClientGridWithFilters({
         <div className="text-5xl">🏢</div>
         <div>
           <p className="text-lg font-medium text-white">Aucun client pour l&apos;instant</p>
-          <p className="text-sm text-gray-500 mt-1 max-w-xs">Commencez par ajouter votre premier établissement HORECA pour générer du contenu avec les agents IA.</p>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs">Commencez par ajouter votre premier commerce pour générer du contenu avec les agents IA.</p>
         </div>
         <Link
           href="/clients/new"
-          title="Créer le premier profil client HORECA"
+          title="Créer le premier profil client"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 active:scale-[0.98] text-white text-sm font-medium rounded-lg transition-all duration-150"
         >
           <Plus className="w-4 h-4" />
@@ -112,23 +113,22 @@ export function ClientGridWithFilters({
           >
             Tous ({counts.all})
           </Link>
-          {(Object.keys(CLIENT_TYPES) as ClientType[]).filter(t => counts[t] > 0).map(t => {
-            const cfg = CLIENT_TYPES[t]
-            const active = filter === t
-            const href = ['/clients', new URLSearchParams({ type: t, ...(statusFilter !== 'all' ? { status: statusFilter } : {}) }).toString()].filter(Boolean).join('?')
+          {VERTICAL_OPTIONS.filter(option => (counts[option.vertical] ?? 0) > 0).map(option => {
+            const active = filter === option.vertical
+            const href = ['/clients', new URLSearchParams({ type: option.vertical, ...(statusFilter !== 'all' ? { status: statusFilter } : {}) }).toString()].filter(Boolean).join('?')
             return (
               <Link
-                key={t}
+                key={option.vertical}
                 href={href}
-                title={`Afficher uniquement les clients de type ${cfg.label}`}
+                title={`Afficher uniquement les clients de type ${option.label}`}
                 className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 flex items-center gap-1.5 ${
                   active
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm'
                     : 'bg-gray-900 border border-gray-800 text-gray-400 hover:bg-gray-800 hover:border-gray-700'
                 }`}
               >
-                <span>{cfg.emoji}</span>
-                {cfg.label} ({counts[t]})
+                <span>{option.emoji}</span>
+                {option.label} ({counts[option.vertical]})
               </Link>
             )
           })}

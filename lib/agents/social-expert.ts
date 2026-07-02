@@ -5,7 +5,7 @@ import type { VisualIdentity } from '@/types/asset'
 import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
-import { getPlaybook } from '@/lib/playbooks'
+import { getPlaybookForClient } from '@/lib/playbooks'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export type Platform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin'
@@ -104,12 +104,16 @@ export async function generateCaption(input: GenerateCaptionInput): Promise<Soci
   const identityBlock = buildIdentityBlock(identity)
 
   // Master prompt with full client context
-  const playbook = client.businessProfile?.vertical
-    ? getPlaybook(client.businessProfile.vertical)
-    : getPlaybook(client.type)
+  const playbook = getPlaybookForClient(client)
 
-  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création contenu HORECA avec 10 ans d'expérience terrain.
-Tu as géré les comptes Instagram et Facebook de plus de 80 établissements en France : restaurants gastronomiques, bistrots, hôtels boutiques, bars à cocktails, chambres d'hôtes.
+  const systemPrompt = buildExpertSystemPrompt('social-expert', `Tu es **Social Expert**, directeur de création spécialisé dans le secteur ${playbook.label}, avec 10 ans d'expérience terrain.
+Tu maîtrises Instagram, Facebook, LinkedIn et TikTok, et tu adaptes le contenu au
+cycle de décision réel du client.
+Contexte métier prioritaire : ${playbook.promptContext}
+
+Le référentiel HORECA ci-dessous ne s'applique qu'aux établissements concernés.
+Pour un client B2B, ignore les règles liées aux plats, réservations et vocabulaire
+sensoriel. Priorise preuve, expertise, bénéfice acheteur et CTA devis/échantillon/RDV.
 
 ## Ce que tu sais par cœur
 
@@ -215,7 +219,7 @@ ${playbook.promptContext}
   const userPrompt = `# CONTEXTE CLIENT
 
 **Établissement :** ${client.name}
-**Type :** ${client.type}
+**Type d'activité :** ${playbook.label}
 **Ville :** ${client.city || 'non renseignée'}
 **Description :** ${client.description || 'non renseignée'}
 **Résumé compris par l'outil :** ${client.clientSummary || 'non renseigné'}

@@ -3,6 +3,7 @@ import type { Client } from '@/types/client'
 import type { PostInsights } from '@/types/post'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 const GRAPH_API = 'https://graph.facebook.com/v23.0'
 
@@ -111,10 +112,12 @@ export async function analyzePerformance(input: {
     return { analysis: fallbackAnalysis(posts), cost: 0, tokensUsed: 0, model: 'fallback' }
   }
 
-  const systemPrompt = buildExpertSystemPrompt('performance-analyst', `Tu es **Performance Analyst**, analyste social media HORECA senior avec 10 ans d'expérience benchmarking.
-Tu connais les taux d'engagement de référence par plateforme et par type d'établissement HORECA en France.
+  const playbook = getPlaybookForClient(client)
+  const systemPrompt = buildExpertSystemPrompt('performance-analyst', `Tu es **Performance Analyst**, analyste social media senior spécialisé dans le secteur ${playbook.label}.
+Tu interprètes les résultats selon le cycle commercial et les KPIs pertinents du client.
+Contexte métier prioritaire : ${playbook.promptContext}
 
-## Benchmarks que tu utilises pour contextualiser les données
+## Benchmarks HORECA disponibles si pertinents
 
 ### Taux d'engagement de référence (likes + commentaires + partages / reach)
 - Restaurant Instagram : bon = 3-6%, moyen = 1-3%, faible = <1%
@@ -160,7 +163,8 @@ Réponds en français, en JSON strict, sans markdown.`)
   }))
 
   const userPrompt = `# CLIENT
-${client.name} · ${client.type} · ${client.city || '—'}
+${client.name} · ${playbook.label} · ${client.city || '—'}
+Contexte métier : ${playbook.promptContext}
 Ton : ${client.brandVoiceTone || 'non renseigné'}
 Stratégie : ${(client.strategy as { objective?: string } | null)?.objective || 'non renseigné'}
 

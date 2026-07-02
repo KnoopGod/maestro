@@ -6,12 +6,10 @@ import { updateClientAction } from '@/lib/actions/clients'
 import {
   BUSINESS_OBJECTIVES,
   BUSINESS_TARGET_DELAYS,
-  CLIENT_TYPES,
   CLIENT_STATUS,
   CONVERSION_CHANNELS,
   type BusinessObjective,
   type BusinessTargetDelay,
-  type ClientType,
   type ClientStatus,
   type ConversionChannel,
 } from '@/types/client'
@@ -69,35 +67,6 @@ export default async function EditClientPage({
               required
               className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
-          </div>
-
-          <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-1.5">
-              Type
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {(Object.keys(CLIENT_TYPES) as ClientType[]).map(t => {
-                const cfg = CLIENT_TYPES[t]
-                return (
-                  <label
-                    key={t}
-                    className="cursor-pointer aspect-square rounded-xl border border-gray-800 hover:border-purple-500 bg-gray-950/60 flex flex-col items-center justify-center gap-1 transition-all has-[:checked]:border-purple-500 has-[:checked]:bg-purple-900/20"
-                  >
-                    <input
-                      type="radio"
-                      name="type"
-                      value={t}
-                      defaultChecked={client.type === t}
-                      className="sr-only peer"
-                    />
-                    <span className="text-2xl">{cfg.emoji}</span>
-                    <span className="text-[11px] text-gray-400 peer-checked:text-purple-300 text-center px-1">
-                      {cfg.label}
-                    </span>
-                  </label>
-                )
-              })}
-            </div>
           </div>
 
           <div>

@@ -18,6 +18,12 @@ export function createClientStrategy(input: StrategyInput): ClientStrategy {
     ? getPlaybook(input.businessProfile.vertical)
     : getPlaybookForLegacyType(input.type)
   const defaults = playbook.strategy
+  const platforms = Array.from(new Set(
+    playbook.campaignTemplates.flatMap(template => template.platforms)
+  ))
+  const primaryObjective = input.businessProfile?.priorityObjective === 'generate_leads'
+    ? `Générer des demandes de devis et des contacts professionnels qualifiés pour ${input.name}.`
+    : `Développer la visibilité locale de ${input.name}${input.city.trim() ? ` à ${input.city.trim()}` : ''} et transformer l'intérêt digital en actions commerciales mesurables.`
   const context = [
     input.positioning.trim() ? `Positionnement : ${input.positioning.trim()}.` : '',
     input.offerFocus.trim() ? `Offre prioritaire : ${input.offerFocus.trim()}.` : '',
@@ -27,11 +33,11 @@ export function createClientStrategy(input: StrategyInput): ClientStrategy {
 
   return {
     objective: [
-      `Développer la visibilité locale de ${input.name}${input.city.trim() ? ` à ${input.city.trim()}` : ''} et transformer l'intérêt digital en actions commerciales mesurables.`,
+      primaryObjective,
       ...context,
     ].join(' '),
     contentPillars: defaults.contentPillars,
-    platforms: ['instagram', 'facebook'],
+    platforms: platforms.length ? platforms : ['instagram', 'facebook'],
     frequency: defaults.frequency,
     bestTimes: defaults.bestTimes,
     avoid: [...new Set([...sharedAvoid, ...defaults.avoid])],

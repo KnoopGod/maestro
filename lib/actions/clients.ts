@@ -20,7 +20,7 @@ import {
   type ClientType,
   type ConversionChannel,
 } from '@/types/client'
-import { getPlaybook } from '@/lib/playbooks'
+import { getPlaybook, isKnownVertical } from '@/lib/playbooks'
 
 export async function createClientAction(formData: FormData) {
   const clientId = String(formData.get('clientId') ?? '').trim() || nanoid(12)
@@ -65,7 +65,7 @@ export async function updateClientAction(id: string, formData: FormData) {
   const patch: Record<string, unknown> = {}
 
   // Required fields — keep value or skip if empty
-  const requiredFields = ['name', 'type', 'status']
+  const requiredFields = ['name', 'status']
   for (const field of requiredFields) {
     const val = formData.get(field)
     if (val !== null && String(val).trim() !== '') {
@@ -83,18 +83,23 @@ export async function updateClientAction(id: string, formData: FormData) {
     }
   }
 
-  patch.businessProfile = buildBusinessProfile(formData)
+  const businessProfile = buildBusinessProfile(formData)
+  patch.businessProfile = businessProfile
 
-  // Validate type if provided
-  if (patch.type && !(patch.type as string in CLIENT_TYPES)) {
-    throw new Error(`Type invalide : ${patch.type}`)
-  }
-
-  // Update emoji + color if type changed
-  if (patch.type) {
-    const typeCfg = CLIENT_TYPES[patch.type as ClientType]
-    patch.emoji = typeCfg.emoji
-    patch.color = typeCfg.color
+  if (businessProfile) {
+    const playbook = getPlaybook(businessProfile.vertical)
+    patch.type = playbook.legacyType
+    patch.emoji = playbook.emoji
+    patch.color = CLIENT_TYPES[playbook.legacyType].color
+  } else {
+    const rawType = String(formData.get('type') ?? '').trim()
+    if (rawType) {
+      if (!(rawType in CLIENT_TYPES)) throw new Error(`Type invalide : ${rawType}`)
+      const type = rawType as ClientType
+      patch.type = type
+      patch.emoji = CLIENT_TYPES[type].emoji
+      patch.color = CLIENT_TYPES[type].color
+    }
   }
 
   await dbUpdateClient(id, patch)
@@ -106,8 +111,13 @@ export async function updateClientAction(id: string, formData: FormData) {
 function buildBusinessProfile(formData: FormData): ClientBusinessProfile | null {
   const vertical = String(formData.get('businessVertical') ?? '').trim()
   if (!vertical) return null
+  if (!isKnownVertical(vertical)) throw new Error(`Verticale métier invalide : ${vertical}`)
 
-  const priorityObjective = normalizeBusinessObjective(formData.get('priorityObjective'))
+  const playbook = getPlaybook(vertical)
+  const priorityObjective = normalizeBusinessObjective(
+    formData.get('priorityObjective'),
+    playbook.businessObjectives[0] ?? 'attract_new_customers'
+  )
   const targetDelay = normalizeTargetDelay(formData.get('targetDelay'))
   const conversionChannels = formData
     .getAll('conversionChannels')
@@ -120,7 +130,7 @@ function buildBusinessProfile(formData: FormData): ClientBusinessProfile | null 
     avgBasketEur: parseNullableNumber(formData.get('avgBasketEur')),
     peakDays: splitList(formData.get('peakDays')),
     offDays: splitList(formData.get('offDays')),
-    conversionChannels: conversionChannels.length ? conversionChannels : ['instagram_dm'],
+    conversionChannels: conversionChannels.length ? conversionChannels : playbook.priorityChannels,
     monthlyRevenueEur: parseNullableNumber(formData.get('monthlyRevenueEur')),
     priorityObjective,
     targetDelay,
@@ -149,9 +159,12 @@ function parseNullableNumber(value: FormDataEntryValue | null): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-function normalizeBusinessObjective(value: FormDataEntryValue | null): BusinessObjective {
+function normalizeBusinessObjective(
+  value: FormDataEntryValue | null,
+  fallback: BusinessObjective
+): BusinessObjective {
   const raw = String(value ?? '').trim()
-  return raw in BUSINESS_OBJECTIVES ? raw as BusinessObjective : 'attract_new_customers'
+  return raw in BUSINESS_OBJECTIVES ? raw as BusinessObjective : fallback
 }
 
 function normalizeTargetDelay(value: FormDataEntryValue | null): BusinessTargetDelay {

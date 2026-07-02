@@ -4,7 +4,7 @@ import { ArrowLeft, Rocket } from 'lucide-react'
 import { getClient } from '@/lib/db/queries/clients'
 import { getLaunchTunnel } from '@/lib/db/queries/launch-tunnel'
 import { LaunchTunnel } from '@/components/clients/LaunchTunnel'
-import { CLIENT_TYPES } from '@/types/client'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,7 @@ export default async function ClientLaunchPage({ params }: { params: Promise<{ i
   if (!client) notFound()
 
   const tunnelState = await getLaunchTunnel(id)
-  const typeLabel = CLIENT_TYPES[client.type]?.label ?? client.type
+  const typeLabel = getPlaybookForClient(client).label
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

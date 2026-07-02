@@ -7,6 +7,7 @@ import {
   type AgentQualityEnvelope,
 } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export interface SupervisorResult {
   review: SupervisorReview
@@ -33,9 +34,13 @@ export async function supervisePost(input: {
   }
 
   const { client, post } = input
-  const systemPrompt = buildExpertSystemPrompt('supervisor', `Tu es **Supervisor**, directeur éditorial HORECA avec 10 ans de relecture de contenu social media.
-Tu as relu et corrigé des milliers de posts avant publication pour des restaurants, hôtels, bars et B&Bs en France.
+  const playbook = getPlaybookForClient(client)
+  const systemPrompt = buildExpertSystemPrompt('supervisor', `Tu es **Supervisor**, directeur éditorial spécialisé dans le secteur ${playbook.label}, avec 10 ans de relecture de contenu social media.
+Tu as relu et corrigé des milliers de posts avant publication pour des entreprises de ce secteur.
 Tu connais les erreurs qui coûtent des clients, les formulations qui créent des plaintes, et les occasions manquées qui font perdre de l'engagement.
+
+Contexte métier à appliquer en priorité : ${playbook.promptContext}
+Ignore tout exemple sectoriel ci-dessous qui ne concerne pas ce client.
 
 ## Tes critères de relecture (par ordre de priorité)
 
@@ -64,13 +69,15 @@ Tu connais les erreurs qui coûtent des clients, les formulations qui créent de
 - Le ton correspond-il au positionnement (gastronomique ≠ bistrot populaire ≠ bar tendance) ?
 - Les mots-clés brand voice apparaissent-ils naturellement ?
 
-### 5. Clichés HORECA (→ "revise" si présents)
-Signaler et suggérer remplacement pour :
+### 5. Clichés sectoriels (→ "revise" si présents)
+Pour l'HORECA uniquement, signaler et suggérer un remplacement pour :
 - "fait maison" → suggérer formulation avec prénom du chef ou date de recette
 - "frais du jour" → demander la provenance spécifique
 - "venez nombreux" → remplacer par CTA avec action précise
 - "notre équipe" → humaniser avec prénoms si possible
 - "n'hésitez pas" → supprimer, aucune valeur
+Pour le B2B, signaler le jargon corporate creux, les certifications non prouvées,
+les promesses de résultat sans preuve et l'absence de CTA devis, échantillon ou RDV.
 
 ### 6. Adéquation plateforme
 - Instagram : y a-t-il des hashtags ? (5-8, pas #food #yummy) Saut de ligne avant les hashtags ?
@@ -94,9 +101,10 @@ Réponds en français, en JSON strict, sans markdown.`)
   const userPrompt = `# CONTEXTE CLIENT
 
 **Établissement :** ${client.name}
-**Type :** ${client.type}
+**Type d'activité :** ${playbook.label}
 **Ville :** ${client.city || 'non renseignée'}
 **Positionnement :** ${client.description || 'non renseigné'}
+**Contexte métier :** ${playbook.promptContext}
 
 # VOIX DE MARQUE
 
@@ -122,7 +130,7 @@ Réponds en français, en JSON strict, sans markdown.`)
 
 # TÂCHE
 
-Évalue ce post avant publication Meta. Juge la cohérence avec le client, la qualité HORECA, le potentiel de conversion, les risques de promesse, et l'adéquation plateforme.
+Évalue ce post avant publication. Juge la cohérence avec le client et son secteur, le potentiel de conversion, les risques de promesse, et l'adéquation plateforme.
 
 **Réponds en JSON strict, sans backticks, sans markdown, exactement ce format :**
 

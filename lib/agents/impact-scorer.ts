@@ -7,7 +7,7 @@ export function scoreImpact(input: {
   if (input.caption.length >= 120 && input.caption.length <= 450) score += 12
   if (input.hashtags.length >= 4 && input.hashtags.length <= 9) score += 10
   if (/[?]/.test(input.caption)) score += 5
-  if (/réserv|venez|découvr|ce soir|week-end/i.test(input.caption)) score += 8
+  if (/réserv|venez|découvr|contact|devis|rendez-vous|rdv|échantillon|appelez|message/i.test(input.caption)) score += 8
   if (input.hasVisualIdentity) score += 10
   return Math.min(score, 95)
 }

@@ -36,7 +36,7 @@ export async function analyzeImage(
 
   const claude = new Anthropic({ apiKey })
 
-  const systemPrompt = buildExpertSystemPrompt('vision-analyzer', `Tu es un expert en analyse visuelle pour la création de contenu HORECA (restaurants, hôtels, bars, chambres d'hôte).
+  const systemPrompt = buildExpertSystemPrompt('vision-analyzer', `Tu es un expert en analyse visuelle pour la création de contenu de marque multi-secteurs.
 
 Tu analyses une image et extrais des informations structurées qui serviront à :
 1. Construire l'identité visuelle de la marque
@@ -56,9 +56,9 @@ Tu analyses une image et extrais des informations structurées qui serviront à 
 
 Règles :
 - description : factuelle, ce qui est visible
-- tags : 5-10 mots-clés concrets (plat, ambiance, technique, sujet)
+- tags : 5-10 mots-clés concrets (produit, lieu, ambiance, geste métier, sujet)
 - dominantColors : 4-6 couleurs hexa dominantes, dans l'ordre de prévalence
-- mood : un mood word adapté au secteur HORECA
+- mood : un mood word fidèle à l'image
 
 Rien d'autre dans ta réponse que le JSON.`
 

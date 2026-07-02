@@ -98,12 +98,12 @@ export function buildVideoPrompt(input: {
   brief?: string | null
   mood?: string | null
 }): string {
-  const subject = (input.caption ?? input.brief ?? 'HORECA ambiance').slice(0, 120)
+  const subject = (input.caption ?? input.brief ?? 'Authentic brand atmosphere').slice(0, 120)
   const mood = input.mood ? ` Mood: ${input.mood}.` : ''
   return (
     `${subject}.${mood} ` +
     'Smooth cinematic motion, gentle parallax, warm atmospheric lighting, ' +
-    'professional food and hospitality photography style, no text, no watermarks.'
+    'professional realistic brand photography style, no text, no watermarks.'
   )
 }
 

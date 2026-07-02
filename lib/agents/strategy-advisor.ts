@@ -5,6 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export interface StrategyAdvice {
   positioning: string
@@ -35,16 +36,18 @@ export async function generateStrategyAdvice(client: Client): Promise<StrategyAd
   if (!apiKey) return fallbackStrategy(client)
 
   const anthropic = new Anthropic({ apiKey })
+  const playbook = getPlaybookForClient(client)
 
-  const prompt = `Tu es un **expert en marketing digital HORECA** avec 15 ans d'expérience.
+  const prompt = `Tu es un **expert en marketing digital spécialisé dans le secteur ${playbook.label}** avec 15 ans d'expérience.
 Analyse ce profil client et génère une stratégie marketing complète, précise et actionnable.
 
 # PROFIL CLIENT
 
 **Nom :** ${client.name}
-**Type :** ${client.type}
+**Type d'activité :** ${playbook.label}
 **Ville :** ${client.city || 'non renseignée'}
 **Description :** ${client.description || 'non renseignée'}
+**Contexte métier :** ${playbook.promptContext}
 
 ## Voix de marque
 - **Ton :** ${client.brandVoiceTone || 'non renseigné'}
@@ -60,7 +63,7 @@ Analyse ce profil client et génère une stratégie marketing complète, précis
 
 # MISSION
 
-Génère une stratégie marketing détaillée et adaptée à ce client HORECA spécifique.
+Génère une stratégie marketing détaillée et adaptée à ce client et à son secteur.
 Sois concret, local, et orienté résultats commerciaux.
 
 Réponds en JSON strict sans markdown, avec cette structure exacte :
@@ -124,30 +127,39 @@ Réponds en JSON strict sans markdown, avec cette structure exacte :
 }
 
 function fallbackStrategy(client: Client): StrategyAdvice {
+  const playbook = getPlaybookForClient(client)
+  const platforms = Array.from(new Set(
+    playbook.campaignTemplates.flatMap(template => template.platforms)
+  )).slice(0, 3)
+
   return {
-    positioning: `${client.name} — ${client.type} authentique à ${client.city || 'votre ville'}`,
+    positioning: `${client.name} — ${playbook.label} à ${client.city || 'votre ville'}`,
     uniqueAngle: 'Définissez ce qui vous rend unique localement',
-    contentPillars: [
-      { name: 'Produits & Offres', description: 'Mettre en avant vos plats/chambres/cocktails phares', examples: ['Photo du plat du jour', 'Offre spéciale weekend'], frequency: '2x/semaine' },
-      { name: 'Coulisses', description: 'Humaniser votre établissement', examples: ['La préparation en cuisine', 'L\'équipe en action'], frequency: '1x/semaine' },
-      { name: 'Ambiance & Lifestyle', description: 'Vendre une expérience', examples: ['L\'atmosphère du soir', 'La terrasse au soleil'], frequency: '2x/semaine' },
-    ],
-    platformStrategy: [
-      { platform: 'instagram', tone: 'Chaleureux et visuel', contentTypes: ['photos', 'reels', 'stories'], bestTimes: '12h et 19h en semaine', specificTips: 'Miser sur les visuels de qualité' },
-      { platform: 'facebook', tone: 'Informatif et local', contentTypes: ['posts', 'events', 'photos'], bestTimes: '10h et 18h', specificTips: 'Promouvoir les événements locaux' },
-    ],
-    keyMessages: ['Qualité et authenticité', 'Ancré dans la communauté locale', 'Expérience unique'],
+    contentPillars: playbook.strategy.contentPillars.slice(0, 4).map(name => ({
+      name,
+      description: `Développer le pilier « ${name} » avec des preuves concrètes adaptées au client.`,
+      examples: [`Présenter ${name.toLowerCase()}`, `Montrer une preuve liée à ${name.toLowerCase()}`],
+      frequency: playbook.strategy.frequency,
+    })),
+    platformStrategy: (platforms.length ? platforms : ['instagram', 'facebook']).map(platform => ({
+      platform,
+      tone: 'Professionnel, humain et cohérent avec la marque',
+      contentTypes: ['photos', 'vidéos courtes', 'témoignages'],
+      bestTimes: playbook.strategy.bestTimes.join(', '),
+      specificTips: playbook.promptContext,
+    })),
+    keyMessages: ['Expertise démontrée', 'Preuves concrètes', 'Action commerciale claire'],
     hashtagClusters: [
-      { theme: 'local', tags: [`#${client.city?.toLowerCase() || 'local'}`, '#horeca', '#restaurant'] },
+      { theme: 'local', tags: [`#${client.city?.toLowerCase() || 'local'}`, `#${playbook.vertical.replace(/-/g, '')}`] },
     ],
     monthlyPlan: [
-      { week: 'Semaine 1', focus: 'Présentation', postIdeas: ['Présentation de l\'équipe', 'Photo signature'] },
-      { week: 'Semaine 2', focus: 'Offre phare', postIdeas: ['Plat/offre du moment', 'Témoignage client'] },
-      { week: 'Semaine 3', focus: 'Coulisses', postIdeas: ['Préparation en cuisine', 'Sourcing local'] },
-      { week: 'Semaine 4', focus: 'Engagement', postIdeas: ['Question à la communauté', 'Sondage stories'] },
+      { week: 'Semaine 1', focus: playbook.strategy.contentPillars[0] ?? 'Présentation', postIdeas: ['Présentation de l’équipe', 'Preuve de savoir-faire'] },
+      { week: 'Semaine 2', focus: playbook.strategy.contentPillars[1] ?? 'Offre phare', postIdeas: ['Offre ou service phare', 'Témoignage client'] },
+      { week: 'Semaine 3', focus: playbook.strategy.contentPillars[2] ?? 'Coulisses', postIdeas: ['Coulisses du métier', 'Méthode ou expertise'] },
+      { week: 'Semaine 4', focus: 'Conversion', postIdeas: ['Cas client', 'CTA vers le canal prioritaire'] },
     ],
     doNotDo: ['Posts sans visuels', 'Trop de promotions', 'Ignorer les commentaires'],
-    quickWins: ['Activer les stories quotidiennes', 'Répondre à tous les avis Google', 'Poster les menus du jour'],
+    quickWins: playbook.priorityChannels.slice(0, 3).map(channel => `Optimiser le canal ${channel}`),
     cost: 0,
   }
 }

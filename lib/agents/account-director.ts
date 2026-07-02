@@ -5,7 +5,7 @@ import type { Post } from '@/types/post'
 import { getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts } from '@/lib/db/queries/posts'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
-import { getPlaybook } from '@/lib/playbooks'
+import { getPlaybookForClient } from '@/lib/playbooks'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
 
 export interface AccountDirective {
@@ -70,8 +70,14 @@ export async function runAccountDirector(input: {
   }
 
   const identity = await getVisualIdentity(client.id)
-  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Account Director**, chef de dossier senior pour une agence HORECA avec 10 ans d'expérience.
-Tu as géré des portefeuilles de 20-30 établissements simultanément. Tu connais les piliers de contenu qui fonctionnent par type d'établissement, les saisons HORECA, les erreurs de répétition qui fatiguent les abonnés.
+  const playbook = getPlaybookForClient(client)
+  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Account Director**, chef de dossier senior spécialisé dans le secteur ${playbook.label}, avec 10 ans d'expérience.
+Tu sais transformer une stratégie métier en calendrier de contenu orienté résultats.
+Contexte métier prioritaire : ${playbook.promptContext}
+
+Les exemples HORECA ci-dessous constituent un référentiel sectoriel. Ne les applique
+que s'ils correspondent réellement au client. Pour un client B2B, privilégie études
+de cas, expertise, coulisses de production, preuves et CTA devis/échantillon/RDV.
 
 ## Ton rôle précis
 Avant chaque post, tu lis la stratégie du client, l'historique récent, et la DA disponible.
@@ -110,14 +116,10 @@ Exemple de mauvais enrichedBrief : "Parler du tartare et mettre en avant la qual
 
 Réponds en français, en JSON strict, sans markdown.`)
 
-  const playbook = client.businessProfile?.vertical
-    ? getPlaybook(client.businessProfile.vertical)
-    : getPlaybook(client.type)
-
   const userPrompt = `# CLIENT
 
 **Établissement :** ${client.name}
-**Type :** ${client.type}
+**Type d'activité :** ${playbook.label}
 **Ville :** ${client.city || 'non renseignée'}
 **Description :** ${client.description || 'non renseignée'}
 **Résumé compris par l'outil :** ${client.clientSummary || 'non renseigné'}
@@ -336,7 +338,7 @@ function fallbackDirective(client: Client, userBrief: string | undefined, recent
   ))
   const priorityPillar = pillars.find(pillar => !recentPillarsCovered.includes(pillar)) || pillars[0] || 'Priorité client'
   const briefBase = userBrief?.trim() || `${priorityPillar} — ${client.name}`
-  const ctaSuggestion = ctaForClientType(client.type)
+  const ctaSuggestion = ctaForClient(client)
 
   return {
     priorityPillar,
@@ -355,8 +357,12 @@ function guessPillar(post: Post, pillars: string[]) {
   return pillars.find(pillar => source.includes(pillar.toLowerCase())) || 'Non identifié'
 }
 
-function ctaForClientType(type: Client['type']) {
-  if (type === 'hotel' || type === 'bnb') return 'Réservez'
-  if (type === 'bar') return 'Découvrez'
+function ctaForClient(client: Client) {
+  const playbook = getPlaybookForClient(client)
+  if (client.businessProfile?.priorityObjective === 'generate_leads') return 'Demandez un devis'
+  if (playbook.vertical === 'hotel' || playbook.vertical === 'bnb' || playbook.vertical === 'restaurant_hotel') {
+    return 'Réservez'
+  }
+  if (playbook.vertical === 'bar') return 'Découvrez'
   return 'Réservez'
 }

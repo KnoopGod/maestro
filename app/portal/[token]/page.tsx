@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { getClientByPortalToken } from '@/lib/db/queries/portal'
 import { listPosts } from '@/lib/db/queries/posts'
 import { PortalReviewCard } from '@/components/portal/PortalReviewCard'
-import { CLIENT_TYPES } from '@/types/client'
+import { getPlaybookForClient } from '@/lib/playbooks'
 import type { Post } from '@/types/post'
 import { PortalPrintButton } from '@/components/portal/PortalPrintButton'
 
@@ -85,7 +85,7 @@ export default async function ClientPortalPage({
   const avgRate = rates.length ? (rates.reduce((s, r) => s + r, 0) / rates.length).toFixed(1) : null
   const topPost = [...published].sort((a, b) => (engagementRate(b) ?? -1) - (engagementRate(a) ?? -1))[0]
 
-  const typeCfg = CLIENT_TYPES[client.type]
+  const typeLabel = getPlaybookForClient(client).label
   const periodLabel = `${MONTH_NAMES[month]} ${year}`
 
   // Month navigation
@@ -120,7 +120,7 @@ export default async function ClientPortalPage({
                 <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 mb-2">Bilan mensuel — Réseaux sociaux</p>
                 <h1 className="text-2xl sm:text-3xl font-bold">{client.name}</h1>
                 <p className="text-sm text-gray-500 mt-1">
-                  {typeCfg.label}{client.city ? ` · ${client.city}` : ''}
+                  {typeLabel}{client.city ? ` · ${client.city}` : ''}
                 </p>
               </div>
               <div className="text-right flex-shrink-0">

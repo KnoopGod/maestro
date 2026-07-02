@@ -3,7 +3,7 @@ import { Search, Users, FileText } from 'lucide-react'
 import { searchClients } from '@/lib/db/queries/clients'
 import { searchPosts } from '@/lib/db/queries/posts'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { CLIENT_TYPES } from '@/types/client'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,7 +66,7 @@ export default async function SearchPage({
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-white">{c.name}</div>
                   <div className="text-[11px] text-gray-500">
-                    {CLIENT_TYPES[c.type]?.label}{c.city ? ` · ${c.city}` : ''}
+                    {getPlaybookForClient(c).label}{c.city ? ` · ${c.city}` : ''}
                   </div>
                 </div>
               </Link>

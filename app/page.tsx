@@ -10,7 +10,7 @@ import { FailedPostsAlert } from '@/components/dashboard/FailedPostsAlert'
 import { PortalFeedbackAlert } from '@/components/dashboard/PortalFeedbackAlert'
 import { OverduePostsAlert } from '@/components/dashboard/OverduePostsAlert'
 import { TodayScheduleWidget } from '@/components/dashboard/TodayScheduleWidget'
-import { CLIENT_TYPES } from '@/types/client'
+import { getPlaybookForClient } from '@/lib/playbooks'
 import type { Client } from '@/types/client'
 
 function healthDot(days: number | null): string {
@@ -199,7 +199,7 @@ export default async function HomePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {clients.slice(0, 6).map(c => {
-                const typeCfg = CLIENT_TYPES[c.type]
+                const typeLabel = getPlaybookForClient(c).label
                 return (
                   <Link
                     key={c.id}
@@ -227,7 +227,7 @@ export default async function HomePage() {
                     <div className="flex-1 min-w-0">
                       <div className="text-[11px] font-medium text-[#E0E3FF] truncate group-hover:text-indigo-300 transition-colors font-mono tracking-wide uppercase">{c.name}</div>
                       <div className="text-[11px] text-gray-600 font-mono truncate">
-                        {typeCfg?.label ?? ''}{c.city ? ` // ${c.city}` : ''}
+                        {typeLabel}{c.city ? ` // ${c.city}` : ''}
                       </div>
                     </div>
                     <span className="text-[11px] text-indigo-700/60 font-mono group-hover:text-indigo-400 transition-colors">►</span>

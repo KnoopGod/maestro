@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export interface UrlBriefResult {
   brief: string
@@ -67,13 +68,15 @@ export async function extractBriefFromUrl(url: string, client: Client): Promise<
   }
 
   const anthropic = new Anthropic({ apiKey })
-  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Content Strategist** pour une agence HORECA.
+  const playbook = getPlaybookForClient(client)
+  const systemPrompt = buildExpertSystemPrompt('account-director', `Tu es **Content Strategist** spécialisé dans le secteur ${playbook.label}.
 Tu lis le contenu d'une page web et en extrais les informations clés pour créer un brief de post social.
+Contexte métier : ${playbook.promptContext}
 Réponds en JSON strict, sans markdown.`)
 
   const userPrompt = `# CLIENT
 Nom : ${client.name}
-Type : ${client.type}
+Type d'activité : ${playbook.label}
 Ville : ${client.city || 'non renseignée'}
 Ton : ${client.brandVoiceTone || 'non renseigné'}
 
@@ -85,10 +88,10 @@ ${pageText.substring(0, 8000)}
 
 # TÂCHE
 Analyse ce contenu et génère un JSON avec ces champs :
-- "brief": string — un brief de post social prêt à utiliser (2-3 phrases, impératif, actionnable). Adapté au client HORECA.
+- "brief": string — un brief de post social prêt à utiliser (2-3 phrases, impératif, actionnable). Adapté au secteur du client.
 - "title": string — titre court de l'événement ou sujet principal
 - "keyPoints": string[] — 3-5 points clés extraits du contenu
-- "suggestedPillar": string | null — pilier de contenu parmi ceux typiques HORECA : "Plat du jour", "Événement", "Coulisses", "Offre spéciale", "Ambiance", "Témoignage client", "Saisonnalité", ou null si non déterminable
+- "suggestedPillar": string | null — choisir uniquement parmi ces piliers client : ${client.strategy.contentPillars.length ? client.strategy.contentPillars.join(', ') : playbook.strategy.contentPillars.join(', ')} ; retourner null si aucun ne correspond
 
 JSON uniquement.`
 
