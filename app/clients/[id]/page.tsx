@@ -1,7 +1,7 @@
 import type React from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket, Layers, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Sparkles, CalendarDays, BarChart3, Settings2, Bot, Edit3, FolderOpen, Plug, CheckCircle2, Clock, AlertCircle, Euro, FileText, Rocket, Layers, TrendingUp, Megaphone } from 'lucide-react'
 import { getClient, getAiStrategy } from '@/lib/db/queries/clients'
 import { getClientAssetSummary, getVisualIdentity } from '@/lib/db/queries/assets'
 import { listPosts, getPillarDistribution, listClientUpcomingPosts } from '@/lib/db/queries/posts'
@@ -176,6 +176,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <div>
             <div className="text-sm font-medium text-white">Croissance</div>
             <div className="text-[11px] text-gray-500">{client.businessProfile ? 'Objectif · KPIs' : 'Profil business à configurer'}</div>
+          </div>
+        </Link>
+
+        <Link href={`/campaigns/new?client=${client.id}`} title="Créer une campagne Meta Ads ou Google Ads pour ce client" className="bg-gradient-to-br from-blue-950/40 to-indigo-950/30 border border-blue-700/30 rounded-xl p-4 hover:border-blue-500/50 transition-all flex items-center gap-3 group">
+          <Megaphone className="w-5 h-5 text-blue-400 flex-shrink-0" />
+          <div>
+            <div className="text-sm font-medium text-white">Campagnes</div>
+            <div className="text-[11px] text-gray-500">Meta Ads · Google Ads</div>
           </div>
         </Link>
 
