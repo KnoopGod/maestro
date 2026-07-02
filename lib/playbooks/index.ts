@@ -210,6 +210,35 @@ export const VERTICAL_PLAYBOOKS: Record<string, VerticalPlaybook> = {
     commonMistakes: ['Ne parler qu’aux joueurs experts', 'Oublier les débutants', 'CTA réservation absent'],
     promptContext: 'Padel : vendre le jeu social, les créneaux, les tournois et les offres groupes. Toujours rendre la réservation évidente.',
   },
+  'societe-b2b': {
+    vertical: 'societe-b2b',
+    label: 'Société B2B',
+    emoji: '💼',
+    legacyType: 'bar',
+    strategy: {
+      contentPillars: ['Étude de cas client', 'Coulisses production', 'Expertise & conseils', 'Nouveautés catalogue', 'Salons & RDV pro'],
+      frequency: '3 posts/semaine',
+      bestTimes: ['08:30', '12:00', '17:30'],
+      avoid: [...sharedAvoid, 'jargon corporate creux', 'vendre sans prouver', 'ton B2C promotionnel'],
+    },
+    businessObjectives: ['generate_leads', 'attract_new_customers', 'sell_offer', 'promote_event'],
+    priorityChannels: ['linkedin_dm', 'email', 'phone', 'website'],
+    campaignTemplates: [
+      {
+        id: 'lead-gen-b2b',
+        name: 'Génération de leads',
+        objective: 'generate_leads',
+        duration: '1 mois',
+        postCount: 6,
+        platforms: ['linkedin', 'instagram'],
+        briefTemplate: 'Démontrer l’expertise avec un cas client concret ou les coulisses de production, puis inviter à demander un devis ou un échantillon.',
+        kpis: ['Demandes de devis', 'RDV commerciaux', 'Messages LinkedIn', 'Clics site'],
+      },
+    ],
+    kpis: ['Leads qualifiés', 'Demandes de devis', 'RDV commerciaux', 'Abonnés LinkedIn', 'Clics site'],
+    commonMistakes: ['Parler produit sans parler client', 'Ignorer LinkedIn au profit d’Instagram', 'Aucun CTA de contact commercial'],
+    promptContext: 'Société B2B (ex: fabricant, grossiste, prestataire pro) : cycle de vente long, décision rationnelle. Construire la crédibilité par la preuve — études de cas, coulisses de production, savoir-faire, certifications. LinkedIn est le canal prioritaire, ton professionnel mais humain. Chaque post doit faciliter un contact commercial : devis, échantillon, RDV. Éviter le ton promotionnel B2C et les remises agressives.',
+  },
 }
 
 export const DEFAULT_PLAYBOOK: VerticalPlaybook = {

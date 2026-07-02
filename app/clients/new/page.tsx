@@ -5,11 +5,9 @@ import { createClientAction } from '@/lib/actions/clients'
 import {
   BUSINESS_OBJECTIVES,
   BUSINESS_TARGET_DELAYS,
-  CLIENT_TYPES,
   CONVERSION_CHANNELS,
   type BusinessObjective,
   type BusinessTargetDelay,
-  type ClientType,
   type ConversionChannel,
 } from '@/types/client'
 import { SubmitButton } from '@/components/ui/SubmitButton'
@@ -61,32 +59,32 @@ export default function NewClientPage() {
           </div>
 
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-1.5">
-              Type <span className="text-red-400">*</span>
+            <label htmlFor="businessVertical" className="block text-sm font-medium text-gray-300 mb-1.5">
+              Type d&apos;activité <span className="text-red-400">*</span>
             </label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {(Object.keys(CLIENT_TYPES) as ClientType[]).map(t => {
-                const cfg = CLIENT_TYPES[t]
-                return (
-                  <label
-                    key={t}
-                    className="cursor-pointer aspect-square rounded-xl border border-gray-800 hover:border-purple-500 bg-gray-950/60 flex flex-col items-center justify-center gap-1 transition-all has-[:checked]:border-purple-500 has-[:checked]:bg-purple-900/20"
-                  >
-                    <input
-                      type="radio"
-                      name="type"
-                      value={t}
-                      required
-                      className="sr-only peer"
-                    />
-                    <span className="text-2xl">{cfg.emoji}</span>
-                    <span className="text-[11px] text-gray-400 peer-checked:text-purple-300 text-center px-1">
-                      {cfg.label}
-                    </span>
-                  </label>
-                )
-              })}
+            <div className="grid grid-cols-3 gap-2">
+              {VERTICAL_OPTIONS.map(vertical => (
+                <label
+                  key={vertical.vertical}
+                  className="cursor-pointer aspect-square rounded-xl border border-gray-800 hover:border-purple-500 bg-gray-950/60 flex flex-col items-center justify-center gap-1 transition-all has-[:checked]:border-purple-500 has-[:checked]:bg-purple-900/20"
+                >
+                  <input
+                    type="radio"
+                    name="businessVertical"
+                    value={vertical.vertical}
+                    required
+                    className="sr-only peer"
+                  />
+                  <span className="text-2xl">{vertical.emoji}</span>
+                  <span className="text-[11px] text-gray-400 peer-checked:text-purple-300 text-center px-1">
+                    {vertical.label}
+                  </span>
+                </label>
+              ))}
             </div>
+            <p className="text-[11px] text-gray-500 mt-1.5">
+              Le type d&apos;activité charge le playbook d&apos;expertise adapté (piliers de contenu, objectifs, canaux).
+            </p>
           </div>
 
           <div>
@@ -139,36 +137,18 @@ export default function NewClientPage() {
             Base de croissance : ce que le commerce vend, comment il convertit, et quel résultat Maestro doit viser.
           </p>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="businessVertical" className="block text-xs text-gray-400 mb-1.5">Verticale métier</label>
-              <select
-                id="businessVertical"
-                name="businessVertical"
-                defaultValue="restaurant"
-                className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-              >
-                {VERTICAL_OPTIONS.map(vertical => (
-                  <option key={vertical.vertical} value={vertical.vertical}>
-                    {vertical.emoji} {vertical.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="priorityObjective" className="block text-xs text-gray-400 mb-1.5">Objectif prioritaire</label>
-              <select
-                id="priorityObjective"
-                name="priorityObjective"
-                defaultValue="attract_new_customers"
-                className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-              >
-                {(Object.keys(BUSINESS_OBJECTIVES) as BusinessObjective[]).map(objective => (
-                  <option key={objective} value={objective}>{BUSINESS_OBJECTIVES[objective].label}</option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label htmlFor="priorityObjective" className="block text-xs text-gray-400 mb-1.5">Objectif prioritaire</label>
+            <select
+              id="priorityObjective"
+              name="priorityObjective"
+              defaultValue="attract_new_customers"
+              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+            >
+              {(Object.keys(BUSINESS_OBJECTIVES) as BusinessObjective[]).map(objective => (
+                <option key={objective} value={objective}>{BUSINESS_OBJECTIVES[objective].label}</option>
+              ))}
+            </select>
           </div>
 
           <div>
