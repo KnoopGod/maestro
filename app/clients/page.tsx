@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { listClientsWithStats } from '@/lib/db/queries/clients'
 import { ClientGridWithFilters } from '@/components/clients/ClientFilters'
-import { CLIENT_TYPES, CLIENT_STATUS, type ClientType, type ClientStatus } from '@/types/client'
+import { CLIENT_STATUS, type ClientStatus } from '@/types/client'
+import { isKnownVertical } from '@/lib/playbooks'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,7 @@ export default async function ClientsPage({
   searchParams: Promise<{ type?: string; status?: string }>
 }) {
   const { type, status } = await searchParams
-  const filter = isClientType(type) ? type : 'all'
+  const filter = type && isKnownVertical(type) ? type : 'all'
   const statusFilter = isClientStatus(status) ? status : 'all'
   const clients = await listClientsWithStats()
 
@@ -41,10 +42,6 @@ export default async function ClientsPage({
       <ClientGridWithFilters clients={clients} filter={filter} statusFilter={statusFilter} />
     </div>
   )
-}
-
-function isClientType(value: string | undefined): value is ClientType {
-  return !!value && value in CLIENT_TYPES
 }
 
 function isClientStatus(value: string | undefined): value is ClientStatus {

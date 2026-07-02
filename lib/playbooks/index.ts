@@ -1,4 +1,4 @@
-import type { ClientType } from '@/types/client'
+import type { Client, ClientType } from '@/types/client'
 import type { VerticalPlaybook } from './types'
 
 const sharedAvoid = ['contenu générique', 'promesses exagérées', 'ton robotique']
@@ -122,6 +122,35 @@ export const VERTICAL_PLAYBOOKS: Record<string, VerticalPlaybook> = {
     kpis: ['Réservations directes', 'Messages', 'Clics site', 'Avis Google'],
     commonMistakes: ['Trop parler de prix', 'Ne pas montrer le cadre', 'Ignorer les activités locales'],
     promptContext: 'B&B : vendre le rêve, l’accueil et le cadre avant le prix. Favoriser réservations directes, témoignages et expériences locales.',
+  },
+  restaurant_hotel: {
+    vertical: 'restaurant_hotel',
+    label: 'Resto + Hôtel',
+    emoji: '🌲',
+    legacyType: 'restaurant_hotel',
+    strategy: {
+      contentPillars: ['Expérience complète', 'Table & cuisine', 'Chambres', 'Séjour local', 'Avis client'],
+      frequency: '4 posts/semaine',
+      bestTimes: ['08:30', '11:30', '18:30'],
+      avoid: [...sharedAvoid, 'séparer artificiellement le restaurant et l’hôtel', 'promesse de disponibilité non vérifiée'],
+    },
+    businessObjectives: ['increase_bookings', 'reduce_platform_dependency', 'sell_offer', 'get_google_reviews'],
+    priorityChannels: ['website', 'phone', 'instagram_dm', 'google_maps', 'booking_platform'],
+    campaignTemplates: [
+      {
+        id: 'stay-and-dine',
+        name: 'Séjour & table',
+        objective: 'increase_bookings',
+        duration: '1 mois',
+        postCount: 6,
+        platforms: ['instagram', 'facebook'],
+        briefTemplate: 'Présenter une expérience complète associant séjour, table et découverte locale avec un CTA de réservation directe.',
+        kpis: ['Réservations directes', 'Appels', 'Clics site', 'Demandes de séjour'],
+      },
+    ],
+    kpis: ['Réservations directes', 'Couverts', 'Appels', 'Clics site', 'Avis Google'],
+    commonMistakes: ['Ne montrer que les chambres', 'Ne montrer que les plats', 'CTA qui ne précise pas quoi réserver'],
+    promptContext: 'Restaurant-hôtel : vendre une expérience cohérente qui relie la table, le séjour et la destination. Clarifier le CTA selon le contenu : réserver une chambre, une table ou une formule complète.',
   },
   coiffeur: {
     vertical: 'coiffeur',
@@ -274,6 +303,16 @@ export const DEFAULT_PLAYBOOK: VerticalPlaybook = {
 export function getPlaybook(vertical?: string | null): VerticalPlaybook {
   if (!vertical) return DEFAULT_PLAYBOOK
   return VERTICAL_PLAYBOOKS[vertical] ?? DEFAULT_PLAYBOOK
+}
+
+export function isKnownVertical(vertical: string): boolean {
+  return Object.prototype.hasOwnProperty.call(VERTICAL_PLAYBOOKS, vertical)
+}
+
+export function getPlaybookForClient(
+  client: Pick<Client, 'type' | 'businessProfile'>
+): VerticalPlaybook {
+  return getPlaybook(client.businessProfile?.vertical ?? client.type)
 }
 
 export function getPlaybookForLegacyType(type: ClientType): VerticalPlaybook {

@@ -10,8 +10,8 @@
  */
 import Anthropic from '@anthropic-ai/sdk'
 import type { Client } from '@/types/client'
-import { CLIENT_TYPES } from '@/types/client'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export interface LaunchAdvice {
   step2: {
@@ -48,21 +48,24 @@ export async function runLaunchAdvisor(client: Client): Promise<{
     return { advice: fallback, cost: 0, tokensUsed: 0, model: 'fallback' }
   }
 
-  const typeLabel = CLIENT_TYPES[client.type]?.label ?? client.type
-  const systemPrompt = `Tu es un panel de trois experts seniors d'une agence social media spécialisée HORECA :
+  const playbook = getPlaybookForClient(client)
+  const typeLabel = playbook.label
+  const systemPrompt = `Tu es un panel de trois experts seniors d'une agence social media spécialisée dans le secteur ${typeLabel} :
 
-1. **Community Manager Facebook** (10 ans d'expérience pages locales) — tu sais exactement quels champs d'une page Facebook influencent le référencement local, quel bouton d'action convertit le mieux par type d'établissement, et comment écrire une description de page qui ressort dans la recherche Facebook ET Google.
+1. **Community Manager Facebook** (10 ans d'expérience) — tu sais quels champs d'une page influencent sa découvrabilité, quel bouton d'action convertit le mieux, et comment écrire une description claire.
 
-2. **Stratège Instagram HORECA** — tu as lancé des dizaines de comptes hôtels/restaurants. Tu connais les règles d'or : username court et cherchable, bio ≤150 caractères avec proposition de valeur + lieu + CTA lien, et la "grille de 9" qui transforme un profil vide en vitrine crédible avant d'inviter la moindre audience.
+2. **Stratège Instagram** — tu sais lancer un compte adapté au secteur : username court et cherchable, bio ≤150 caractères avec proposition de valeur + CTA, et grille de 9 cohérente.
 
 3. **Spécialiste technique Meta API** — tu connais les pièges de la connexion Pages/Instagram Business : compte personnel vs professionnel, liaison page↔IG, permissions token, Business Manager.
 
-Tes conseils sont CONCRETS et SPÉCIFIQUES au client (pas de généralités). Tu écris en français. Les textes destinés aux clients finaux (description de page, bio Instagram) respectent la voix de marque et les langues du client — si le client cible une clientèle internationale, propose des textes bilingues FR/EN.`
+Contexte métier : ${playbook.promptContext}
+Tes conseils sont CONCRETS et SPÉCIFIQUES au client (pas de généralités). Tu écris en français. Les textes destinés aux clients finaux respectent la voix de marque et les langues du client.`
 
   const userPrompt = `## Client à lancer
 
 - Nom : ${client.name}
 - Type : ${typeLabel}
+- Contexte métier : ${playbook.promptContext}
 - Ville : ${client.city ?? 'non précisée'}
 - Description : ${client.description ?? '—'}
 - Voix de marque : ${client.brandVoiceTone ?? '—'}
@@ -89,7 +92,7 @@ Réponds en JSON strict, sans backticks, sans markdown, exactement ce format :
     "tips": ["3 à 5 conseils spécifiques à ce client pour la page"]
   },
   "step3": {
-    "expert": "Stratège Instagram HORECA",
+    "expert": "Stratège Instagram",
     "usernameIdeas": ["3 propositions de username disponibles-plausibles, courtes, sans underscore multiple"],
     "bio": "Bio Instagram complète ≤150 caractères, avec emojis sobres, lieu et CTA",
     "firstNineGrid": ["9 entrées : sujet précis de chaque post de la grille de lancement, ordonnés pour un rendu visuel cohérent"],
@@ -175,7 +178,9 @@ const CTA_BY_TYPE: Record<Client['type'], string> = {
 }
 
 function fallbackAdvice(client: Client): LaunchAdvice {
-  const typeLabel = CLIENT_TYPES[client.type]?.label ?? client.type
+  const playbook = getPlaybookForClient(client)
+  const typeLabel = playbook.label
+  const isB2B = playbook.vertical === 'societe-b2b'
   const slug = client.name.toLowerCase().replace(/[^a-z0-9]+/g, '')
   const city = client.city ?? ''
   const citySlug = city.toLowerCase().replace(/[^a-z0-9]+/g, '')
@@ -186,8 +191,12 @@ function fallbackAdvice(client: Client): LaunchAdvice {
       pageDescription: `${client.name} — ${typeLabel}${city ? ` à ${city}` : ''}. ${client.description ?? 'Une expérience à découvrir.'}`,
       shortDescription: `${client.name} · ${typeLabel}${city ? ` · ${city}` : ''}`.substring(0, 155),
       categorySuggestion: typeLabel,
-      ctaButton: CTA_BY_TYPE[client.type],
-      coverPhotoIdea: 'La meilleure photo grand-angle du lieu, lumineuse, sans texte incrusté (1640×924px).',
+      ctaButton: isB2B
+        ? 'Bouton "Nous contacter" → formulaire de devis ou prise de rendez-vous'
+        : CTA_BY_TYPE[client.type],
+      coverPhotoIdea: isB2B
+        ? 'Une réalisation forte ou une scène de production réelle, nette, sans texte incrusté (1640×924px).'
+        : 'La meilleure photo grand-angle du lieu, lumineuse, sans texte incrusté (1640×924px).',
       tips: [
         'Remplir 100% des infos : adresse, horaires, téléphone, WhatsApp, site web.',
         'Demander l\'URL personnalisée facebook.com/' + slug + ' dès que la page est éligible.',
@@ -195,10 +204,20 @@ function fallbackAdvice(client: Client): LaunchAdvice {
       ],
     },
     step3: {
-      expert: 'Stratège Instagram HORECA',
+      expert: 'Stratège Instagram',
       usernameIdeas: [`@${slug}`, citySlug ? `@${slug}${citySlug}` : `@${slug}official`, citySlug ? `@${citySlug}${slug}` : `@the${slug}`],
-      bio: `${client.name}${city ? ` 📍 ${city}` : ''} — ${typeLabel}. Réservation ↓`,
-      firstNineGrid: [
+      bio: `${client.name}${city ? ` 📍 ${city}` : ''} — ${typeLabel}. ${isB2B ? 'Devis & échantillons' : 'Réservation'} ↓`,
+      firstNineGrid: isB2B ? [
+        'Réalisation client emblématique',
+        'Matière ou produit en détail',
+        'Étape de production',
+        'Équipe ou expert métier',
+        'Vue d’ensemble de l’atelier',
+        'Cas client et résultat',
+        'Certification ou preuve qualité',
+        'Coulisses du savoir-faire',
+        'Invitation à demander un devis ou échantillon',
+      ] : [
         'Photo signature du lieu (extérieur / vue)',
         'Détail d\'ambiance (déco, matière, lumière)',
         'Le produit phare (plat, chambre, cocktail)',

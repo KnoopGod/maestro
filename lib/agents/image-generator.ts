@@ -4,6 +4,7 @@ import type { VisualIdentity } from '@/types/asset'
 import { createAsset } from '@/lib/db/queries/assets'
 import { saveClientBuffer } from '@/lib/storage/local'
 import { AGENT_MODELS } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 type ImageResponseItem = {
   b64_json?: string | null
@@ -19,22 +20,29 @@ export function buildImagePrompt(input: {
   contentType?: string
 }): string {
   const { client, brief, caption, visualIdentity, visualPrompt, contentType } = input
+  const playbook = getPlaybookForClient(client)
+  const hospitality = ['restaurant', 'hotel', 'bar', 'bnb', 'restaurant_hotel'].includes(playbook.vertical)
   const da = visualIdentity?.stylePrompt
     ? `Visual direction to follow: ${visualIdentity.stylePrompt}.`
-    : 'Natural premium hospitality photography, realistic lighting, appetizing composition.'
+    : hospitality
+      ? 'Natural premium hospitality photography, realistic lighting, authentic atmosphere.'
+      : 'Professional, realistic brand photography with credible materials, products and working environment.'
 
   return [
-    `Create a premium, realistic social media image for a ${client.type} named "${client.name}" in ${client.city || 'France'}.`,
+    `Create a premium, realistic social media image for a ${playbook.label} named "${client.name}" in ${client.city || 'France'}.`,
+    `Business context: ${playbook.promptContext}`,
     client.clientSummary ? `Client context to respect: ${client.clientSummary}` : null,
     `Post brief: ${brief}`,
     `Caption context: ${caption}`,
     contentType ? `Target social format: ${contentType}.` : null,
     visualPrompt?.trim() ? `Specific visual instruction from the user: ${visualPrompt.trim()}` : null,
     da,
-    'Use a realistic hospitality photography style, coherent with a real client brand asset library.',
-    'Avoid cheap stock-photo aesthetics, distorted food, fake unreadable signage, plastic textures, extra fingers, uncanny faces, and random brand logos.',
+    'Use a realistic editorial photography style coherent with the client brand asset library and actual business.',
+    hospitality
+      ? 'Avoid cheap stock-photo aesthetics, distorted food, fake unreadable signage, plastic textures, extra fingers, uncanny faces, and random brand logos.'
+      : 'Avoid generic corporate stock-photo aesthetics, fake unreadable signage, plastic textures, impossible products, uncanny faces, and random brand logos.',
     'No text overlay, no watermark. If a logo is requested, imply the brand atmosphere instead of inventing unreadable logo text.',
-    'The image must feel like a high-end but authentic photo from the actual venue, suitable for Instagram and Facebook.',
+    'The image must feel like an authentic photo from the actual business, suitable for the selected social platforms.',
   ].filter(Boolean).join('\n')
 }
 

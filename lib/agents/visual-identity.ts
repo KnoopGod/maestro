@@ -12,6 +12,7 @@ import type { Client } from '@/types/client'
 import type { ClientAsset } from '@/types/asset'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export interface IdentitySynthesisResult {
   palette: string[]
@@ -50,10 +51,12 @@ export async function synthesizeVisualIdentity(
     .join('\n\n---\n\n')
 
   const claude = new Anthropic({ apiKey })
+  const playbook = getPlaybookForClient(client)
 
-  const systemPrompt = buildExpertSystemPrompt('da-curator', `Tu es **Visual Identity Director**, l'agent de CODEXRS chargé de synthétiser l'identité visuelle d'un établissement HORECA en analysant ses contenus existants (photos, vidéos, documents).
+  const systemPrompt = buildExpertSystemPrompt('da-curator', `Tu es **Visual Identity Director**, l'agent de CODEXRS chargé de synthétiser l'identité visuelle d'une entreprise du secteur ${playbook.label} en analysant ses contenus existants (photos, vidéos, documents).
 
 Tu produis une carte d'identité visuelle qui guidera TOUTES les futures générations de contenu pour ce client (texte ET images).
+Contexte métier : ${playbook.promptContext}
 
 **Tu dois être précis, opérationnel, pas générique.**
 
@@ -62,7 +65,7 @@ Tu produis une carte d'identité visuelle qui guidera TOUTES les futures génér
   const userPrompt = `# CLIENT
 
 **Nom :** ${client.name}
-**Type :** ${client.type}
+**Type d'activité :** ${playbook.label}
 **Ville :** ${client.city || '—'}
 **Description :** ${client.description || '—'}
 **Voix de marque actuelle :** ${client.brandVoiceTone || '—'}

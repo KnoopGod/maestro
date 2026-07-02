@@ -5,8 +5,8 @@ import { getClient } from '@/lib/db/queries/clients'
 import { listPosts } from '@/lib/db/queries/posts'
 import { analyzePerformance } from '@/lib/agents/performance-analyst'
 import { PrintButton } from '@/components/clients/PrintButton'
-import { CLIENT_TYPES } from '@/types/client'
 import type { Post } from '@/types/post'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,7 +103,7 @@ export default async function ClientReportPage({
       })
     : { analysis: null }
 
-  const typeCfg = CLIENT_TYPES[client.type]
+  const typeLabel = getPlaybookForClient(client).label
   const periodLabel = `${MONTH_NAMES[month]} ${year}`
 
   return (
@@ -149,7 +149,7 @@ export default async function ClientReportPage({
               <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400 mb-2">Bilan mensuel — Réseaux sociaux</p>
               <h1 className="text-3xl font-bold">{client.name}</h1>
               <p className="text-sm text-gray-500 mt-1">
-                {typeCfg.label}{client.city ? ` · ${client.city}` : ''}
+                {typeLabel}{client.city ? ` · ${client.city}` : ''}
               </p>
             </div>
             <div className="text-right">

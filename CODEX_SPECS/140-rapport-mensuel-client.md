@@ -8,12 +8,12 @@ est le document mensuel qui matérialise cette valeur — c'est l'artefact de r�
 
 **Fichiers à lire avant d'implémenter :**
 - `types/post.ts` — `PostInsights` (likes, comments, shares, reach, impressions, saves — données Meta réelles)
-- `app/api/cron/sync-insights/route.ts` — les insights sont déjà synchronisés toutes les 12h (30 derniers jours)
+- `app/api/cron/sync-insights/route.ts` — les insights sont synchronisés quotidiennement (30 derniers jours)
 - `app/analytics/growth/page.tsx` — agrégations par client déjà écrites (à réutiliser comme modèle)
 - `lib/db/queries/posts.ts` — `listPosts({ includeInsights: true })`, `getPillarDistribution`
 - `types/client.ts` — `BUSINESS_OBJECTIVES` (l'objectif prioritaire du client structure le rapport)
 - `lib/playbooks/index.ts` — `getPlaybook(vertical).kpis` (les KPIs à mettre en avant par verticale)
-- `app/clients/[id]/page.tsx` — pour le bouton d'accès au rapport
+- `app/clients/[id]/report/page.tsx` — page existante à refactorer, pas à recréer
 
 ## Goal
 
@@ -61,8 +61,9 @@ Règles de calcul :
 - **Ne pas exposer `cost` ni `tokensUsed` dans ce module** : le coût IA est une donnée interne
   agence, elle ne doit pas fuiter dans un document client.
 
-### 2. `app/clients/[id]/report/page.tsx` (NOUVEAU — Server Component)
+### 2. `app/clients/[id]/report/page.tsx` (MODIFIER — Server Component existant)
 
+- Remplacer les calculs intégrés à la page par `buildMonthlyReport`, sans réécrire la page depuis zéro.
 - `searchParams: { month?: string }` — défaut : mois précédent (le rapport se produit en début de mois).
 - Appelle `buildMonthlyReport`. Si null (client introuvable) → `notFound()`.
 - Sections dans cet ordre :
@@ -83,10 +84,9 @@ Règles de calcul :
 - Langue : français simple. INTERDIT dans le texte : « DA », « pipeline », « agent »,
   « tokens », « playbook ». Dire « identité visuelle », « publications », « stratégie ».
 
-### 3. `app/clients/[id]/page.tsx` (MODIFICATION LÉGÈRE)
+### 3. `app/clients/[id]/page.tsx`
 
-Ajouter un bouton « 📊 Rapport mensuel » dans la rangée d'actions existante de la fiche
-client, lien vers `/clients/[id]/report`. Ne rien réorganiser d'autre.
+Le bouton vers `/clients/[id]/report` existe déjà. Ne pas le dupliquer.
 
 ## Don't touch
 
@@ -111,12 +111,14 @@ Cas limites à vérifier :
 ## Output expected
 
 - `lib/reports/monthly.ts` (~120 lignes)
-- `app/clients/[id]/report/page.tsx` (~250 lignes)
-- 1 bouton ajouté sur la fiche client
+- `app/clients/[id]/report/page.tsx` refactoré sans régression visuelle
+- aucun bouton dupliqué sur la fiche client
 - 0 erreur tsc/lint
 
 ## V2 (ne PAS coder maintenant)
 
 - Paragraphe d'analyse rédigé par l'agent performance-analyst (avec tracking de coût).
+  La page actuelle appelle cet agent directement : retirer cet appel lors du refactor
+  V1 pour éviter un coût et une latence à chaque affichage, puis le réintroduire avec cache.
 - Saisie des résultats business réels du client (appels, devis, CA) pour boucler l'attribution.
 - Envoi automatique par email en début de mois + lien portail.

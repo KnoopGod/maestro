@@ -5,9 +5,9 @@ noter chaque friction, et valider que MAESTRO est prêt pour un client payant.
 
 URL : https://maestro-green.vercel.app · Durée estimée : 45-60 min
 
-> ⚠ Réalité à connaître avant de commencer : la **publication automatique couvre
-> Facebook + Instagram**. Pour LinkedIn (canal clé en B2B), MAESTRO génère la caption
-> optimisée mais la publication est **manuelle** (copier-coller) en V1.
+> La publication automatique couvre Facebook, Instagram et LinkedIn lorsque chaque
+> compte est connecté. Sans connexion LinkedIn, la caption reste disponible pour
+> une publication manuelle.
 
 ---
 
@@ -43,7 +43,7 @@ Fiche client → **Library**
 `/studio` → sélectionner le client
 
 - [ ] Vérifier que le panneau client affiche l'objectif business
-- [ ] Choisir l'objectif **Générer des leads B2B** (chips)
+- [ ] Vérifier que le panneau « Mission business » affiche **Générer des leads B2B**
 - [ ] Plateformes : Instagram + Facebook (+ LinkedIn pour tester la caption)
 - [ ] Brief test réaliste, ex. : « Mettre en avant notre nouvelle gamme de tissus
   recyclés pour les marques éco-responsables. Mentionner échantillons gratuits
@@ -80,13 +80,13 @@ Fiche client → **Connexions**
 
 - [ ] Publier le post (directement ou planifié à +15 min pour tester le cron)
 - [ ] Vérifier sur Facebook ET Instagram : image présente, caption complète, pas de texte tronqué
-- [ ] Copier la caption LinkedIn générée → la poster manuellement sur la page LinkedIn de la société
+- [ ] Si LinkedIn est connecté : vérifier la publication automatique. Sinon, copier la caption et la publier manuellement.
 - [ ] Dans `/plan` : le post est bien marqué « publié » avec les IDs Meta
 
 ## Étape 7 — Boucle de suivi (à J+2)
 
 - [ ] `/analytics` et la fiche client : les stats réelles (reach, interactions) remontent
-  (sync automatique toutes les 12 h)
+  (sync automatique quotidienne)
 - [ ] Noter les premières retombées business réelles : vues LinkedIn, DM, demandes
 
 ---

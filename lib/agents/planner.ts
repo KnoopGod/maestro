@@ -3,6 +3,7 @@ import type { Client } from '@/types/client'
 import type { PostPlatform } from '@/types/post'
 import { buildExpertSystemPrompt } from '@/lib/agents/prompts'
 import { AGENT_MODELS, calcCost } from '@/lib/agents/config'
+import { getPlaybookForClient } from '@/lib/playbooks'
 
 export interface PostIdea {
   title: string
@@ -25,6 +26,7 @@ interface PlannerResult {
  * Falls back to a deterministic 5-idea list if no API key.
  */
 export async function proposePostIdeas(client: Client, count = 5): Promise<PlannerResult> {
+  const playbook = getPlaybookForClient(client)
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return {
@@ -35,8 +37,9 @@ export async function proposePostIdeas(client: Client, count = 5): Promise<Plann
     }
   }
 
-  const systemPrompt = buildExpertSystemPrompt('strategy-director', `Tu es **Strategy Director** pour CODEXRS, agence HORECA.
+  const systemPrompt = buildExpertSystemPrompt('strategy-director', `Tu es **Strategy Director** pour CODEXRS, spécialisé dans le secteur ${playbook.label}.
 Tu pilotes la planification de contenu social pour chaque client.
+Contexte métier prioritaire : ${playbook.promptContext}
 
 Tes principes :
 1. Chaque idée doit servir un pilier de la stratégie client.
@@ -51,7 +54,7 @@ Réponds en JSON strict, sans markdown.`)
   const userPrompt = `# CLIENT
 
 **Établissement :** ${client.name}
-**Type :** ${client.type}
+**Type d'activité :** ${playbook.label}
 **Ville :** ${client.city || 'non renseignée'}
 **Description :** ${client.description || 'non renseignée'}
 
@@ -155,53 +158,25 @@ function normalizeIdea(idea: PostIdea): PostIdea {
 }
 
 function fallbackIdeas(client: Client, count: number): PostIdea[] {
-  const pillars = client.strategy.contentPillars
-  const platforms: PostPlatform[] = ['instagram', 'facebook']
+  const playbook = getPlaybookForClient(client)
+  const pillars = client.strategy.contentPillars.length
+    ? client.strategy.contentPillars
+    : playbook.strategy.contentPillars
+  const platforms = client.strategy.platforms.length
+    ? client.strategy.platforms
+    : playbook.campaignTemplates[0]?.platforms ?? ['instagram', 'facebook']
   const city = client.city || ''
   const tone = client.brandVoiceTone || 'naturel'
 
-  const all: PostIdea[] = [
-    {
-      title: 'Offre de la semaine',
-      pillar: pillars[0] || 'Offre',
-      objective: 'Déclencher une visite ou une réservation rapide.',
-      brief: `Mettre en avant l'offre prioritaire de ${client.name}. Ton ${tone}, CTA clair pour réserver cette semaine.`,
-      platforms,
-      bestTime: client.strategy.bestTimes[0],
-    },
-    {
-      title: 'Ambiance du lieu',
-      pillar: pillars[1] || 'Ambiance',
-      objective: 'Renforcer l\'image de marque et la mémorisation.',
-      brief: `Capturer l'ambiance de ${client.name}${city ? ` à ${city}` : ''}. Ton ${tone}, focus sur le ressenti plutôt que sur l'offre.`,
-      platforms,
-      bestTime: client.strategy.bestTimes[1],
-    },
-    {
-      title: 'Preuve sociale',
-      pillar: pillars[3] || 'Avis client',
-      objective: 'Rassurer et convertir avec un angle confiance.',
-      brief: `Valoriser un avis ou un moment client de ${client.name}. Ton ${tone}, ne pas sur-promettre.`,
-      platforms,
-      bestTime: client.strategy.bestTimes[0],
-    },
-    {
-      title: 'Moment local',
-      pillar: 'Local',
-      objective: `Ancrer ${client.name} dans la vie de ${city || 'la ville'}.`,
-      brief: `Relier ${client.name} à un événement, saison ou particularité de ${city || 'la ville'}. Ton ${tone}.`,
-      platforms,
-      bestTime: client.strategy.bestTimes[2] || client.strategy.bestTimes[1],
-    },
-    {
-      title: 'Réservation week-end',
-      pillar: pillars[4] || 'Réservation',
-      objective: 'Remplir les créneaux les plus rentables.',
-      brief: `Inciter à réserver le week-end chez ${client.name}, sans tomber dans le ton commercial. Ton ${tone}.`,
-      platforms,
-      bestTime: client.strategy.bestTimes[2] || '18:30',
-    },
-  ]
+  const all: PostIdea[] = pillars.map((pillar, index) => ({
+    title: pillar,
+    pillar,
+    objective: `Servir l'objectif commercial de ${client.name} avec le pilier « ${pillar} ».`,
+    brief: `Créer un contenu sur « ${pillar} » pour ${client.name}${city ? ` à ${city}` : ''}. Ton ${tone}. Apporter une preuve concrète et terminer par un CTA adapté aux canaux prioritaires.`,
+    platforms,
+    bestTime: client.strategy.bestTimes[index % Math.max(client.strategy.bestTimes.length, 1)]
+      ?? playbook.strategy.bestTimes[index % Math.max(playbook.strategy.bestTimes.length, 1)],
+  }))
 
   return all.slice(0, count)
 }

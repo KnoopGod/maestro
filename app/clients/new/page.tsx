@@ -3,15 +3,11 @@ import { nanoid } from 'nanoid'
 import { ArrowLeft } from 'lucide-react'
 import { createClientAction } from '@/lib/actions/clients'
 import {
-  BUSINESS_OBJECTIVES,
   BUSINESS_TARGET_DELAYS,
-  CONVERSION_CHANNELS,
-  type BusinessObjective,
   type BusinessTargetDelay,
-  type ConversionChannel,
 } from '@/types/client'
 import { SubmitButton } from '@/components/ui/SubmitButton'
-import { VERTICAL_OPTIONS } from '@/lib/playbooks'
+import { BusinessProfileSelectors } from '@/components/clients/BusinessProfileSelectors'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,35 +52,6 @@ export default function NewClientPage() {
               placeholder="Ex: Le Bistrot de Marie"
               className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-150"
             />
-          </div>
-
-          <div>
-            <label htmlFor="businessVertical" className="block text-sm font-medium text-gray-300 mb-1.5">
-              Type d&apos;activité <span className="text-red-400">*</span>
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {VERTICAL_OPTIONS.map(vertical => (
-                <label
-                  key={vertical.vertical}
-                  className="cursor-pointer aspect-square rounded-xl border border-gray-800 hover:border-purple-500 bg-gray-950/60 flex flex-col items-center justify-center gap-1 transition-all has-[:checked]:border-purple-500 has-[:checked]:bg-purple-900/20"
-                >
-                  <input
-                    type="radio"
-                    name="businessVertical"
-                    value={vertical.vertical}
-                    required
-                    className="sr-only peer"
-                  />
-                  <span className="text-2xl">{vertical.emoji}</span>
-                  <span className="text-[11px] text-gray-400 peer-checked:text-purple-300 text-center px-1">
-                    {vertical.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <p className="text-[11px] text-gray-500 mt-1.5">
-              Le type d&apos;activité charge le playbook d&apos;expertise adapté (piliers de contenu, objectifs, canaux).
-            </p>
           </div>
 
           <div>
@@ -137,19 +104,7 @@ export default function NewClientPage() {
             Base de croissance : ce que le commerce vend, comment il convertit, et quel résultat Maestro doit viser.
           </p>
 
-          <div>
-            <label htmlFor="priorityObjective" className="block text-xs text-gray-400 mb-1.5">Objectif prioritaire</label>
-            <select
-              id="priorityObjective"
-              name="priorityObjective"
-              defaultValue="attract_new_customers"
-              className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
-            >
-              {(Object.keys(BUSINESS_OBJECTIVES) as BusinessObjective[]).map(objective => (
-                <option key={objective} value={objective}>{BUSINESS_OBJECTIVES[objective].label}</option>
-              ))}
-            </select>
-          </div>
+          <BusinessProfileSelectors />
 
           <div>
             <label htmlFor="mainOffers" className="block text-xs text-gray-400 mb-1.5">Offres principales</label>
@@ -203,24 +158,6 @@ export default function NewClientPage() {
                 placeholder="Ex: lundi, mardi"
                 className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500"
               />
-            </div>
-          </div>
-
-          <div>
-            <div className="block text-xs text-gray-400 mb-2">Canaux de conversion</div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {(Object.keys(CONVERSION_CHANNELS) as ConversionChannel[]).map(channel => (
-                <label key={channel} className="flex items-center gap-2 rounded-lg border border-gray-800 bg-gray-950/50 px-3 py-2 text-xs text-gray-300">
-                  <input
-                    type="checkbox"
-                    name="conversionChannels"
-                    value={channel}
-                    defaultChecked={channel === 'instagram_dm'}
-                    className="accent-purple-500"
-                  />
-                  {CONVERSION_CHANNELS[channel].label}
-                </label>
-              ))}
             </div>
           </div>
 

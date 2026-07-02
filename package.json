@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
     "mcp:build": "tsc mcp/server.ts --outDir mcp/dist --module nodenext --moduleResolution nodenext --target es2022 --esModuleInterop true --skipLibCheck true",
     "mcp:start": "node mcp/dist/server.js"
   },
@@ -42,6 +43,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }
