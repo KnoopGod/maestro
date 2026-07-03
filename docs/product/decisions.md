@@ -24,6 +24,21 @@ Ce fichier enregistre les décisions importantes pour éviter de les remettre en
 **Raison** : L'API Meta est la plus complète pour le HORECA. TikTok et LinkedIn seront ajoutés en V2.
 **Impact** : `PostPlatform` type = `'instagram' | 'facebook' | 'tiktok' | 'linkedin'` (tiktok/linkedin en préparation).
 
+### DP-04 — Module Campagnes en 3 phases, seule la Phase 1 (assistée) est codée
+**Date** : 2026-07 (spec 141)
+**Décision** : MAESTRO génère la stratégie média, les créas (Meta + Google) et suit le
+ROAS déclaré par l'agence. L'achat publicitaire reste manuel dans Meta Ads Manager /
+Google Ads — aucun appel à la Meta Marketing API ni à la Google Ads API en Phase 1.
+**Raison** : Vendable immédiatement (stratégie + créas + reporting) sans le risque
+d'une dépense réelle déclenchée par bug, et sans dépendre de l'App Review Meta
+(`ads_management`) ni du developer token Google Ads (délais de plusieurs semaines).
+**Impact** : Table `campaigns` (migration 018), agent `media-planner.ts`, routes
+`/api/campaigns*` protégées par le middleware, pages `/campaigns`. Les phases 2
+(boost de posts via Meta Marketing API) et 3 (Google Ads API) restent à faire et
+nécessitent des prérequis externes (voir `CODEX_SPECS/141-module-campagnes-ads.md`).
+**Suite** : intégrer les campagnes dans le rapport mensuel client (spec 140) une
+fois celle-ci codée — non fait à ce jour, seule la spec existe.
+
 ---
 
 ## Décisions techniques

@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière vérification : 2026-07-01
+Dernière vérification : 2026-07-03
 
 ## Phase actuelle
 
@@ -59,6 +59,7 @@ Client
 | Analytics, croissance et coûts IA | Fonctionnel |
 | Suppressions groupées de posts | Fonctionnel |
 | Chiffrement des tokens Meta | Fonctionnel |
+| Module Campagnes — stratégie et créas assistées (Meta Ads + Google Ads, phase 1) | Fonctionnel |
 
 ## Fondations présentes mais non validées pour commercialisation
 
@@ -79,7 +80,10 @@ dédié de sécurité et de bout en bout.
   d'affaires ;
 - versioning des posts ;
 - tests automatisés du tunnel critique ;
-- TikTok et Google Business.
+- TikTok et Google Business ;
+- rapport mensuel client (spec 140) — spec écrite, non codée ;
+- Campagnes phase 2 et 3 : achat via Meta Marketing API et Google Ads API (spec 141) —
+  nécessitent App Review Meta (`ads_management`) et developer token Google Ads.
 
 ## Limites connues
 
