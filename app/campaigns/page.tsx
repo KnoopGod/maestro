@@ -6,6 +6,7 @@ import { CAMPAIGN_CHANNELS, CAMPAIGN_STATUS, type Campaign, type CampaignStatus 
 import { BUSINESS_OBJECTIVES } from '@/types/client'
 import type { Client } from '@/types/client'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { MigrateBanner } from '@/components/system/MigrateBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -82,10 +83,20 @@ export default async function CampaignsPage({
     ? (statusParam as CampaignStatus)
     : undefined
 
-  const [campaigns, clients] = await Promise.all([
-    listCampaigns({ status: statusFilter, clientId: clientParam || undefined }),
-    listClients(),
-  ])
+  // La table campaigns peut manquer si les migrations n'ont pas encore été
+  // appliquées en production (schemaAutoInit désactivé sur Turso).
+  let campaigns: Campaign[] = []
+  let clients: Client[] = []
+  let dbError = false
+  try {
+    ;[campaigns, clients] = await Promise.all([
+      listCampaigns({ status: statusFilter, clientId: clientParam || undefined }),
+      listClients(),
+    ])
+  } catch (err) {
+    console.error('[CampaignsPage] DB error:', err)
+    dbError = true
+  }
   const clientsMap = new Map(clients.map(c => [c.id, c]))
 
   return (
@@ -130,7 +141,9 @@ export default async function CampaignsPage({
         })}
       </div>
 
-      {campaigns.length === 0 ? (
+      {dbError ? (
+        <MigrateBanner context="La page Campagnes ne peut pas encore lire ses données." />
+      ) : campaigns.length === 0 ? (
         <EmptyState
           icon={Megaphone}
           title="Aucune campagne pour l'instant"

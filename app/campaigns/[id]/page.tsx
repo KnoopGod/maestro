@@ -8,6 +8,7 @@ import { BUSINESS_OBJECTIVES } from '@/types/client'
 import { CopyField, CopyList } from '@/components/campaigns/CopyField'
 import { CampaignResultsForm } from '@/components/campaigns/CampaignResultsForm'
 import { CampaignActions } from '@/components/campaigns/CampaignActions'
+import { MigrateBanner } from '@/components/system/MigrateBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,23 @@ export default async function CampaignDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const campaign = await getCampaign(id)
+
+  // La table campaigns peut manquer si les migrations n'ont pas été appliquées en prod.
+  let campaign: Awaited<ReturnType<typeof getCampaign>> = null
+  try {
+    campaign = await getCampaign(id)
+  } catch (err) {
+    console.error('[CampaignDetailPage] DB error:', err)
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <Link href="/campaigns" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-200 transition-colors group">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
+          Retour aux campagnes
+        </Link>
+        <MigrateBanner context="Cette campagne ne peut pas encore être chargée." />
+      </div>
+    )
+  }
   if (!campaign) notFound()
 
   const client = await getClient(campaign.clientId)
