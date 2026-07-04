@@ -1,30 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
-import { getClient } from '@/lib/db/queries/clients'
-import { listPosts } from '@/lib/db/queries/posts'
-import { analyzePerformance } from '@/lib/agents/performance-analyst'
+import { buildMonthlyReport, parseMonthParam, postEngagementRate, deltaPct } from '@/lib/reports/monthly'
 import { PrintButton } from '@/components/clients/PrintButton'
-import type { Post } from '@/types/post'
 import { getPlaybookForClient } from '@/lib/playbooks'
+import { CAMPAIGN_CHANNELS } from '@/types/campaign'
 
 export const dynamic = 'force-dynamic'
-
-const MONTH_NAMES = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
-
-function engagementRate(post: Post): number | null {
-  if (!post.metaInsights?.length) return null
-  let sum = 0
-  let n = 0
-  for (const i of post.metaInsights) {
-    const reach = i.reach ?? 0
-    if (reach === 0) continue
-    sum += ((i.likes ?? 0) + (i.comments ?? 0) + (i.shares ?? 0)) / reach * 100
-    n++
-  }
-  return n ? parseFloat((sum / n).toFixed(2)) : null
-}
 
 export default async function ClientReportPage({
   params,
@@ -35,76 +17,26 @@ export default async function ClientReportPage({
 }) {
   const { id } = await params
   const { month: monthParam } = await searchParams
-  const client = await getClient(id)
-  if (!client) notFound()
 
-  // ── Period ──────────────────────────────────────────────────────────────────
+  const report = await buildMonthlyReport(id, monthParam)
+  if (!report) notFound()
+
+  const { client, published, totals, prevMonthTotals, topPosts, pillarCoverage, campaigns } = report
+
+  // ── Navigation mois précédent / suivant ─────────────────────────────────────
   const now = new Date()
-  let year = now.getFullYear()
-  let month = now.getMonth() // 0-indexed
-  if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-    const [y, m] = monthParam.split('-').map(Number)
-    if (m >= 1 && m <= 12) { year = y; month = m - 1 }
-  }
-  const periodStart = new Date(year, month, 1).getTime()
-  const periodEnd = new Date(year, month + 1, 1).getTime()
-
+  const { year, month } = parseMonthParam(monthParam)
   const prevMonth = new Date(year, month - 1, 1)
   const nextMonth = new Date(year, month + 1, 1)
   const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
 
-  // ── Data ────────────────────────────────────────────────────────────────────
-  const allPosts = await listPosts({ clientId: id, limit: 500 })
-  const published = allPosts.filter(p =>
-    p.status === 'published' && p.publishedAt && p.publishedAt >= periodStart && p.publishedAt < periodEnd
-  ).sort((a, b) => (a.publishedAt ?? 0) - (b.publishedAt ?? 0))
-  const created = allPosts.filter(p => p.createdAt >= periodStart && p.createdAt < periodEnd)
-
-  // KPIs
-  const totals = published.reduce(
-    (acc, p) => {
-      for (const i of p.metaInsights ?? []) {
-        acc.reach += i.reach ?? 0
-        acc.likes += i.likes ?? 0
-        acc.comments += i.comments ?? 0
-        acc.shares += i.shares ?? 0
-        acc.saves += i.saves ?? 0
-      }
-      return acc
-    },
-    { reach: 0, likes: 0, comments: 0, shares: 0, saves: 0 }
-  )
-  const interactions = totals.likes + totals.comments + totals.shares + totals.saves
-  const rates = published.map(engagementRate).filter((r): r is number => r !== null)
-  const avgRate = rates.length ? (rates.reduce((s, r) => s + r, 0) / rates.length).toFixed(1) : null
-  const topPost = [...published].sort((a, b) => (engagementRate(b) ?? -1) - (engagementRate(a) ?? -1))[0]
-
-  // Pillar coverage
-  const pillars = client.strategy?.contentPillars ?? []
-  const pillarCoverage = pillars.map(pillar => ({
-    pillar,
-    count: published.filter(p =>
-      `${p.brief} ${p.caption}`.toLowerCase().includes(pillar.toLowerCase())
-    ).length,
-  }))
-
-  // ── Performance Analyst (agent IA) ─────────────────────────────────────────
-  const { analysis } = published.length > 0
-    ? await analyzePerformance({
-        client,
-        posts: published.map(p => ({
-          caption: p.caption,
-          platforms: p.platforms,
-          brief: p.brief,
-          publishedAt: p.publishedAt,
-          insights: p.metaInsights ?? [],
-        })),
-      })
-    : { analysis: null }
-
   const typeLabel = getPlaybookForClient(client).label
-  const periodLabel = `${MONTH_NAMES[month]} ${year}`
+  const topPost = topPosts[0]
+
+  const reachDelta = deltaPct(totals.reach, prevMonthTotals?.reach)
+  const interactionsDelta = deltaPct(totals.interactions, prevMonthTotals?.interactions)
+  const postsDelta = deltaPct(totals.postsPublished, prevMonthTotals?.postsPublished)
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
@@ -122,7 +54,7 @@ export default async function ClientReportPage({
           >
             <ChevronLeft className="w-4 h-4" />
           </Link>
-          <span className="text-sm text-gray-300 font-medium min-w-[130px] text-center">{periodLabel}</span>
+          <span className="text-sm text-gray-300 font-medium min-w-[130px] text-center">{report.monthLabel}</span>
           {!isCurrentMonth ? (
             <Link
               href={`/clients/${id}/report?month=${fmt(nextMonth)}`}
@@ -140,7 +72,7 @@ export default async function ClientReportPage({
         </div>
       </div>
 
-      {/* ── The report document (white, agency deliverable) ── */}
+      {/* ── Le document rapport (blanc, livrable client) ── */}
       <article className="print-page bg-white text-gray-900 rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <header className="px-10 pt-10 pb-8 border-b-2 border-gray-900">
@@ -153,7 +85,7 @@ export default async function ClientReportPage({
               </p>
             </div>
             <div className="text-right">
-              <div className="text-xl font-bold">{periodLabel}</div>
+              <div className="text-xl font-bold">{report.monthLabel}</div>
               <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-1">
                 Généré le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
@@ -161,26 +93,45 @@ export default async function ClientReportPage({
           </div>
         </header>
 
+        {/* Objectif */}
+        {report.objective && (
+          <section className="px-10 py-5 border-b border-gray-200 bg-gray-50">
+            <p className="text-sm">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mr-3">Votre objectif</span>
+              <span className="font-semibold">{report.objective.label}</span>
+            </p>
+          </section>
+        )}
+
         {/* KPIs */}
         <section className="px-10 py-8 border-b border-gray-200">
           <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">Chiffres clés du mois</h2>
           <div className="grid grid-cols-4 gap-6">
-            <Kpi value={published.length} label="Posts publiés" />
-            <Kpi value={totals.reach > 0 ? totals.reach.toLocaleString('fr-FR') : '—'} label="Personnes touchées" />
-            <Kpi value={interactions > 0 ? interactions.toLocaleString('fr-FR') : '—'} label="Interactions" />
-            <Kpi value={avgRate ? `${avgRate}%` : '—'} label="Taux d'engagement" />
+            <Kpi value={totals.postsPublished} label="Publications" delta={postsDelta} />
+            <Kpi value={totals.reach > 0 ? totals.reach.toLocaleString('fr-FR') : '—'} label="Personnes touchées" delta={reachDelta} />
+            <Kpi value={totals.interactions > 0 ? totals.interactions.toLocaleString('fr-FR') : '—'} label="Interactions" delta={interactionsDelta} />
+            <Kpi value={totals.engagementRate !== null ? `${totals.engagementRate}%` : '—'} label="Taux d'engagement" />
           </div>
           {totals.reach === 0 && published.length > 0 && (
             <p className="text-[11px] text-gray-400 mt-4 italic">
-              Les métriques Meta seront disponibles après récupération des insights (Analytics → Récupérer les insights).
+              Les statistiques détaillées sont en cours de collecte — elles apparaîtront dans les prochains jours.
             </p>
+          )}
+          {report.byPlatform.length > 1 && (
+            <div className="flex flex-wrap gap-x-6 gap-y-1 mt-4 text-xs text-gray-500">
+              {report.byPlatform.map(p => (
+                <span key={p.platform} className="capitalize">
+                  {p.platform} : {p.reach.toLocaleString('fr-FR')} personnes · {p.interactions.toLocaleString('fr-FR')} interactions
+                </span>
+              ))}
+            </div>
           )}
         </section>
 
         {/* Top post */}
         {topPost && (
           <section className="px-10 py-8 border-b border-gray-200">
-            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">Post du mois</h2>
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">Publication du mois</h2>
             <div className="flex gap-5">
               {topPost.imageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -189,12 +140,12 @@ export default async function ClientReportPage({
               <div className="flex-1 min-w-0">
                 <p className="text-sm leading-relaxed line-clamp-4">{topPost.caption}</p>
                 <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                  <span>{topPost.platforms.join(' + ')}</span>
+                  <span className="capitalize">{topPost.platforms.join(' + ')}</span>
                   {topPost.publishedAt && (
                     <span>{new Date(topPost.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>
                   )}
-                  {engagementRate(topPost) !== null && (
-                    <span className="font-semibold text-gray-900">{engagementRate(topPost)}% d&apos;engagement</span>
+                  {postEngagementRate(topPost) !== null && (
+                    <span className="font-semibold text-gray-900">{postEngagementRate(topPost)}% d&apos;engagement</span>
                   )}
                 </div>
               </div>
@@ -209,7 +160,7 @@ export default async function ClientReportPage({
           </h2>
           {published.length === 0 ? (
             <p className="text-sm text-gray-400 italic">
-              Aucune publication ce mois-ci.{created.length > 0 ? ` ${created.length} post${created.length > 1 ? 's' : ''} en préparation.` : ''}
+              Aucune publication ce mois-ci.{report.createdCount > 0 ? ` ${report.createdCount} publication${report.createdCount > 1 ? 's' : ''} en préparation.` : ''}
             </p>
           ) : (
             <table className="w-full text-sm">
@@ -223,7 +174,7 @@ export default async function ClientReportPage({
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {published.map(p => {
-                  const rate = engagementRate(p)
+                  const rate = postEngagementRate(p)
                   return (
                     <tr key={p.id}>
                       <td className="py-2.5 pr-3 text-gray-500 text-xs align-top">
@@ -246,10 +197,54 @@ export default async function ClientReportPage({
           )}
         </section>
 
-        {/* Pillar coverage */}
-        {pillars.length > 0 && published.length > 0 && (
+        {/* Campagnes publicitaires */}
+        {campaigns.length > 0 && (
           <section className="px-10 py-8 border-b border-gray-200">
-            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">Couverture des piliers de contenu</h2>
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">
+              Vos campagnes publicitaires ({campaigns.length})
+            </h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-200">
+                  <th className="pb-2 pr-3 font-medium">Campagne</th>
+                  <th className="pb-2 pr-3 font-medium w-24">Canal</th>
+                  <th className="pb-2 pr-3 font-medium text-right w-24">Investi</th>
+                  <th className="pb-2 pr-3 font-medium text-right w-20">Leads</th>
+                  <th className="pb-2 font-medium text-right w-24">Retour</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {campaigns.map(c => (
+                  <tr key={c.id}>
+                    <td className="py-2.5 pr-3 align-top">
+                      <span className="line-clamp-1">{c.name}</span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-gray-500 text-xs align-top">
+                      {CAMPAIGN_CHANNELS[c.channel].label}
+                    </td>
+                    <td className="py-2.5 pr-3 text-right align-top">
+                      {c.spendEur !== null ? `${c.spendEur.toLocaleString('fr-FR')} €` : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="py-2.5 pr-3 text-right align-top">
+                      {c.leads !== null ? c.leads : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="py-2.5 text-right align-top font-semibold">
+                      {c.roas !== null ? `×${c.roas}` : <span className="text-gray-300">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-[11px] text-gray-400 mt-3 italic">
+              Retour = chiffre d&apos;affaires attribué divisé par le budget investi.
+            </p>
+          </section>
+        )}
+
+        {/* Pillar coverage */}
+        {pillarCoverage.length > 0 && published.length > 0 && (
+          <section className="px-10 py-8 border-b border-gray-200">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">Couverture des thèmes de contenu</h2>
             <div className="space-y-2.5">
               {pillarCoverage.map(({ pillar, count }) => {
                 const max = Math.max(...pillarCoverage.map(p => p.count), 1)
@@ -272,59 +267,55 @@ export default async function ClientReportPage({
           </section>
         )}
 
-        {/* AI analysis */}
-        {analysis && (
+        {/* Indicateurs à suivre chez le client */}
+        {report.playbookKpis.length > 0 && (
           <section className="px-10 py-8 border-b border-gray-200">
-            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-4">Analyse & recommandations</h2>
-            <p className="text-sm leading-relaxed mb-5">{analysis.summary}</p>
-
-            {analysis.patterns.length > 0 && (
-              <div className="mb-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Ce qui fonctionne</h3>
-                <ul className="space-y-1.5">
-                  {analysis.patterns.map((p, i) => (
-                    <li key={i} className="text-sm flex gap-2">
-                      <span className="text-gray-400 flex-shrink-0">→</span>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {analysis.recommendations.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Plan pour le mois prochain</h3>
-                <ol className="space-y-2">
-                  {analysis.recommendations.map((r, i) => (
-                    <li key={i} className="text-sm flex gap-3">
-                      <span className="w-5 h-5 rounded-full bg-gray-900 text-white text-[10px] flex items-center justify-center flex-shrink-0 font-bold">{i + 1}</span>
-                      <span className="leading-relaxed">{r}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-3">Indicateurs à suivre chez vous</h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Pour mesurer l&apos;impact réel sur votre activité, notez chaque mois ces indicateurs et partagez-les-nous :
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {report.playbookKpis.map(kpi => (
+                <span key={kpi} className="text-xs px-3 py-1 rounded-full border border-gray-300 text-gray-700">
+                  {kpi}
+                </span>
+              ))}
+            </div>
           </section>
         )}
+
+        {/* Mois prochain */}
+        <section className="px-10 py-6 border-b border-gray-200 bg-gray-50">
+          <p className="text-sm">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-gray-400 mr-3">Le mois prochain</span>
+            {report.scheduledNextMonth > 0
+              ? <span className="font-medium">{report.scheduledNextMonth} publication{report.scheduledNextMonth > 1 ? 's' : ''} déjà planifiée{report.scheduledNextMonth > 1 ? 's' : ''}</span>
+              : <span className="text-gray-500">Calendrier en cours de préparation</span>}
+          </p>
+        </section>
 
         {/* Footer */}
         <footer className="px-10 py-6 flex items-center justify-between">
           <p className="text-[10px] text-gray-400 uppercase tracking-widest">
             Bilan généré par Maestro — gestion social media
           </p>
-          <p className="text-[10px] text-gray-300">{periodLabel}</p>
+          <p className="text-[10px] text-gray-300">{report.monthLabel}</p>
         </footer>
       </article>
     </div>
   )
 }
 
-function Kpi({ value, label }: { value: string | number; label: string }) {
+function Kpi({ value, label, delta }: { value: string | number; label: string; delta?: number | null }) {
   return (
     <div>
       <div className="text-3xl font-bold tabular-nums">{value}</div>
       <div className="text-[11px] uppercase tracking-wider text-gray-400 mt-1">{label}</div>
+      {delta !== undefined && delta !== null && (
+        <div className={`text-xs font-medium mt-0.5 ${delta >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+          {delta >= 0 ? '↑' : '↓'} {delta >= 0 ? '+' : ''}{delta}% vs mois précédent
+        </div>
+      )}
     </div>
   )
 }
