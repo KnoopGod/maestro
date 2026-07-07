@@ -24,6 +24,17 @@ Ce fichier enregistre les décisions importantes pour éviter de les remettre en
 **Raison** : L'API Meta est la plus complète pour le HORECA. TikTok et LinkedIn seront ajoutés en V2.
 **Impact** : `PostPlatform` type = `'instagram' | 'facebook' | 'tiktok' | 'linkedin'` (tiktok/linkedin en préparation).
 
+### DP-04 — Module Campagnes : Phase 1 assistée, sans API publicitaire
+**Date** : 2026-07 (spec 141)
+**Décision** : Le module Campagnes ne fait qu'assister l'agence — génération du plan média
+et des créas par un agent (`lib/agents/media-planner.ts`), saisie manuelle des résultats
+(`CampaignResults`). Aucun appel à la Meta Marketing API ni à la Google Ads API.
+**Raison** : Vendable immédiatement (stratégie + créas + reporting), sans App Review
+supplémentaire ni risque de dépenser l'argent d'un client par bug. L'achat média reste
+opéré manuellement par l'agence dans Ads Manager / Google Ads.
+**Suite** : Phase 2 (Meta Marketing API, boost de posts) et Phase 3 (Google Ads API)
+restent à faire, hors périmètre de cette spec.
+
 ---
 
 ## Décisions techniques
