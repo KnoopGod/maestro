@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière vérification : 2026-07-06
+Dernière vérification : 2026-07-10
 
 ## Phase actuelle
 
@@ -59,14 +59,11 @@ Client
 | Analytics, croissance et coûts IA | Fonctionnel |
 | Suppressions groupées de posts | Fonctionnel |
 | Chiffrement des tokens Meta | Fonctionnel |
-| Rapport mensuel client (deltas, top posts, KPIs verticale) | Fonctionnel — branche non mergée |
-| Module Campagnes Meta Ads / Google Ads (phase 1 assistée) | Fonctionnel — branche non mergée |
+| Rapport mensuel client (deltas, top posts, KPIs verticale) | Fonctionnel |
+| Module Campagnes Meta Ads / Google Ads (phase 1 assistée) | Fonctionnel |
 
-Le rapport mensuel et le module Campagnes (specs 140 et 141) sont terminés,
-`tsc --noEmit` et `npm run lint` passent sans erreur, mais vivent encore sur
-la branche `claude/gifted-keller-0kdhft` (19 commits d'avance sur `main`,
-aucune Pull Request ouverte). Ils ne sont pas en production tant que Bradley
-n'a pas validé et autorisé le merge dans `main`.
+Le rapport mensuel et le module Campagnes (specs 140 et 141) sont mergés dans
+`main` (PR #13 à #17) et déployés en production.
 
 ## Fondations présentes mais non validées pour commercialisation
 
