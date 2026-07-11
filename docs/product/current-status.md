@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière vérification : 2026-07-06
+Dernière vérification : 2026-07-11
 
 ## Phase actuelle
 
@@ -59,14 +59,16 @@ Client
 | Analytics, croissance et coûts IA | Fonctionnel |
 | Suppressions groupées de posts | Fonctionnel |
 | Chiffrement des tokens Meta | Fonctionnel |
-| Rapport mensuel client (deltas, top posts, KPIs verticale) | Fonctionnel — branche non mergée |
-| Module Campagnes Meta Ads / Google Ads (phase 1 assistée) | Fonctionnel — branche non mergée |
+| Rapport mensuel client (deltas, top posts, KPIs verticale) | Fonctionnel — sur `main` |
+| Module Campagnes Meta Ads / Google Ads (phase 1 assistée) | Fonctionnel — sur `main` |
 
 Le rapport mensuel et le module Campagnes (specs 140 et 141) sont terminés,
-`tsc --noEmit` et `npm run lint` passent sans erreur, mais vivent encore sur
-la branche `claude/gifted-keller-0kdhft` (19 commits d'avance sur `main`,
-aucune Pull Request ouverte). Ils ne sont pas en production tant que Bradley
-n'a pas validé et autorisé le merge dans `main`.
+`tsc --noEmit` et `npm run lint` passent sans erreur, et le code est fusionné
+dans `main` (PR #13 à #17, dont la migration 018 pour la table `campaigns`
+et le bandeau de migration en cas de table manquante). Le déploiement
+production sur Vercel n'a pas été revérifié depuis ce merge — confirmer
+`ok: true` sur `/api/health` et l'affichage réel de `/campaigns` et du
+rapport mensuel avant de les présenter comme disponibles à un client.
 
 ## Fondations présentes mais non validées pour commercialisation
 
