@@ -25,11 +25,26 @@ mais authentique et reconnaissable. Le client qui vient manger retrouve CE plat.
 - Infra jobs asynchrones (`agent-jobs` + polling) — même pattern que generate-post
 - `getVisualIdentity` — la DA du client guide le style de la retouche
 
+## Décisions actées (réflexion amont avec Bradley — 2026-07)
+
+1. **POC retouche AVANT construction** : le moteur (`lib/agents/photo-enhancer.ts`,
+   gpt-image-1 `images.edit` + `input_fidelity: high`) est validé sur de vraies photos
+   via le Labo interne `/labs/enhance`. Critère go/no-go : ≥ 7/10 photos fidèles ET
+   améliorées. Si non-go → approche hybride (retouche classique sharp + IA au choix).
+2. **Publication : validation agence en V1**, avec notification immédiate. Le réglage
+   « publication directe » par client est prévu dans la structure dès le début
+   (colonne/flag), activable client par client quand la confiance est établie.
+   Rappel : le plat du jour est time-critical — la validation doit être rapide.
+3. **Édition par le restaurateur : ajustement par instruction, pas d'édition libre.**
+   Il choisit une des 3 propositions, et peut demander une modification depuis son
+   téléphone (« préciser que c'est jusqu'à dimanche ») → l'IA régénère cette caption
+   avec l'instruction → il valide. Même mécanisme que la régénération partielle du Studio.
+
 ## Goal
 
 Un parcours mobile en 3 écrans pour le restaurateur, accessible par son lien portail
 (sauvegardable sur l'écran d'accueil) :
-**📸 Photographier → ✨ Voir avant/après + 3 propositions → ✅ Envoyer**
+**📸 Photographier → ✨ Voir avant/après + 3 propositions (ajustables par instruction) → ✅ Envoyer**
 Le post choisi arrive dans la file de validation de l'agence, qui publie.
 
 ## Files to modify
