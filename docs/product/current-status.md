@@ -1,6 +1,6 @@
 # Statut actuel — MAESTRO
 
-Dernière vérification : 2026-07-06
+Dernière vérification : 2026-07-16
 
 ## Phase actuelle
 
@@ -59,14 +59,17 @@ Client
 | Analytics, croissance et coûts IA | Fonctionnel |
 | Suppressions groupées de posts | Fonctionnel |
 | Chiffrement des tokens Meta | Fonctionnel |
-| Rapport mensuel client (deltas, top posts, KPIs verticale) | Fonctionnel — branche non mergée |
-| Module Campagnes Meta Ads / Google Ads (phase 1 assistée) | Fonctionnel — branche non mergée |
+| Rapport mensuel client (deltas, top posts, KPIs verticale) | Fonctionnel |
+| Module Campagnes Meta Ads / Google Ads (phase 1 assistée) | Fonctionnel |
+| Labo de retouche Snap Studio | POC disponible — décision go/no-go en attente du test sur 10 photos réelles |
 
-Le rapport mensuel et le module Campagnes (specs 140 et 141) sont terminés,
-`tsc --noEmit` et `npm run lint` passent sans erreur, mais vivent encore sur
-la branche `claude/gifted-keller-0kdhft` (19 commits d'avance sur `main`,
-aucune Pull Request ouverte). Ils ne sont pas en production tant que Bradley
-n'a pas validé et autorisé le merge dans `main`.
+Le rapport mensuel (spec 140, PR #16) et le module Campagnes (spec 141, PR #14,
+avec correctif de résilience en PR #15) sont mergés dans `main` et en production.
+
+Le labo `/labs/enhance` permet de comparer une photo originale et sa retouche
+`gpt-image-1`. Snap Studio ne doit pas être construit avant le verdict prévu par
+la spec 142 : au moins 7 photos sur 10 doivent rester fidèles tout en étant
+visiblement améliorées.
 
 ## Fondations présentes mais non validées pour commercialisation
 
